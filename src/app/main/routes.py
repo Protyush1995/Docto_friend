@@ -172,6 +172,7 @@ from flask import (
     current_app,
     jsonify,
     session,
+    url_for,
 )
 from . import bp
 from ..db_manager import doctor_db_manager
@@ -204,9 +205,14 @@ def doctor_seed_submit():
 
     try:
         qr_filename = doctor_db_manager.append_doctor_record(fields)
+        # Store form data in session
+        session['last_submitted_data'] = fields
+        
         current_app.logger.info("Saved QR: %s", qr_filename)
         message = f"Saved. CSV updated; QR image: {qr_filename}"
-        return render_template("doctor_db_seed.html", success_message=message, qr_filename=qr_filename)
+        dashboard_url = url_for('main.doc_seed_dashboard')  # Update with the correct blueprint name
+        return render_template("doctor_db_seed.html", success_message=message, qr_filename=qr_filename, dashboard_url=dashboard_url)
+        
     except Exception as e:
         current_app.logger.exception("Failed to save doctor record")
         return render_template("doctor_db_seed.html", error_message=str(e)), 500
@@ -342,3 +348,7 @@ def submit_booking():
     current_app.logger.info("Saved booking %s to %s", patient_id, booking_filename)
     return jsonify({"patient_id": patient_id, "booking_file": booking_filename}), 200
 
+@bp.route("/doc-seed-dashboard")
+def doc_seed_dashboard():
+    doctor_data = session.get('last_submitted_data', {})
+    return render_template("doctor_dashboard.html", doctor_data=doctor_data)
