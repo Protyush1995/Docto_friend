@@ -170,16 +170,30 @@ def append_doctor_record(fields: dict) -> str:
         except ValueError:
             raise ValueError("clinic_fees must be a valid non-negative number")
 
-    # Create QR filename and booking URL
+    # Create QR filename
     qr_filename = _make_unique_filename()
-    booking_url = f"/clinic-booking?qr={quote_plus(qr_filename)}"
 
-    # Create QR image bytes and save disk copy
-    png_bytes = _create_qr_image_bytes(booking_url)
+    # Build JSON payload using the helper so QR contains the dictionary info
+    qr_payload = _generate_qr_payload({
+        "doctor_id": doctor_id_generated,
+        "doctor_first_name": doctor_first,
+        "doctor_last_name": doctor_last,
+        "doctor_qualifications": fields.get("doctor_qualifications", ""),
+        "clinic_id": clinic_id_generated,
+        "clinic_name": clinic_name_raw,
+        "clinic_fees": fields.get("clinic_fees", ""),
+        "clinic_address": fields.get("clinic_address", ""),
+        "clinic_contact": fields.get("clinic_contact", ""),
+        "doctor_visit_days": fields.get("doctor_visit_days", ""),
+    })
+
+    # Create QR image bytes from payload and save disk copy
+    png_bytes = _create_qr_image_bytes(qr_payload)
     from PIL import Image
     img_buf = BytesIO(png_bytes)
     img = Image.open(img_buf)
     _save_qr_image_to_disk(img, qr_filename)
+
 
     # Encode PNG bytes as base64 for CSV storage
     qr_b64 = base64.b64encode(png_bytes).decode("ascii")
