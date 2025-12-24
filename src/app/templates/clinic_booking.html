@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Appointment Booking</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; padding:1rem; max-width:900px; margin:auto; color:#0066cc; }
+    .card { border:1px solid #ddd; border-radius:8px; padding:1rem; box-shadow:0 2px 6px rgba(0, 0, 0, 0.545); margin-bottom:1rem; }
+    .card h2 { margin:0 0 0.25rem 0; }
+    .card p { margin:0.25rem 0; color:#333; }
+    label { display:block; margin-top:0.6rem; font-weight:600; }
+    input, select, textarea, button { width:100%; padding:0.5rem; box-sizing:border-box; margin-top:0.25rem; }
+    .muted { color:#666; font-size:0.9rem; }
+    .inline { display:inline-block; width:48%; }
+    .row { display:flex; gap:0.5rem; }
+    .success { color:green; }
+    .error { color:#b00020; }
+    #message { margin-top:0.75rem; }
+    .field-error { color:#b00020; font-size:0.9rem; margin-top:0.25rem; display:none; }
+    .field-invalid { border-color:#b00020; }
+  </style>
+</head>
+<body>
+  <h1>Doctor Appointment Booking</h1>
+
+<!-- Dummy record with doctor image -->
+<div class="card" id="clinicCard" style="display:flex; gap:1rem; align-items:center;">
+  <img src="C:\Users\Protyush\Desktop\doctor_friend_ai\src\app\static\image\doc_placeholder.png" alt="Doctor photo"
+       style="width:120px;height:120px;border-radius:8px;object-fit:cover;border:1px solid #ccc;">
+  <div>
+    <h2 id="doctorName" style="margin:0 0 0.25rem 0">Dr. Tonmoy Tikader</h2>
+    <p><strong>Clinic:</strong> <span id="clinicName">SIBALAY ABASAN</span>
+       <span class="muted">(<span id="clinicId">CLINID_SIBALAY_ABASAN_1</span>)</span></p>
+    <p><strong>Qualifications:</strong> <span id="doctorQual">MBBS, Surgeon</span></p>
+    <p><strong>Address:</strong> <span id="clinicAddress">Malancha Road, Noapara, Barasat, Kolkata -700125</span></p>
+    <p><strong>Clinic Contact:</strong> <span id="clinicContact">1234567890</span></p>
+    <p><strong>Clinic Fees:</strong> ₹<span id="clinicFees">500</span></p>
+  </div>
+</div>
+
+  <!-- Booking form -->
+  <form id="bookingForm" onsubmit="return false;">
+   <label id="visitDayLabel"></label>
+    <select id="visitDay" required>
+    <option value="">-- Select --</option>
+    </select>
+
+    <script>
+    (function populateVisitDays() {
+        const pad = n => String(n).padStart(2,'0');
+        const now = new Date();
+        // get Sunday of the week that includes today (0 = Sunday)
+        const day = now.getDay();
+        const sunday = new Date(now);
+        sunday.setDate(now.getDate() - day);
+
+        const schedule = [
+        {name:'Monday', time:'(01:30pm - 04:00pm)'},
+        {name:'Tuesday', time:'(01:30pm - 04:00pm)'},
+        {name:'Wednesday', time:'(02:30pm - 04:00pm)'},
+        {name:'Thursday', time:'(01:30pm - 04:00pm)'}
+        ];
+
+        const select = document.getElementById('visitDay');
+        const label = document.getElementById('visitDayLabel');
+
+        const fmt = d => pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + String(d.getFullYear()).slice(-2);
+
+        const weekStart = new Date(sunday);
+        const weekEnd = new Date(sunday);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        label.textContent = `Doctor visit day - time for dates from ${fmt(weekStart)} to ${fmt(weekEnd)}`;
+
+        // clear existing options except placeholder
+        select.innerHTML = '<option value="">-- Select --</option>';
+
+        schedule.forEach((s, i) => {
+        const dayDate = new Date(weekStart);
+        dayDate.setDate(weekStart.getDate() + (i + 1)); // Monday = sunday+1
+
+        const datePrefix = fmt(dayDate);
+        const option = document.createElement('option');
+        option.value = `${datePrefix}_${s.name}`;
+        option.textContent = `${datePrefix}_${s.name} - ${s.time}`;
+
+        // Disable option if the date is strictly before today (past)
+        const dateOnlyNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const dateOnlyDay = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+        if (dateOnlyDay < dateOnlyNow) {
+            option.disabled = true;
+            // optional: mark visually by prefixing "(past) " — keep text but do not change layout per instruction, so only disable
+        }
+
+        select.appendChild(option);
+        });
+    })();
+    </script>
+
+    <div id="visitDayError" class="field-error">Please enter a valid value for visit day</div>
+
+    <div class="row" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+        <div style="flex:1">
+            <label>Patient First Name
+            <input id="patientFirstName" placeholder="First name" required>
+            </label>
+            <div id="firstNameError" class="field-error">Please enter a valid value for Patient First Name</div>
+        </div>
+        <div style="flex:1">
+            <label>Patient Last Name
+            <input id="patientLastName" placeholder="Last name" required>
+            </label>
+            <div id="lastNameError" class="field-error">Please enter a valid value for Patient Last Name</div>
+        </div>
+        <div style="flex:0 0 160px">
+            <label>Sex
+            <select id="patientSex" required>
+                <option value="" disabled selected>Select</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Others">Others</option>
+            </select>
+            </label>
+            <div id="sexError" class="field-error">Please enter a valid value for Sex</div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:0.5rem;">
+        <div style="flex:1">
+            <label>Patient Mobile
+            <input id="patientMobile" placeholder="10-digit mobile" required>
+            </label>
+            <div id="mobileError" class="field-error">Please enter a valid value for Patient Mobile</div>
+        </div>
+        <div style="flex:1">
+            <label>Enter OTP
+            <input id="otpInput" placeholder="Enter OTP">
+            </label>
+            <div id="otpError" class="field-error">Please enter a valid value for OTP</div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+        <div style="flex:1">
+            <button type="button" id="sendOtpBtn" style="width:100%;">Send OTP</button>
+        </div>
+        <div style="flex:1">
+            <button type="button" id="verifyOtpBtn" disabled style="width:100%;">Verify OTP</button>
+        </div>
+    </div>
+
+    <button type="button" id="submitBookingBtn" disabled style="margin-top:1rem;">Submit Booking</button>
+
+    <div id="message"></div>
+  </form>
+
+  <script>
+    // Dummy OTP flow and CSV save (client-only)
+    let currentOtp = null;
+    const msgEl = document.getElementById('message');
+    const msg = (t, ok=true) => {
+      msgEl.textContent = t;
+      msgEl.className = ok ? 'success' : 'error';
+    };
+
+    // Utility: show/hide field error
+    function setFieldError(id, show) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.display = show ? 'block' : 'none';
+      const input = el.previousElementSibling && el.previousElementSibling.querySelector
+                    ? el.previousElementSibling.querySelector('input,select,textarea')
+                    : null;
+      if (input) {
+        if (show) input.classList.add('field-invalid'); else input.classList.remove('field-invalid');
+      }
+    }
+
+    // Validation helpers
+    function isNonEmptyText(val) {
+      return typeof val === 'string' && val.trim().length > 0;
+    }
+    function isValidMobile(val) {
+      return /^\d{10}$/.test(val);
+    }
+
+    // Validate all fields and show per-field messages; returns boolean
+    function validateAll(showErrors=true) {
+      let ok = true;
+
+      const visitDay = document.getElementById('visitDay').value;
+      if (!isNonEmptyText(visitDay)) { ok = false; if (showErrors) setFieldError('visitDayError', true); }
+      else setFieldError('visitDayError', false);
+
+      const firstName = document.getElementById('patientFirstName').value;
+      if (!isNonEmptyText(firstName)) { ok = false; if (showErrors) setFieldError('firstNameError', true); }
+      else setFieldError('firstNameError', false);
+
+      const lastName = document.getElementById('patientLastName').value;
+      if (!isNonEmptyText(lastName)) { ok = false; if (showErrors) setFieldError('lastNameError', true); }
+      else setFieldError('lastNameError', false);
+
+      const sex = document.getElementById('patientSex').value;
+      if (!isNonEmptyText(sex)) { ok = false; if (showErrors) setFieldError('sexError', true); }
+      else setFieldError('sexError', false);
+
+      const mobile = document.getElementById('patientMobile').value.trim();
+      if (!isValidMobile(mobile)) { ok = false; if (showErrors) setFieldError('mobileError', true); }
+      else setFieldError('mobileError', false);
+
+      // OTP is optional until verify; if user entered OTP show message if invalid
+      const otpVal = document.getElementById('otpInput').value.trim();
+      if (otpVal && !/^\d{4,6}$/.test(otpVal)) { ok = false; if (showErrors) setFieldError('otpError', true); }
+      else setFieldError('otpError', false);
+
+      return ok;
+    }
+
+    // Live validation hooks
+    ['patientFirstName','patientLastName','patientSex','visitDay','patientMobile','otpInput'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', () => {
+        validateAll(true);
+      });
+      el.addEventListener('change', () => {
+        validateAll(true);
+      });
+    });
+
+    document.getElementById('sendOtpBtn').addEventListener('click', () => {
+      const mobile = document.getElementById('patientMobile').value.trim();
+      // Show field-specific message if mobile invalid
+      if (!isValidMobile(mobile)) {
+        setFieldError('mobileError', true);
+        msg('Please enter a valid value for Patient Mobile', false);
+        return;
+      }
+      setFieldError('mobileError', false);
+
+      currentOtp = String(Math.floor(100000 + Math.random() * 900000));
+      // In a real app send via SMS. Here we show it for testing.
+      msg('OTP sent (for demo): ' + currentOtp);
+      document.getElementById('verifyOtpBtn').disabled = false;
+    });
+
+    document.getElementById('verifyOtpBtn').addEventListener('click', () => {
+      const otp = document.getElementById('otpInput').value.trim();
+      if (!currentOtp) { msg('Please send OTP first', false); return; }
+      if (otp === currentOtp) {
+        msg('OTP verified');
+        document.getElementById('submitBookingBtn').disabled = false;
+        document.getElementById('verifyOtpBtn').disabled = true;
+        setFieldError('otpError', false);
+      } else {
+        setFieldError('otpError', true);
+        msg('OTP incorrect', false);
+      }
+    });
+
+    document.getElementById('submitBookingBtn').addEventListener('click', () => {
+      // Validate all fields and show per-field messages
+      const allValid = validateAll(true);
+      if (!allValid) {
+        msg('Please correct the highlighted fields', false);
+        return;
+      }
+
+      // All good: proceed with original booking logic
+      const patientName = document.getElementById('patientFirstName').value.trim() + ' ' + document.getElementById('patientLastName').value.trim();
+      const patientMobile = document.getElementById('patientMobile').value.trim();
+      const visitDay = document.getElementById('visitDay').value;
+
+      // generate patient id
+      const ts = new Date().toISOString().replace(/[-:T.]/g,'').slice(0,14);
+      const rand = Math.floor(100 + Math.random() * 900);
+      const patientId = 'P' + ts + rand;
+
+      // build booking row and CSV filename
+      const clinicId = document.getElementById('clinicId').textContent;
+      const clinicName = document.getElementById('clinicName').textContent.replace(/\s+/g,'_');
+      const doctorName = document.getElementById('doctorName').textContent.replace(/\s+/g,'_');
+      const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+      const bookingFilename = `${clinicId}__${clinicName}__${doctorName}__${today}.csv`;
+
+      const headers = ["patient_id","patient_name","patient_mobile","visit_day","clinic_id","clinic_name","clinic_address","doctor_name","doctor_qualifications","created_at"];
+      const row = [
+        patientId,
+        patientName,
+        patientMobile,
+        visitDay,
+        document.getElementById('clinicId').textContent,
+        document.getElementById('clinicName').textContent,
+        document.getElementById('clinicAddress').textContent,
+        document.getElementById('doctorName').textContent,
+        document.getElementById('doctorQual').textContent,
+        new Date().toISOString()
+      ];
+
+      // create CSV content and trigger download (simulates saving)
+      const csvContent = headers.join(',') + "\n" + row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',') + "\n";
+      const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = bookingFilename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      // Booking success message (field-specific cleared)
+      msg('Booking created: ' + patientId + ' — Booking successful.');
+
+      // reset demo state
+      currentOtp = null;
+      document.getElementById('submitBookingBtn').disabled = true;
+      document.getElementById('verifyOtpBtn').disabled = true;
+      document.getElementById('otpInput').value = '';
+      // Optionally clear inputs but preserve layout — do not change current behavior
+    });
+
+    // Pre-fill some demo values (already in HTML) — no-op
+  </script>
+</body>
+</html>

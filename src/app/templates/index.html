@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Button Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; }
+    button { padding: 0.6rem 1rem; font-size: 1rem; }
+    h1 { color: #2c3e50; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <a href="{{ url_for('main.doctor_seed_form') }}">
+    <button id="clickMe">Click me</button>
+  </a>
+  <div id="output"></div>
+</body>
+</html>

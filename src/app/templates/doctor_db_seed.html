@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Doctor DB Seed</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 1rem; max-width: 800px; margin:auto }
+    label { display:block; margin-top:0.6rem }
+    input, textarea, select { width:100%; padding:0.4rem; box-sizing:border-box }
+    button { margin-top:1rem; padding:0.6rem 1rem }
+    .flash { margin-top:1rem; padding:0.6rem; border-radius:4px }
+    .success { background:#e6ffed; border:1px solid #a3e6b0 }
+    .danger { background:#ffe6e6; border:1px solid #e6a3a3 }
+  </style>
+</head>
+<body>
+  <h1>Doctor DB Seed</h1>
+
+  {% if qr_filename %}
+    <div style="margin-bottom:1rem">
+      <h3>Generated QR</h3>
+      <img src="{{ url_for('static', filename='qr/' ~ qr_filename) }}" alt="QR" style="max-width:300px">
+    </div>
+  {% endif %}
+
+  {% if success_message %}
+    <div class="flash success">{{ success_message }}</div>
+  {% endif %}
+  {% if error_message %}
+    <div class="flash danger">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('main.doctor_seed_submit') }}">
+    <label>Doctor First Name<input name="doctor_first_name" required></label>
+    <label>Doctor Last Name<input name="doctor_last_name" required></label>
+    <label>Doctor Qualifications<input name="doctor_qualifications"></label>
+    <label>Clinic Name<input name="clinic_name" required></label>
+    <label>Clinic Fees<input name="clinic_fees" type="number" step="0.01"></label>
+    <label>Clinic Address<textarea name="clinic_address" rows="2"></textarea></label>
+    <label>Clinic Contact<input name="clinic_contact"></label>
+    <label>Doctor visit days (comma separated)<input name="doctor_visit_days"></label>
+
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>
