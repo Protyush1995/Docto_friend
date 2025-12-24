@@ -218,5 +218,5 @@ def append_doctor_record(fields: dict) -> str:
     with open(CSV_PATH, "a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
         writer.writerow(record)
-
+    print(qr_filename)
     return qr_filename
