@@ -25,7 +25,11 @@
 
   {% if success_message %}
     <div class="flash success">{{ success_message }}</div>
+    <a href="{{ dashboard_url }}">
+      <button type="button">Go to Dashboard</button>
+    </a>
   {% endif %}
+  
   {% if error_message %}
     <div class="flash danger">{{ error_message }}</div>
   {% endif %}

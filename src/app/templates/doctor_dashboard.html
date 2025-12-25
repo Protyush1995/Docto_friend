@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <title>Doctor Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+
   <style>
     :root{
       --primary: #4d20cab8;
@@ -153,10 +154,11 @@
     </header>
 
     <section class="top">
+      <!--
       <aside class="profile-card card">
         <div class="profile-row">
           <div class="avatar">
-            <!-- replace with {{ url_for('static', filename='image/doc_paceholder.pn') }} in Jinja -->
+            
             <img src="C:\Users\Protyush\Desktop\doctor_friend_ai\src\app\static\image\doc_placeholder.png" alt="Doctor">
           </div>
           <div class="profile-meta">
@@ -175,7 +177,28 @@
           </div>
         </div>
       </aside>
+    -->
+      <aside class="profile-card card">
+    <div class="profile-row">
+        <div class="avatar">
+            <img src="{{ url_for('static', filename='image/doc_placeholder.png') }}" alt="Doctor">
+        </div>
+        <div class="profile-meta">
+            <h2>Dr. {{ doctor_data.doctor_first_name }} {{ doctor_data.doctor_last_name }}</h2>
+            <p>{{ doctor_data.doctor_qualifications }}</p>
+            <p class="sub">Email: {{ doctor_data.clinic_name }}@example.com · Phone: {{ doctor_data.clinic_contact }}</p>
+        </div>
+    </div>
 
+    <div style="margin-top:12px; color:var(--muted); font-size:13px;">
+        <div><strong>Member since:</strong> {{ doctor_data.doctor_id }}</div>
+        <div style="margin-top:6px"><strong>License:</strong> LIC-IND-123456</div>
+        <div style="margin-top:8px" class="action-row">
+            <button class="btn">Edit Profile</button>
+            <button class="btn ghost">Message</button>
+        </div>
+    </div>
+</aside>
       <div class="stats">
         <div class="stat">
           <h3 id="totalClinics">3</h3>
@@ -268,5 +291,24 @@
     document.getElementById('upcomingAppointments').textContent = 12;
     document.getElementById('patientsToday').textContent = 4;
   </script>
+
+
+  
+    <h1>Doctor Dashboard</h1>
+    <table>
+        <tr>
+            <th>Field</th>
+            <th>Value</th>
+        </tr>
+        {% for key, value in doctor_data.items() %}
+            <tr>
+                <td>{{ key }}</td>
+                <td>{{ value }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    
+
 </body>
+
 </html>
