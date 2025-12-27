@@ -12,7 +12,7 @@ from flask import (
     url_for,
 )
 from . import bp
-from ..db_manager import doctor_db_manager
+from ..db_manager import doctor_db_manager, doctor_database_management
 
 
 @bp.route("/", methods=["GET"])
@@ -27,7 +27,7 @@ def doctor_registration_form():
 def register_route():
     data = request.get_json() or {}
     try:
-        rec = doctor_db.append_registration_record(data)
+        rec = doctor_database_management.append_registration_record(data)
         # TODO: send verification email asynchronously
         return jsonify(success=True, doctor_id=rec["doctor_id"]), 201
     except ValueError as ve:
