@@ -113,11 +113,14 @@
 
     <div class="card" role="main" aria-labelledby="regTitle">
       <h2 id="regTitle">Create account</h2>
-      <p class="sub">Register as a clinician</p>
 
       <form id="regForm" autocomplete="on" onsubmit="return false;">
-        <label for="fullname">Full name</label>
-        <input id="fullname" name="fullname" type="text" placeholder="Dr. Jane Doe" required>
+        <label for="firstname">First name</label>
+        <input id="firstname" name="firstname" type="text" placeholder="Dr. John " required>
+
+        <label for="lastname">Last name</label>
+        <input id="lastname" name="lastname" type="text" placeholder="Doe" required>
+
 
         <label for="email">Email</label>
         <input id="email" name="email" type="email" placeholder="you@hospital.com" required>
@@ -160,14 +163,16 @@
     document.getElementById('regForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
       showError('');
-      const name = document.getElementById('fullname').value.trim();
+      const firstname = document.getElementById('firstname').value.trim();
+      const lastname = document.getElementById('lastname').value.trim();
       const email = document.getElementById('email').value.trim();
       const license = document.getElementById('license').value.trim();
       const password = document.getElementById('password').value;
       const confirm = document.getElementById('confirm').value;
       const terms = document.getElementById('terms').checked;
 
-      if(!name) return showError('Full name is required');
+      if(!firstname) return showError('First name is required');
+      if(!lastname) return showError('Last name is required');
       if(!EMAIL_RE.test(email)) return showError('Enter a valid email');
       if(!LICENSE_RE.test(license)) return showError('Enter a valid license number (5–20 alphanumeric/dash chars)');
       if(!PASS_RE.test(password)) return showError('Password must be ≥8 chars and include letters and numbers');
@@ -175,14 +180,15 @@
       if(!terms) return showError('You must accept the terms');
 
       const payload = {
-        fullname: name,
+        firstname: firstname,
+        lastname: lastname,
         email,
         license,
         password
       };
 
       try {
-        const res = await fetch('/register', {
+        const res = await fetch('/doctor-register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)

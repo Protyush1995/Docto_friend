@@ -7,7 +7,7 @@ from typing import Dict, Optional
 # Base app directory (one level up from db_manager)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # CSV stored inside db_manager folder
-CSV_PATH = os.path.join(BASE_DIR, "doctor_db_dataframe.csv")
+CSV_PATH = os.path.join(BASE_DIR, "doctor_credentials_dataframe_database.csv")
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 LICENSE_RE = re.compile(r"^[A-Z0-9\-]{5,20}$", re.I)
@@ -16,7 +16,8 @@ PASS_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
 # CSV headers for registration records
 HEADERS = [
     "doctor_id",        # generated unique id
-    "fullname",
+    "firstname",
+    "lastname",
     "email",
     "license",
     "password_hash",    # store hashed password (for demo we store placeholder)
@@ -32,13 +33,16 @@ def ensure_csv():
             writer.writeheader()
 
 def validate_registration(data: Dict) -> Optional[str]:
-    name = (data.get("fullname") or "").strip()
+    firstname = (data.get("firstname") or "").strip()
+    lastname = (data.get("lastname") or "").strip()
     email = (data.get("email") or "").strip()
     license_no = (data.get("license") or "").strip()
     password = data.get("password") or ""
 
-    if not name:
-        return "Full name is required"
+    if not firstname:
+        return "First name is required"
+    if not lastname:
+        return "Last name is required"
     if not EMAIL_RE.match(email):
         return "Invalid email"
     if not LICENSE_RE.match(license_no):
@@ -72,6 +76,7 @@ def append_registration_record(data: Dict) -> Dict:
     Returns the saved record dict (without plaintext password).
     Raises ValueError on validation errors or Exception on IO errors.
     """
+    print("NEW DATAFRAME REGISTRATION PAGE")
     err = validate_registration(data)
     if err:
         raise ValueError(err)
@@ -82,7 +87,8 @@ def append_registration_record(data: Dict) -> Dict:
 
     record = {
         "doctor_id": doctor_id,
-        "fullname": data["fullname"].strip(),
+        "firstname": data["firstname"].strip(),
+        "lastname": data["lastname"].strip(),
         "email": data["email"].strip().lower(),
         "license": data["license"].strip(),
         "password_hash": password_hash,
