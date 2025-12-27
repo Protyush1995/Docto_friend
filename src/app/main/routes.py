@@ -180,7 +180,7 @@ from ..db_manager import doctor_db_manager
 
 @bp.route("/", methods=["GET"])
 def index():
-    return render_template("index.html")
+    return render_template("docto_login.html")
 
 
 @bp.route("/doctor-seed", methods=["GET"])
