@@ -17,6 +17,7 @@ from flask import (
 from . import bp
 from ..db_manager import doctor_db_manager
 from ..db_manager.db_operations import DatabaseOperations
+from ..db_manager.doctor_db_manager import insert_doctor_record
 db_ops = DatabaseOperations()
 
 @bp.route("/", methods=["GET"])
@@ -86,19 +87,24 @@ def doctor_seed_submit():
     }
 
     try:
-        qr_filename = doctor_db_manager.append_doctor_record(fields)
+        qr_filename,record = doctor_db_manager.append_doctor_record(fields)
         session['last_submitted_data'] = fields
 
         current_app.logger.info("Saved QR: %s", qr_filename)
-
+        current_app.logger.info("Saved QR: %s", record)
+        record["username"] = session.get("username")
+        record["user_id"] = session.get("user_id")
+        record_insert_status = insert_doctor_record(record)
+        if record_insert_status["success"]:
         # Redirect back to dashboard after success
-        return render_template( "doctor_db_seed.html", 
-                               success_message=f"Saved. CSV updated; QR image: {qr_filename}", 
-                               qr_filename=qr_filename, 
-                               dashboard_url=url_for('main.doc_seed_dashboard'), 
-                               username=session.get("username"), 
-                               user_id=session.get("user_id") )
-
+            return render_template( "doctor_db_seed.html", 
+                                success_message=f"Saved. CSV updated; QR image: {qr_filename}", 
+                                qr_filename=qr_filename, 
+                                dashboard_url=url_for('main.doc_seed_dashboard'), 
+                                username=session.get("username"), 
+                                user_id=session.get("user_id") )
+        else:
+            raise Exception(f"MongoDB Insert Failed: {record_insert_status['error']}")
     except Exception as e:
         current_app.logger.exception("Failed to save doctor record")
         return render_template("doctor_db_seed.html", error_message=str(e)), 500
