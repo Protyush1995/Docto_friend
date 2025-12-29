@@ -279,7 +279,7 @@ def login():
             print(f"session['username']: {session['username']}  session['user_id']: {session['user_id']}   ")
             return redirect(url_for('main.doc_seed_dashboard'))
         else:
-            return "Login Failed"
+           return render_template('login.html', error="Invalid username or password")
 
     return render_template('login.html')
 
