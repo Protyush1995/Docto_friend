@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 2rem; }
+        form { display: flex; flex-direction: column; max-width: 300px; }
+        label { margin-top: 1rem; }
+        input { padding: 0.5rem; font-size: 1rem; }
+        button { margin-top: 1.5rem; padding: 0.6rem 1rem; font-size: 1rem; }
+        h1 { color: #2c3e50; margin-bottom: 1rem; } 
+    </style>
+</head>
+<body>
+    <h1>Login</h1>
+    <form method="POST">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        
+        <button type="submit">Login</button>
+    </form>
+    <p>Don't have an account? <a href="{{ url_for('main.register') }}">Register here</a>.</p>
+</body>
+</html>
