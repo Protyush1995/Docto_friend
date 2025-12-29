@@ -16,3 +16,8 @@
 - Modified `dashboard.html` to populate the profile card with doctor data dynamically.
 - In `index.html`, added two options for improved navigation:
 
+# Project Update - 28.12.2025
+### Database and User Management
+- Created a database and collections using MongoDB.
+- Added user registration functionality to the collection.
+- Implemented login/logout routes for registered users.
