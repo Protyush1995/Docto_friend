@@ -26,9 +26,17 @@ def index():
 
 @bp.route("/doctor-seed", methods=["GET"])
 def doctor_seed_form():
-    return render_template("doctor_db_seed.html")
+    # Ensure user is logged in
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
 
+    return render_template(
+        "doctor_db_seed.html",
+        username=session.get("username"),
+        user_id=session.get("user_id")
+    )
 
+"""
 @bp.route("/doctor-seed", methods=["POST"])
 def doctor_seed_submit():
     fields = {
@@ -58,6 +66,42 @@ def doctor_seed_submit():
         current_app.logger.exception("Failed to save doctor record")
         return render_template("doctor_db_seed.html", error_message=str(e)), 500
 
+"""
+@bp.route("/doctor-seed", methods=["POST"])
+def doctor_seed_submit():
+    if 'username' not in session:
+        return redirect(url_for('main.login'))
+
+    fields = {
+        "doctor_id": request.form.get("doctor_id", "").strip(),
+        "doctor_first_name": request.form.get("doctor_first_name", "").strip(),
+        "doctor_last_name": request.form.get("doctor_last_name", "").strip(),
+        "doctor_qualifications": request.form.get("doctor_qualifications", "").strip(),
+        "clinic_id": request.form.get("clinic_id", "").strip(),
+        "clinic_name": request.form.get("clinic_name", "").strip(),
+        "clinic_fees": request.form.get("clinic_fees", "").strip(),
+        "clinic_address": request.form.get("clinic_address", "").strip(),
+        "clinic_contact": request.form.get("clinic_contact", "").strip(),
+        "doctor_visit_days": request.form.get("doctor_visit_days", "").strip(),
+    }
+
+    try:
+        qr_filename = doctor_db_manager.append_doctor_record(fields)
+        session['last_submitted_data'] = fields
+
+        current_app.logger.info("Saved QR: %s", qr_filename)
+
+        # Redirect back to dashboard after success
+        return render_template( "doctor_db_seed.html", 
+                               success_message=f"Saved. CSV updated; QR image: {qr_filename}", 
+                               qr_filename=qr_filename, 
+                               dashboard_url=url_for('main.doc_seed_dashboard'), 
+                               username=session.get("username"), 
+                               user_id=session.get("user_id") )
+
+    except Exception as e:
+        current_app.logger.exception("Failed to save doctor record")
+        return render_template("doctor_db_seed.html", error_message=str(e)), 500
 
 @bp.route("/clinic-booking", methods=["GET"])
 def clinic_booking():
@@ -189,14 +233,23 @@ def submit_booking():
     current_app.logger.info("Saved booking %s to %s", patient_id, booking_filename)
     return jsonify({"patient_id": patient_id, "booking_file": booking_filename}), 200
 
-@bp.route("/doc-seed-dashboard")
-def doc_seed_dashboard():
-    if 'username' not in session:
-        return redirect(url_for('main.login'))
 
+@bp.route('/doc_seed_dashboard')
+def doc_seed_dashboard():
+    username = session.get('username')
+    user_id = session.get('user_id')
+
+    if not username:
+        return redirect(url_for('main.login'))
+    
     doctor_data = session.get('last_submitted_data', {})
-    print("doctor_data",doctor_data)  
-    return render_template("doctor_dashboard.html", doctor_data=doctor_data)
+    print("doctor_data",doctor_data)
+    return render_template(
+        'doctor_dashboard.html',
+        username=username,
+        user_id=user_id,
+        doctor_data=doctor_data
+    )
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -212,13 +265,18 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        user = db_ops.find_user(username, password)  # Check credentials
+        user = db_ops.find_user(username, password)
+
         if user:
-            session['username'] = username  # Store username in session
-            return redirect(url_for('main.doc_seed_dashboard'))  # Redirect to dashboard
+            session['username'] = user['doc_username']
+            session['user_id'] = user['_id']   # Store the ID
+            print(f"session['username']: {session['username']}  session['user_id']: {session['user_id']}   ")
+            return redirect(url_for('main.doc_seed_dashboard'))
         else:
-            return "Login Failed"  # Display error message
+            return "Login Failed"
+
     return render_template('login.html')
+
 
 
 

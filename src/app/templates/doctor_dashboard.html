@@ -186,7 +186,9 @@
             <img src="{{ url_for('static', filename='image/doc_placeholder.png') }}" alt="Doctor">
         </div>
         <div class="profile-meta">
-            <h2>Dr. {{ doctor_data.doctor_first_name }} {{ doctor_data.doctor_last_name }}</h2>
+            <h2>Dr. <strong>{{ username }} 
+            </strong>
+            </h2>
             <p>{{ doctor_data.doctor_qualifications }}</p>
             <p class="sub">Email: {{ doctor_data.clinic_name }}@example.com · Phone: {{ doctor_data.clinic_contact }}</p>
         </div>
@@ -194,9 +196,11 @@
 
     <div style="margin-top:12px; color:var(--muted); font-size:13px;">
         <div><strong>Member since:</strong> {{ doctor_data.doctor_id }}</div>
-        <div style="margin-top:6px"><strong>License:</strong> LIC-IND-123456</div>
+        <div style="margin-top:6px"><strong>License:</strong> <strong>{{ user_id  }} 
+            </strong></div>
         <div style="margin-top:8px" class="action-row">
-            <button class="btn">Edit Profile</button>
+            
+            <a href="{{ url_for('main.doctor_seed_form') }}" class="btn">Add Clinics</a>
             <button class="btn ghost">Message</button>
         </div>
     </div>

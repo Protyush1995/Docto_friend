@@ -2,18 +2,35 @@ from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from bson.objectid import ObjectId
 import hashlib
-
+from dotenv import load_dotenv
+import os
+from pathlib import Path
 class DatabaseOperations:
-    def __init__(self, db_name='doctor_mate'):
+    def __init__(self, env_file=None):
+
+        print(f"Current Working Directory: {os.getcwd()}") # Always load .env.development from the same folder as this file 
+        if env_file is None: env_file = Path(__file__).parent / ".env.development" 
+        if env_file.is_file(): 
+            load_dotenv(env_file) 
+            print(f"Loaded environment variables from: {env_file}") 
+        else: 
+            print(f"Warning: {env_file} not found!")
+        client_url = os.getenv('MONGODB_CLIENT_URL') 
+        db_name = os.getenv('MONGODB_DB_NAME') 
+        collection_name = os.getenv('MONGODB_COLLECTION_NAME')
+        # Print the values to check if they're loaded correctly
+        print(f"Client URL: {client_url}")
+        print(f"Database Name: {db_name}")
+        print(f"Collection Name: {collection_name}")
         # Initialize the MongoDB client and select the database
         try:
-            self.client = MongoClient('mongodb://localhost:27017/')
+            self.client = MongoClient(client_url)
             self.db = self.client[db_name]
-            self.collection = self.db['doc_logins']
-            self.create_collection()
+            self.collection = self.db[collection_name]
+            self.create_collection()  # Ensure this method is defined
             print("Connected to the database:")
             print(f"Database: {db_name}")
-            print(f"Collection: 'doc_logins'")
+            print(f"Collection: '{collection_name}'")
         except ConnectionFailure:
             print("Failed to connect to the database!")
 
@@ -53,13 +70,4 @@ class DatabaseOperations:
         })
         return user
 
-# Example usage
-if __name__ == "__main__":
-    db_ops = DatabaseOperations()
-    # To add a new user
-    user_id = db_ops.insert_user('test_user', 'test_password')
-    print(f'Inserted user with ID: {user_id}')
 
-    # To find a user
-    user = db_ops.find_user('test_user', 'test_password')
-    print(f'User found: {user}') if user else print('User not found')
