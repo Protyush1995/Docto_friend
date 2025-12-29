@@ -17,7 +17,7 @@ from flask import (
 from . import bp
 from ..db_manager import doctor_db_manager
 from ..db_manager.db_operations import DatabaseOperations
-from ..db_manager.doctor_db_manager import insert_doctor_record
+from ..db_manager.doctor_db_manager import insert_doctor_record,find_clinics_by_doctor
 db_ops = DatabaseOperations()
 
 @bp.route("/", methods=["GET"])
@@ -249,12 +249,15 @@ def doc_seed_dashboard():
         return redirect(url_for('main.login'))
     
     doctor_data = session.get('last_submitted_data', {})
-    print("doctor_data",doctor_data)
+    clinics_list = find_clinics_by_doctor(user_id)
+    doctor_data['clinics'] = clinics_list
+   
     return render_template(
         'doctor_dashboard.html',
         username=username,
         user_id=user_id,
-        doctor_data=doctor_data
+        doctor_data=doctor_data,
+        clinics = clinics_list
     )
 
 @bp.route('/register', methods=['GET', 'POST'])

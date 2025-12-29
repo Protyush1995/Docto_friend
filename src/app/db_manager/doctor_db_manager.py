@@ -11,17 +11,22 @@ from dotenv import load_dotenv
 from pathlib import Path
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
-def insert_doctor_record(record: dict): 
-    print("am in insert_doctor_record function")
-    env_file = Path(__file__).parent / ".env.clinics"
-    if env_file.is_file(): 
+# -----------------------------
+# Load environment variables for clinics DB
+env_file = Path(__file__).parent / ".env.clinics"
+if env_file.is_file(): 
             load_dotenv(env_file) 
             
-    else: 
+else: 
             print(f"Warning: {env_file} not found!")
-    client_url = os.getenv('MONGODB_CLIENT_URL') 
-    db_name = os.getenv('MONGODB_DB_NAME') 
-    collection_name = os.getenv('MONGODB_COLLECTION_NAME_CLINICS')
+client_url = os.getenv('MONGODB_CLIENT_URL') 
+db_name = os.getenv('MONGODB_DB_NAME') 
+collection_name = os.getenv('MONGODB_COLLECTION_NAME_CLINICS')
+
+# -----------------------------
+def insert_doctor_record(record: dict): 
+    print("am in insert_doctor_record function")
+    
         # Initialize the MongoDB client and select the database
     try:
             client = MongoClient(client_url)
@@ -42,6 +47,14 @@ def insert_doctor_record(record: dict):
     raise
 
 
+def find_clinics_by_doctor(doctor_id):
+    try:
+            client = MongoClient(client_url)
+            db = client[db_name]
+            clinics_collection =db[collection_name]
+    except ConnectionFailure:
+            print("Failed to connect to the database!")
+    return list(clinics_collection.find({"user_id": doctor_id}))
 
 
 # Base app directory (one level up from db_manager)
