@@ -7,6 +7,51 @@ import base64
 from datetime import datetime
 from urllib.parse import quote_plus
 from io import BytesIO
+from dotenv import load_dotenv
+from pathlib import Path
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
+def insert_doctor_record(record: dict): 
+    print("am in insert_doctor_record function")
+    env_file = Path(__file__).parent / ".env.clinics"
+    if env_file.is_file(): 
+            load_dotenv(env_file) 
+            print(f"Loaded environment variables from insert_doctor_record: {env_file}") 
+    else: 
+            print(f"Warning: {env_file} not found!")
+    client_url = os.getenv('MONGODB_CLIENT_URL') 
+    db_name = os.getenv('MONGODB_DB_NAME') 
+    collection_name = os.getenv('MONGODB_COLLECTION_NAME_CLINICS')
+        # Print the values to check if they're loaded correctly
+    print(f"Client URL: {client_url}")
+    print(f"Database Name: {db_name}")
+    print(f"MONGODB_COLLECTION_NAME_CLINICS insert_doctor_record: {collection_name}")
+        # Initialize the MongoDB client and select the database
+    try:
+            client = MongoClient(client_url)
+            db = client[db_name]
+            collection =db[collection_name]
+           
+            print("Connected to the database:")
+            print(f"Database: {db_name}")
+            print(f"Collection: '{collection}'")
+            print("record to insert:", record)
+    except ConnectionFailure:
+            print("Failed to connect to the database!")
+
+
+
+    
+    try: 
+        record["_id"] = record["DOCLID"]
+        result = collection.insert_one(record)
+
+        return str(result.inserted_id) 
+    except Exception as e: print("MongoDB Insert Error:", e) 
+    raise
+
+
+
 
 # Base app directory (one level up from db_manager)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -218,4 +263,11 @@ def append_doctor_record(fields: dict) -> str:
     with open(CSV_PATH, "a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
         writer.writerow(record)
+    if record:
+        insert_doctor_record(record)
+        print("Inserted record into MongoDB with ID:")
+
     return qr_filename
+    
+
+
