@@ -196,12 +196,15 @@
         const body = await res.json().catch(()=>({}));
         if(res.ok){
           alert('Registration successful. Please check your email for verification instructions.');
-          // location.href = 'index.html';
+          location.href = "{{ url_for('main.doctor_login_page') }}";
         } else {
           showError(body.error || 'Registration failed — try again');
+          alert('Registration failed — try again');
+          
         }
       } catch (err) {
         showError('Network error — try again later');
+        alert(err);
       }
     });
   </script>

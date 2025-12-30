@@ -69,6 +69,7 @@
 
     label{ display:block; font-weight:600; color:#062a8a; margin-top:10px; font-size:13px; }
     input[type="email"],
+    input[type="text"],
     input[type="password"]{
       width:100%; padding:12px 14px; margin-top:8px; border-radius:8px;
       border:1px solid rgba(0,0,0,0.09); box-shadow:var(--input-shadow);
@@ -114,7 +115,7 @@
     <div class="card" role="main" aria-labelledby="loginTitle">
       <h2 id="loginTitle">Welcome back, Doctor</h2>
       <p class="sub">Sign in to continue to your dashboard</p>
-
+      <!--
       <form id="loginForm" onsubmit="return false;" autocomplete="on">
         <label for="email">Email</label>
         <input id="email" type="email" placeholder="you@hospital.com" required>
@@ -131,10 +132,27 @@
 
         <div class="alt">New here? <a href="{{ url_for('main.doctor_registration_form') }}">Create an account</a></div>
       </form>
+      -->
+      <form id="loginForm" autocomplete="on">
+        <label for="identifier">Email or License</label>
+        <input id="identifier" name="identifier" type="text" placeholder="you@hospital.com or LICENSE123" required>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Enter your password" required>
+
+        <div class="row">
+          <label class="remember"><input type="checkbox" id="remember"> Remember me</label>
+          <a class="link" href="{{ url_for('main.doctor_forgot_password_page') }}">Forgot password?</a>
+        </div>
+
+        <button id="loginBtn" class="btn" type="submit">Sign in</button>
+        <div class="alt">New here? <a href="{{ url_for('main.doctor_registration_form') }}">Create an account</a></div>
+      
+      </form>
     </div>
   </div>
 
-  <script>
+  <!--<script>
     // Minimal client-side demo behavior
     document.getElementById('loginBtn').addEventListener('click', () => {
       const email = document.getElementById('email').value.trim();
@@ -145,6 +163,33 @@
       msg('Login successful — redirecting to dashboard (demo)');
       // window.location.href = '/doctor_dashboard.html';
     });
-  </script>
+  </script>-->
+  <script>
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const identifier = document.getElementById('identifier').value.trim();
+    const password = document.getElementById('password').value;
+    const remember = document.getElementById('remember').checked;
+    if (!identifier || !password) { alert('Please enter identifier and password'); return; }
+
+    try {
+      const res = await fetch('{{ url_for("main.api_doctor_login") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password, remember })
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        // redirect to dashboard (adjust route as needed)
+        window.location.href = json.redirect || '{{ url_for("main.doc_seed_dashboard") }}';
+      } else {
+        alert(json.error || 'Login failed');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error');
+    }
+  });
+</script>
 </body>
 </html>

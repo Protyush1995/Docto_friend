@@ -1,5 +1,5 @@
 import csv
-import os
+import os,json
 import random
 from datetime import datetime
 
@@ -18,6 +18,40 @@ from ..db_manager import doctor_db_manager, doctor_database_management
 @bp.route("/", methods=["GET"])
 def doctor_login_page():
     return render_template("doctor_login.html")
+
+@bp.route("/doctor-login", methods=["POST"])
+def api_doctor_login():
+    data = request.get_json() or {}
+    identifier = (data.get("identifier") or "").strip()
+    password = data.get("password") or ""
+    remember = bool(data.get("remember"))
+
+    if not identifier or not password:
+        return jsonify(success=False, error="missing_credentials"), 400
+
+    try:
+        res = doctor_database_management.authenticate_identifier(identifier, password)
+        if not res.get("success"):
+            # distinguish not found vs invalid credentials
+            err = res.get("error", "invalid_credentials")
+            return jsonify(success=False, error=err), 401
+
+        user = res["user"]
+        # minimal session assignment
+        session.clear()
+        session["doctor_id"] = user.get("doctor_id")
+        session["doctor_email"] = user.get("email")
+        session["doctor_name"] = f"{user.get('firstname','')} {user.get('lastname','')}".strip()
+        # set a flag for "remember" if requested (requires configuring permanent_session_lifetime)
+        if remember:
+            session.permanent = True
+
+        current_app.logger.info("Doctor %s logged in", session.get("doctor_id"))
+        return jsonify(success=True, redirect=url_for('main.doc_seed_dashboard')), 200
+
+    except Exception:
+        current_app.logger.exception("Login error")
+        return jsonify(success=False, error="internal_error"), 500
 
 @bp.route("/doctor-register", methods=["GET"])
 def doctor_registration_form():
