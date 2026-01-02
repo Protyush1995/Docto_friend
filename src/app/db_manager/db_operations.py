@@ -8,8 +8,8 @@ from pathlib import Path
 class DatabaseOperations:
     def __init__(self, env_file=None):
 
-        print(f"Current Working Directory: {os.getcwd()}") # Always load .env.development from the same folder as this file 
-        if env_file is None: env_file = Path(__file__).parent / ".env.development" 
+        print(f"Current Working Directory: {os.getcwd()}") # Always load .env.doctors from the same folder as this file 
+        if env_file is None: env_file = Path(__file__).parent / ".env.doctors" 
         if env_file.is_file(): 
             load_dotenv(env_file) 
             print(f"Loaded environment variables from: {env_file}") 
