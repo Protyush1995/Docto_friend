@@ -10,4 +10,3 @@ __pycache__/
 
 # Ignore all CSV files
 *.csv
-*.env.*
