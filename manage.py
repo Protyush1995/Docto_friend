@@ -26,8 +26,9 @@ def start_flask():
 
 
 if __name__ == "__main__":
-    print("Checking MongoDB connection...")
+    
     if verify_mongodb():
+        print("Checking MongoDB connection...")
         start_flask()
     else:
         print("Flask will NOT start because MongoDB is unavailable.")

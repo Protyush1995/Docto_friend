@@ -13,12 +13,8 @@ from flask import (
     url_for,
 )
 from . import bp
-from ..db_manager import doctor_db_manager, doctor_database_management
+from ..db_manager import doctor_database_management
 
-from ..db_manager import doctor_db_manager
-from ..db_manager.db_operations import DatabaseOperations
-from ..db_manager.doctor_db_manager import insert_doctor_record,find_clinics_by_doctor
-db_ops = DatabaseOperations()
 
 @bp.route("/", methods=["GET"])
 def doctor_login_page():
@@ -57,78 +53,6 @@ def doctor_seed_form():
         user_id=session.get("user_id")
     )
 
-"""
-@bp.route("/doctor-seed", methods=["POST"])
-def doctor_seed_submit():
-    fields = {
-        "doctor_id": request.form.get("doctor_id", "").strip(),
-        "doctor_first_name": request.form.get("doctor_first_name", "").strip(),
-        "doctor_last_name": request.form.get("doctor_last_name", "").strip(),
-        "doctor_qualifications": request.form.get("doctor_qualifications", "").strip(),
-        "clinic_id": request.form.get("clinic_id", "").strip(),
-        "clinic_name": request.form.get("clinic_name", "").strip(),
-        "clinic_fees": request.form.get("clinic_fees", "").strip(),
-        "clinic_address": request.form.get("clinic_address", "").strip(),
-        "clinic_contact": request.form.get("clinic_contact", "").strip(),
-        "doctor_visit_days": request.form.get("doctor_visit_days", "").strip(),
-    }
-
-    try:
-        qr_filename = doctor_db_manager.append_doctor_record(fields)
-        # Store form data in session
-        session['last_submitted_data'] = fields
-        
-        current_app.logger.info("Saved QR: %s", qr_filename)
-        message = f"Saved. CSV updated; QR image: {qr_filename}"
-        dashboard_url = url_for('main.doc_seed_dashboard')  # Update with the correct blueprint name
-        return render_template("doctor_db_seed.html", success_message=message, qr_filename=qr_filename, dashboard_url=dashboard_url)
-        
-    except Exception as e:
-        current_app.logger.exception("Failed to save doctor record")
-        return render_template("doctor_db_seed.html", error_message=str(e)), 500
-
-"""
-
-@bp.route("/doctor-seed", methods=["POST"])
-def doctor_seed_submit():
-    if 'username' not in session:
-        return redirect(url_for('main.login'))
-
-    fields = {
-        "doctor_id": request.form.get("doctor_id", "").strip(),
-        "doctor_first_name": request.form.get("doctor_first_name", "").strip(),
-        "doctor_last_name": request.form.get("doctor_last_name", "").strip(),
-        "doctor_qualifications": request.form.get("doctor_qualifications", "").strip(),
-        "clinic_id": request.form.get("clinic_id", "").strip(),
-        "clinic_name": request.form.get("clinic_name", "").strip(),
-        "clinic_fees": request.form.get("clinic_fees", "").strip(),
-        "clinic_address": request.form.get("clinic_address", "").strip(),
-        "clinic_contact": request.form.get("clinic_contact", "").strip(),
-        "doctor_visit_days": request.form.get("doctor_visit_days", "").strip(),
-    }
-
-    try:
-        qr_filename,record = doctor_db_manager.append_doctor_record(fields)
-        session['last_submitted_data'] = fields
-
-        current_app.logger.info("Saved QR: %s", qr_filename)
-        current_app.logger.info("Saved QR: %s", record)
-        record["username"] = session.get("username")
-        record["user_id"] = session.get("user_id")
-        record_insert_status = insert_doctor_record(record)
-        if record_insert_status["success"]:
-        # Redirect back to dashboard after success
-            return render_template( "doctor_db_seed.html", 
-                                success_message=f"Saved. CSV updated; QR image: {qr_filename}", 
-                                qr_filename=qr_filename, 
-                                dashboard_url=url_for('main.doc_seed_dashboard'), 
-                                username=session.get("username"), 
-                                user_id=session.get("user_id") )
-        else:
-            raise Exception(f"MongoDB Insert Failed: {record_insert_status['error']}")
-    except Exception as e:
-        current_app.logger.exception("Failed to save doctor record")
-        return render_template("doctor_db_seed.html", error_message=str(e)), 500
 
 @bp.route("/clinic-booking", methods=["GET"])
 def clinic_booking():

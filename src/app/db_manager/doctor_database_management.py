@@ -3,6 +3,7 @@ import os
 import re
 from datetime import datetime
 from typing import Dict, Optional
+from .db_operations import DatabaseOperations
 
 # Base app directory (one level up from db_manager)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -13,24 +14,8 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 LICENSE_RE = re.compile(r"^[A-Z0-9\-]{5,20}$", re.I)
 PASS_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
 
-# CSV headers for registration records
-HEADERS = [
-    "doctor_id",        # generated unique id
-    "firstname",
-    "lastname",
-    "email",
-    "license",
-    "password_hash",    # store hashed password (for demo we store placeholder)
-    "created_at",
-    "verified",         # false until email verification
-]
+db = DatabaseOperations()
 
-def ensure_csv():
-    os.makedirs(BASE_DIR, exist_ok=True)
-    if not os.path.exists(CSV_PATH):
-        with open(CSV_PATH, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=HEADERS)
-            writer.writeheader()
 
 def validate_registration(data: Dict) -> Optional[str]:
     firstname = (data.get("firstname") or "").strip()
@@ -39,6 +24,7 @@ def validate_registration(data: Dict) -> Optional[str]:
     license_no = (data.get("license") or "").strip()
     password = data.get("password") or ""
 
+    #Field validity check
     if not firstname:
         return "First name is required"
     if not lastname:
@@ -49,15 +35,13 @@ def validate_registration(data: Dict) -> Optional[str]:
         return "Invalid license number (5-20 alphanumeric/dash chars)"
     if not PASS_RE.match(password):
         return "Password must be at least 8 chars and include letters and numbers"
-    # check uniqueness
-    ensure_csv()
-    with open(CSV_PATH, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            if r.get("email","").lower() == email.lower():
-                return "Email already registered"
-            if r.get("license","").lower() == license_no.lower():
-                return "License number already registered"
+    
+    # uniqueness checks against MongoDB for email and license_no
+    if db.find_by_email(email):
+        return "Email already registered"
+    if db.find_by_license(license_no):
+        return "License number already registered"
+    
     return None
 
 def _generate_doctor_id() -> str:
@@ -76,12 +60,12 @@ def append_registration_record(data: Dict) -> Dict:
     Returns the saved record dict (without plaintext password).
     Raises ValueError on validation errors or Exception on IO errors.
     """
-    print("NEW DATAFRAME REGISTRATION PAGE")
+    print("Preparing NEW user record for database entry!!")
     err = validate_registration(data)
     if err:
         raise ValueError(err)
 
-    ensure_csv()
+
     doctor_id = _generate_doctor_id()
     password_hash = _hash_password(data["password"])
 
@@ -93,31 +77,11 @@ def append_registration_record(data: Dict) -> Dict:
         "license": data["license"].strip(),
         "password_hash": password_hash,
         "created_at": datetime.utcnow().isoformat(),
-        "verified": "false",
     }
 
-    with open(CSV_PATH, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=HEADERS)
-        writer.writerow(record)
+    #inserting data to MongoDb database
+    db.insert_user(user_document=record)
 
     return record
 
-def find_by_email(email: str) -> Optional[Dict]:
-    ensure_csv()
-    email = (email or "").strip().lower()
-    with open(CSV_PATH, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            if r.get("email","").lower() == email:
-                return r
-    return None
 
-def find_by_license(license_no: str) -> Optional[Dict]:
-    ensure_csv()
-    license_no = (license_no or "").strip().lower()
-    with open(CSV_PATH, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            if r.get("license","").lower() == license_no:
-                return r
-    return None
