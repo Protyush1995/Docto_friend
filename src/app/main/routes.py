@@ -20,6 +20,46 @@ from ..db_manager import doctor_database_management
 def doctor_login_page():
     return render_template("doctor_login.html")
 
+@bp.route("/doctor-login", methods=["POST"])
+def api_doctor_login():
+    
+    data = request.get_json() or {}
+    if len(data) == 0 : return jsonify(success=False, error="Empty request!! Contact ADMINISTRATOR!!"), 400
+    
+    #extracting login data
+    identifier = (data.get("identifier") or "").strip()
+    password = data.get("password") or ""
+    remember = bool(data.get("remember"))
+
+    # sanity check
+    if not identifier or not password:
+        return jsonify(success=False, error="missing_credentials"), 400
+
+    try:
+        res = doctor_database_management.authenticate_identifier(identifier, password)
+        if not res.get("success"):
+            # distinguish not found vs invalid credentials
+            err = res.get("error", "invalid_credentials")
+            return jsonify(success=False, error=err), 401
+
+        user = res["user"]
+        
+        # minimal session assignment
+        session.clear()
+        for k, v in user.items(): session[k] = v
+        session["doctor_name"] = f"{session.get('firstname','')} {session.get('lastname','')}".strip()
+        
+        # set a flag for "remember" if requested (requires configuring permanent_session_lifetime)
+        if remember:
+            session.permanent = True
+
+        current_app.logger.info("Doctor %s logged in", session.get("doctor_id"))
+        return jsonify(success=True, redirect=url_for('main.doc_dashboard')), 200
+
+    except Exception:
+        current_app.logger.exception("Login error")
+        return jsonify(success=False, error="internal_error"), 500
+
 @bp.route("/doctor-register", methods=["GET"])
 def doctor_registration_form():
     return render_template("doctor_registration.html")
@@ -53,7 +93,6 @@ def doctor_seed_form():
         user_id=session.get("user_id")
     )
 
-
 @bp.route("/clinic-booking", methods=["GET"])
 def clinic_booking():
     qr = request.args.get("qr", "").strip()
@@ -76,7 +115,6 @@ def clinic_booking():
     days = [d.strip() for d in (record.get("doctor_visit_days") or "").split(",") if d.strip()]
     return render_template("clinic_booking.html", record=record, visit_days=days)
 
-
 @bp.route("/send-otp", methods=["POST"])
 def send_otp():
     mobile = request.form.get("mobile", "").strip()
@@ -89,7 +127,6 @@ def send_otp():
     # For testing we return otp; replace with SMS provider in production
     return jsonify({"otp": otp}), 200
 
-
 @bp.route("/verify-otp", methods=["POST"])
 def verify_otp():
     otp = request.form.get("otp", "").strip()
@@ -100,7 +137,6 @@ def verify_otp():
         session["otp_verified"] = True
         return jsonify({"verified": True}), 200
     return jsonify({"verified": False}), 400
-
 
 @bp.route("/submit-booking", methods=["POST"])
 def submit_booking():
@@ -184,35 +220,27 @@ def submit_booking():
     current_app.logger.info("Saved booking %s to %s", patient_id, booking_filename)
     return jsonify({"patient_id": patient_id, "booking_file": booking_filename}), 200
 
-
-@bp.route('/doc_seed_dashboard')
-def doc_seed_dashboard():
-    username = session.get('username')
-    user_id = session.get('user_id')
+@bp.route('/doc_dashboard')
+def doc_dashboard():
+    username = session.get('doctor_name')
+    user_id = session.get('doctor_id')
 
     if not username:
         return redirect(url_for('main.login'))
     
-    doctor_data = session.get('last_submitted_data', {})
-    clinics_list = find_clinics_by_doctor(user_id)
-    doctor_data['clinics'] = clinics_list
+    doctor_data = dict(session)
+    print("Printing doctor data from routes.py doc_dashboard")
+    print(doctor_data)
+    #clinics_list = find_clinics_by_doctor(user_id)
+    #doctor_data['clinics'] = clinics_list
    
     return render_template(
         'doctor_dashboard.html',
         username=username,
         user_id=user_id,
-        doctor_data=doctor_data,
-        clinics = clinics_list
+        doctor_data=doctor_data
+        #clinics = clinics_list
     )
-
-@bp.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form.get('username')  # Change to your form field names
-        password = request.form.get('password')
-        user_id = db_ops.insert_user(username, password)  # Handle errors as needed
-        return redirect(url_for('main.login'))  # Redirect to login after registration
-    return render_template('register.html')
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -234,4 +262,4 @@ def login():
 @bp.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.clear()  # Clear the session
-    return redirect(url_for('main.login'))  # Redirect to login page
+    return redirect(url_for('main.doctor_login_page'))  # Redirect to login page

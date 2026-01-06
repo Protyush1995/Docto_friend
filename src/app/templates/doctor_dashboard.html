@@ -167,13 +167,13 @@
             </strong>
             </h2>
             <p>{{ doctor_data.doctor_qualifications }}</p>
-            <p class="sub">Email: {{ doctor_data.clinic_name }}@example.com · Phone: {{ doctor_data.clinic_contact }}</p>
+            <p class="sub">Email: {{ doctor_data.email }} · Phone: {{ doctor_data.contact_number }}</p>
         </div>
     </div>
 
     <div style="margin-top:12px; color:var(--muted); font-size:13px;">
-        <div><strong>Member since:</strong> {{ doctor_data.doctor_id }}</div>
-        <div style="margin-top:6px"><strong>License:</strong> <strong>{{ user_id  }} 
+        <div><strong>Member since:</strong> {{ doctor_data.created_at }}</div>
+        <div style="margin-top:6px"><strong>License:</strong> <strong>{{ doctor_data.license  }} 
             </strong></div>
         <div style="margin-top:8px" class="action-row">
             

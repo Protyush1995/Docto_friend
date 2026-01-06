@@ -5,11 +5,6 @@ from datetime import datetime
 from typing import Dict, Optional
 from .db_operations import DatabaseOperations
 
-# Base app directory (one level up from db_manager)
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# CSV stored inside db_manager folder
-CSV_PATH = os.path.join(BASE_DIR, "doctor_credentials_dataframe_database.csv")
-
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 LICENSE_RE = re.compile(r"^[A-Z0-9\-]{5,20}$", re.I)
 PASS_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
@@ -47,7 +42,7 @@ def validate_registration(data: Dict) -> Optional[str]:
 def _generate_doctor_id() -> str:
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S")
     rand = f"{os.urandom(2).hex()}"
-    return f"D{ts}{rand}"
+    return f"DOC_ID_{ts}{rand}"
 
 def _hash_password(password: str) -> str:
     # Placeholder: replace with bcrypt or passlib in production
@@ -84,4 +79,38 @@ def append_registration_record(data: Dict) -> Dict:
 
     return record
 
+def verify_password(plain: str, stored_hash: str) -> bool:
+    if not plain or not stored_hash:
+        return False
+    return _hash_password(plain) == stored_hash
+
+def authenticate_identifier(identifier: str, password: str) -> Dict:
+    """
+    identifier: email or license string
+    password: plaintext password provided by user
+
+    Returns a dict: { "success": bool, "error": str (if any), "user": sanitized_record (if success) }
+    """
+    ident = (identifier or "").strip()
+    if not ident or not password:
+        return {"success": False, "error": "MISSING CREDENNTIALS!!!"}
+
+    # determine lookup
+    if EMAIL_RE.match(ident):
+        rec = db.find_by_email(ident)
+    else:
+        rec = db.find_by_license(ident)
+
+    if not rec:
+        return {"success": False, "error": "Error !! NO USER FOUND!!"}
+
+    #Checking with hashed password
+    stored_hash = rec.get("password_hash","")
+    if stored_hash == "" :  return {"success": False, "error": "Error !! CONTACT ADMNISTRATOR !! Password Absent!!"}
+    if verify_password(password, stored_hash):
+        # sanitize: do not return plaintext password or hash
+        user = {k: v for k, v in rec.items() if k not in ("password", "password_hash","_id")}
+        return {"success": True, "user": user}
+    
+    return {"success": False, "error": "invalid_credentials"}
 
