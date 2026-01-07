@@ -51,8 +51,10 @@
     .top {
       display:flex; gap:16px; align-items:stretch; margin-bottom:18px;
     }
+    /* replace the existing .profile-card rule with: */
     .profile-card{
-      flex:0 0 320px;
+      flex: 0 0 50%;          /* occupy 50% of the top row on desktop */
+      max-width: 50%;
       background:var(--card-bg);
       border-radius:var(--border-radius);
       padding:18px;
@@ -83,9 +85,13 @@
       box-shadow:none;
     }
 
+    /* ensure the stats container uses remaining 50% */
     .stats {
-      flex:1;
-      display:flex; gap:12px; align-items:stretch;
+      flex: 0 0 50%;
+      max-width: 50%;
+      display:flex;
+      gap:12px;
+      align-items:stretch;
     }
     .stat {
       flex:1;
@@ -131,10 +137,11 @@
 
     footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px; }
 
-    /* Responsive tweaks */
+    /* keep mobile behavior: stack and full width under 760px */
     @media (max-width:760px){
       .top{ flex-direction:column; }
-      .profile-card{ flex:1 1 auto; width:100%; }
+      .profile-card{ flex:1 1 auto; max-width:100%; width:100%; }
+      .stats{ flex:1 1 auto; max-width:100%; width:100%; }
     }
   </style>
 </head>
@@ -186,37 +193,37 @@
       </aside>
 
       <div class="stats stats-equal" style="display:flex; gap:12px; align-items:stretch; flex-wrap:wrap;">
-  <div class="left-panel" style="flex:1; min-width:220px; display:flex; flex-direction:column;">
-    <!-- Profile completion pie chart (inside stacked column) -->
-    <div class="stat" id="profileCompletionInline" style="padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px; margin:0; flex:1;">
-      <svg id="profilePie" width="120" height="120" viewBox="0 0 42 42" style="transform:rotate(-90deg);">
-        <circle cx="21" cy="21" r="15.91549431" fill="transparent" stroke="#E6EEF9" stroke-width="6"></circle>
-        <circle id="profileArc" cx="21" cy="21" r="15.91549431" fill="transparent" stroke="#1ABC9C" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 100"></circle>
-      </svg>
-      <div style="text-align:center;">
-        <div id="profilePercent" style="font-weight:700; color:var(--primary); font-size:16px;">0%</div>
-        <div style="font-size:13px; color:var(--muted);">Profile completed</div>
+        <div class="left-panel" style="flex:1; min-width:220px; display:flex; flex-direction:column;">
+          <!-- Profile completion pie chart (inside stacked column) -->
+          <div class="stat" id="profileCompletionInline" style="padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px; margin:0; flex:1;">
+            <svg id="profilePie" width="120" height="120" viewBox="0 0 42 42" style="transform:rotate(-90deg);">
+              <circle cx="21" cy="21" r="15.91549431" fill="transparent" stroke="#E6EEF9" stroke-width="6"></circle>
+              <circle id="profileArc" cx="21" cy="21" r="15.91549431" fill="transparent" stroke="#1ABC9C" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 100"></circle>
+            </svg>
+            <div style="text-align:center;">
+              <div id="profilePercent" style="font-weight:700; color:var(--primary); font-size:16px;">0%</div>
+              <div style="font-size:13px; color:var(--muted);">Profile completed</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-panel" style="flex:0 0 220px; display:flex; flex-direction:column; gap:12px;">
+          <div class="stat" style="padding:12px;">
+            <h3 id="totalClinics" style="margin:0 0 6px 0; font-size:20px;">3</h3>
+            <p style="margin:0; font-size:13px; color:var(--muted);">Total Clinics Registered</p>
+          </div>
+
+          <div class="stat" style="padding:12px;">
+            <h3 id="upcomingAppointments" style="margin:0 0 6px 0; font-size:20px;">12</h3>
+            <p style="margin:0; font-size:13px; color:var(--muted);">Upcoming Appointments</p>
+          </div>
+
+          <div class="stat" style="padding:12px;">
+            <h3 id="patientsToday" style="margin:0 0 6px 0; font-size:20px;">4</h3>
+            <p style="margin:0; font-size:13px; color:var(--muted);">Patients Today</p>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-
-  <div class="right-panel" style="flex:0 0 220px; display:flex; flex-direction:column; gap:12px;">
-    <div class="stat" style="padding:12px;">
-      <h3 id="totalClinics" style="margin:0 0 6px 0; font-size:20px;">3</h3>
-      <p style="margin:0; font-size:13px; color:var(--muted);">Total Clinics Registered</p>
-    </div>
-
-    <div class="stat" style="padding:12px;">
-      <h3 id="upcomingAppointments" style="margin:0 0 6px 0; font-size:20px;">12</h3>
-      <p style="margin:0; font-size:13px; color:var(--muted);">Upcoming Appointments</p>
-    </div>
-
-    <div class="stat" style="padding:12px;">
-      <h3 id="patientsToday" style="margin:0 0 6px 0; font-size:20px;">4</h3>
-      <p style="margin:0; font-size:13px; color:var(--muted);">Patients Today</p>
-    </div>
-  </div>
-</div>
 
 
 
