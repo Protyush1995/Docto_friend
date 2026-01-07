@@ -129,6 +129,10 @@
         <input id="license" name="license" type="text" placeholder="LICENSE123" required>
         <div class="muted-small">Format: letters, numbers, dashes; 5–20 chars.</div>
 
+        <label for="mobile">Mobile number</label>
+        <input id="mobile" name="mobile" type="text" placeholder="+1234567890" required>
+        <div class="muted-small">Include country code (e.g., +1). Digits only, 7–15 characters.</div>
+
         <label for="password">Password</label>
         <input id="password" name="password" type="password" placeholder="Create a password" required>
         <div class="muted-small">Min 8 chars, include a number and a letter.</div>
@@ -153,6 +157,7 @@
     const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const LICENSE_RE = /^[A-Z0-9\-]{5,20}$/i;
     const PASS_RE = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+    const MOBILE_RE = /^\+?\d{7,15}$/;
 
     function showError(msg){
       const el = document.getElementById('error');
@@ -167,6 +172,7 @@
       const lastname = document.getElementById('lastname').value.trim();
       const email = document.getElementById('email').value.trim();
       const license = document.getElementById('license').value.trim();
+      const mobile = document.getElementById('mobile').value.trim();
       const password = document.getElementById('password').value;
       const confirm = document.getElementById('confirm').value;
       const terms = document.getElementById('terms').checked;
@@ -175,6 +181,7 @@
       if(!lastname) return showError('Last name is required');
       if(!EMAIL_RE.test(email)) return showError('Enter a valid email');
       if(!LICENSE_RE.test(license)) return showError('Enter a valid license number (5–20 alphanumeric/dash chars)');
+      if(!MOBILE_RE.test(mobile)) return showError('Enter a valid mobile number (include country code, 7–15 digits)');
       if(!PASS_RE.test(password)) return showError('Password must be ≥8 chars and include letters and numbers');
       if(password !== confirm) return showError('Passwords do not match');
       if(!terms) return showError('You must accept the terms');
@@ -184,6 +191,7 @@
         lastname: lastname,
         email,
         license,
+        mobile,
         password
       };
 
@@ -196,7 +204,7 @@
         const body = await res.json().catch(()=>({}));
         if(res.ok){
           alert('Registration successful. Please check your email for verification instructions.');
-          // location.href = 'index.html';
+          location.href = "{{ url_for('main.doctor_login_page') }}";
         } else {
           showError(body.error || 'Registration failed — try again');
         }

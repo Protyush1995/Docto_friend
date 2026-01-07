@@ -40,8 +40,10 @@ def validate_registration(data: Dict) -> Optional[str]:
     return None
 
 def _generate_doctor_id() -> str:
-    ts = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-    rand = f"{os.urandom(2).hex()}"
+    # numeric timestamp (UTC) + cryptographically random 8-digit number
+    ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[:-3]  # up to milliseconds, digits only
+    rand_int = int.from_bytes(os.urandom(4), "big") % 10_000_000  # 0..9_999_999
+    rand = f"{rand_int:07d}"  # fixed width 7 digits to reduce collision risk
     return f"DOC_ID_{ts}{rand}"
 
 def _hash_password(password: str) -> str:
@@ -70,8 +72,15 @@ def append_registration_record(data: Dict) -> Dict:
         "lastname": data["lastname"].strip(),
         "email": data["email"].strip().lower(),
         "license": data["license"].strip(),
+        "home_address":"",
+        "primary_contact_number":data["mobile"].strip(),
+        "secondary_contact_number":0,
         "password_hash": password_hash,
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.utcnow().date().isoformat(),
+        "qualifications":"",
+        "expertise":"",
+        "practising_or_fellowship":"",
+        "achievements":"",
     }
 
     #inserting data to MongoDb database

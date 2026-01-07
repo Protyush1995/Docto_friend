@@ -43,11 +43,12 @@ def api_doctor_login():
             return jsonify(success=False, error=err), 401
 
         user = res["user"]
-        
+        print("Printing user data returned")
+        print(user)
         # minimal session assignment
         session.clear()
         for k, v in user.items(): session[k] = v
-        session["doctor_name"] = f"{session.get('firstname','')} {session.get('lastname','')}".strip()
+        #session["doctor_name"] = f"{session.get('firstname','')} {session.get('lastname','')}".strip()
         
         # set a flag for "remember" if requested (requires configuring permanent_session_lifetime)
         if remember:
@@ -77,20 +78,23 @@ def register_route():
         current_app.logger.exception("Failed to save registration")
         return jsonify(success=False, error="internal_error"), 500
 
+
 @bp.route("/doctor-forgot-password", methods=["GET"])
 def doctor_forgot_password_page():
     return render_template("doctor_forgot_password.html")
 
-@bp.route("/doctor-seed", methods=["GET"])
-def doctor_seed_form():
+@bp.route("/doctor-clinic-seeding", methods=["GET"])
+def doctor_clinic_seed_form():
     # Ensure user is logged in
-    if 'username' not in session:
-        return redirect(url_for('main.login'))
+    if 'doctor_id' not in session:
+        print("from doctor_clinic_seed_form......................")
+        print(session)
+        return redirect(url_for('main.doctor_login_page'))
 
     return render_template(
-        "doctor_db_seed.html",
-        username=session.get("username"),
-        user_id=session.get("user_id")
+        "doctor_add_clinic.html",
+        username=session.get("doctor_id"),
+        doctor_data=dict(session)
     )
 
 @bp.route("/clinic-booking", methods=["GET"])
@@ -222,11 +226,10 @@ def submit_booking():
 
 @bp.route('/doc_dashboard')
 def doc_dashboard():
-    username = session.get('doctor_name')
     user_id = session.get('doctor_id')
 
-    if not username:
-        return redirect(url_for('main.login'))
+    if not user_id:
+        return redirect(url_for('main.doctor_login_page'))
     
     doctor_data = dict(session)
     print("Printing doctor data from routes.py doc_dashboard")
@@ -236,28 +239,10 @@ def doc_dashboard():
    
     return render_template(
         'doctor_dashboard.html',
-        username=username,
         user_id=user_id,
         doctor_data=doctor_data
         #clinics = clinics_list
     )
-
-@bp.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = db_ops.find_user(username, password)
-
-        if user:
-            session['username'] = user['doc_username']
-            session['user_id'] = user['_id']   # Store the ID
-            print(f"session['username']: {session['username']}  session['user_id']: {session['user_id']}   ")
-            return redirect(url_for('main.doc_seed_dashboard'))
-        else:
-           return render_template('login.html', error="Invalid username or password")
-
-    return render_template('login.html')
 
 @bp.route('/logout', methods=['GET', 'POST'])
 def logout():

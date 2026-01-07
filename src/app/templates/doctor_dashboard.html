@@ -68,6 +68,7 @@
     .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 
     .profile-meta h2{ margin:0; font-size:18px; color:var(--primary); }
+    .profile-meta h3{ margin:0; font-size:10px; color:var(--primary); }
     .profile-meta p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
 
     .action-row{ margin-top:12px; display:flex; gap:8px; }
@@ -150,90 +151,114 @@
       <div>
         <button class="btn ghost">Settings</button>
         <form action="{{ url_for('main.logout') }}" method="POST">
-    <button type="submit" class="btn">Logout</button>
-</form>
+            <button type="submit" class="btn">Logout</button>
+        </form>
       </div>
     </header>
-
+    
+    <script id="doctorDataJson" type="application/json">{{ doctor_data | tojson | safe }}</script>
+    
     <section class="top">
 
       <aside class="profile-card card">
-    <div class="profile-row">
-        <div class="avatar">
-            <img src="{{ url_for('static', filename='image/doc_placeholder.png') }}" alt="Doctor">
-        </div>
-        <div class="profile-meta">
-            <h2>Dr. <strong>{{ username }} 
-            </strong>
-            </h2>
-            <p>{{ doctor_data.doctor_qualifications }}</p>
-            <p class="sub">Email: {{ doctor_data.email }} · Phone: {{ doctor_data.contact_number }}</p>
-        </div>
+          <div class="profile-row">
+              <div class="avatar">
+                  <img src="{{ url_for('static', filename='image/doc_placeholder.png') }}" alt="Doctor">
+              </div>
+              <div class="profile-meta">
+                  <h3><strong>ID :</strong> {{user_id}}</h3>
+                  <h2>Dr. <strong>{{ doctor_data.lastname }} </strong></h2>
+                  <p>{{ doctor_data.doctor_qualifications }}</p>
+                  <p class="sub">Email: {{ doctor_data.email }} · Phone: {{ doctor_data.primary_contact_number }}</p>
+              </div>
+          </div>
+
+          <div style="margin-top:12px; color:var(--muted); font-size:13px;">
+              <div><strong>Member since:</strong> {{ doctor_data.created_at }}</div>
+              <div style="margin-top:6px"><strong>License:</strong> <strong>{{ doctor_data.license  }} 
+                  </strong></div>
+              <div style="margin-top:8px" class="action-row">
+                  
+                  <a href="{{ url_for('main.doctor_clinic_seed_form') }}" class="btn">Add Clinics</a>
+                  <a href="{{ url_for('main.doctor_clinic_seed_form') }}" class="btn ghost">Edit Profile</a>
+              </div>
+          </div>
+      </aside>
+
+      <div class="stats stats-equal" style="display:flex; gap:12px; align-items:stretch; flex-wrap:wrap;">
+  <div class="left-panel" style="flex:1; min-width:220px; display:flex; flex-direction:column;">
+    <!-- Profile completion pie chart (inside stacked column) -->
+    <div class="stat" id="profileCompletionInline" style="padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px; margin:0; flex:1;">
+      <svg id="profilePie" width="120" height="120" viewBox="0 0 42 42" style="transform:rotate(-90deg);">
+        <circle cx="21" cy="21" r="15.91549431" fill="transparent" stroke="#E6EEF9" stroke-width="6"></circle>
+        <circle id="profileArc" cx="21" cy="21" r="15.91549431" fill="transparent" stroke="#1ABC9C" stroke-width="6" stroke-linecap="round" stroke-dasharray="0 100"></circle>
+      </svg>
+      <div style="text-align:center;">
+        <div id="profilePercent" style="font-weight:700; color:var(--primary); font-size:16px;">0%</div>
+        <div style="font-size:13px; color:var(--muted);">Profile completed</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel" style="flex:0 0 220px; display:flex; flex-direction:column; gap:12px;">
+    <div class="stat" style="padding:12px;">
+      <h3 id="totalClinics" style="margin:0 0 6px 0; font-size:20px;">3</h3>
+      <p style="margin:0; font-size:13px; color:var(--muted);">Total Clinics Registered</p>
     </div>
 
-    <div style="margin-top:12px; color:var(--muted); font-size:13px;">
-        <div><strong>Member since:</strong> {{ doctor_data.created_at }}</div>
-        <div style="margin-top:6px"><strong>License:</strong> <strong>{{ doctor_data.license  }} 
-            </strong></div>
-        <div style="margin-top:8px" class="action-row">
-            
-            <a href="{{ url_for('main.doctor_seed_form') }}" class="btn">Add Clinics</a>
-            <button class="btn ghost">Message</button>
-        </div>
+    <div class="stat" style="padding:12px;">
+      <h3 id="upcomingAppointments" style="margin:0 0 6px 0; font-size:20px;">12</h3>
+      <p style="margin:0; font-size:13px; color:var(--muted);">Upcoming Appointments</p>
     </div>
-</aside>
-      <div class="stats">
-        <div class="stat">
-          <h3 id="totalClinics">3</h3>
-          <p>Total Clinics Registered</p>
-        </div>
-        <div class="stat">
-          <h3 id="upcomingAppointments">12</h3>
-          <p>Upcoming Appointments</p>
-        </div>
-        <div class="stat">
-          <h3 id="patientsToday">4</h3>
-          <p>Patients Today</p>
-        </div>
-      </div>
+
+    <div class="stat" style="padding:12px;">
+      <h3 id="patientsToday" style="margin:0 0 6px 0; font-size:20px;">4</h3>
+      <p style="margin:0; font-size:13px; color:var(--muted);">Patients Today</p>
+    </div>
+  </div>
+</div>
+
+
+
+
     </section>
 
     <section class="section">
       <h2>Your Clinics</h2>
-<div class="grid">
+      <div class="grid">
 
-    {% for clinic in clinics %}
-    <div class="clinic-card">
+          {% for clinic in clinics %}
+          <div class="clinic-card">
 
-        <div class="clinic-head">
-            <div class="clinic-avatar">
-                {{ clinic.clinic_name[0] }}
-            </div>
+              <div class="clinic-head">
+                  <div class="clinic-avatar">
+                      {{ clinic.clinic_name[0] }}
+                  </div>
 
-            <div class="clinic-meta">
-                <h3>{{ clinic.clinic_name }}</h3>
-                <p>ID: {{ clinic.clinic_id }}</p>
-            </div>
-        </div>
+                  <div class="clinic-meta">
+                      <h3>{{ clinic.clinic_name }}</h3>
+                      <p>ID: {{ clinic.clinic_id }}</p>
+                  </div>
+              </div>
 
-        <div class="clinic-info">
-            <div class="chip">{{ clinic.clinic_address }}</div>
-            <div class="chip">Fees: {{ clinic.clinic_fees }}</div>
-            <div class="chip">Contact: {{ clinic.clinic_contact }}</div>
-            <div class="chip">Visit Days: {{ clinic.doctor_visit_days }}</div>
-            <div class="chip">Doctor: {{ clinic.doctor_first_name }} {{ clinic.doctor_last_name }}</div>
-            <div class="chip">Qualifications: {{ clinic.doctor_qualifications }}</div>
-        </div>
+              <div class="clinic-info">
+                  <div class="chip">{{ clinic.clinic_address }}</div>
+                  <div class="chip">Fees: {{ clinic.clinic_fees }}</div>
+                  <div class="chip">Contact: {{ clinic.clinic_contact }}</div>
+                  <div class="chip">Visit Days: {{ clinic.doctor_visit_days }}</div>
+                  <div class="chip">Doctor: {{ clinic.doctor_first_name }} {{ clinic.doctor_last_name }}</div>
+                  <div class="chip">Qualifications: {{ clinic.doctor_qualifications }}</div>
+              </div>
 
-        <div style="margin-top:12px; display:flex; gap:8px;">
-            <button class="btn">View</button>
-            <button class="btn ghost">Edit</button>
-        </div>
+              <div style="margin-top:12px; display:flex; gap:8px;">
+                  <button class="btn">View</button>
+                  <button class="btn ghost">Edit</button>
+              </div>
 
-    </div>
-    {% endfor %}
+          </div>
+          {% endfor %}
 
-</div>
+      </div>
 
     </section>
 
@@ -248,7 +273,61 @@
     document.getElementById('upcomingAppointments').textContent = 12;
     document.getElementById('patientsToday').textContent = 4;
   </script>
-    
+  <script>
+      (function(){
+        // Parse server-rendered JSON
+        const script = document.getElementById('doctorDataJson');
+        let doctor = {};
+        try {
+          if(script && script.textContent.trim()){
+            doctor = JSON.parse(script.textContent);
+          }
+        } catch (err) {
+          console.warn('Failed to parse doctorDataJson', err);
+          doctor = {};
+        }
+
+        // Emptiness rules
+        function isEmpty(v){
+          if (v === null || v === undefined) return true;
+          if (typeof v === 'string') {
+            if (v.trim() === '') return true;
+            if (v.trim() === '0') return true;
+            return false;
+          }
+          if (typeof v === 'number') return v === 0;
+          if (Array.isArray(v)) return v.length === 0;
+          if (typeof v === 'object') return Object.keys(v).length === 0;
+          return false;
+        }
+
+        // Exclude keys that shouldn't count (adjust as needed)
+        const exclude = new Set(['id','created_at','updated_at']);
+
+        const keys = Object.keys(doctor).filter(k => !exclude.has(k));
+        const total = keys.length || 0;
+        let filled = 0;
+        keys.forEach(k => { if(!isEmpty(doctor[k])) filled++; });
+
+        const percent = total === 0 ? 0 : Math.round((filled/total)*100);
+
+        // Update SVG pie: stroke-dasharray technique
+        // Circle circumference normalized to 100 => stroke-dasharray = "<percent> 100"
+        // The circle r above yields circumference used as scale; but using 100-based simplifies.
+        const arc = document.getElementById('profileArc');
+        const percentEl = document.getElementById('profilePercent');
+        if(arc && percentEl){
+          // set dasharray: percent then remainder
+          arc.setAttribute('stroke-dasharray', percent + ' ' + (100 - percent));
+          percentEl.textContent = percent + '%';
+        }
+
+        // Expose diagnostics
+        window.__doctorProfileCompletion = { total, filled, percent, keys, doctor };
+      })();
+  </script>
+
+
 
 </body>
 
