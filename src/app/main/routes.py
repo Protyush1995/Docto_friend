@@ -113,7 +113,7 @@ def doctor_clinic_seed_form():
 
         # TODO: Save to DB here
 
-        return "Clinic saved successfully"
+        return redirect(url_for('main.doctor_clinic_seed_form'))
 
     # GET → show form
     return render_template(
