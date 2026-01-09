@@ -138,15 +138,21 @@
 <body>
   <div class="container">
 
-    <header>
-      <div class="brand">
-        <div class="logo">DD</div>
-        <div>
-          <h1>Add Clinic</h1>
-          <div class="sub">Fill out the form to register a new clinic</div>
-        </div>
-      </div>
-    </header>
+<!-- UPDATED HEADER --> 
+ <header> 
+  <div class="brand"> 
+    <div class="logo">DD</div> 
+    <div> <h1>Add Clinic</h1> 
+      <div class="sub">Fill out the form to register a new clinic</div>
+     </div> 
+    </div>
+     <div style="display:flex; gap:10px; align-items:center;"> 
+      <a href="{{ url_for('main.doc_dashboard') }}" class="btn ghost">← Home</a> 
+      <form action="{{ url_for('main.logout') }}" method="POST" style="margin:0;"> 
+        <button type="submit" class="btn">Logout</button> 
+      </form>
+     </div>
+     </header>
 
     <section class="card">
       <form method="POST" action="/doctor-clinic-seeding">
