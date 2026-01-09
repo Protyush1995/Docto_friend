@@ -14,7 +14,9 @@ from flask import (
 )
 from . import bp
 from ..db_manager import doctor_database_management
+from ..db_manager import db_operations
 
+clinic_db = db_operations.ClinicDB()
 
 @bp.route("/", methods=["GET"])
 def doctor_login_page():
@@ -43,8 +45,7 @@ def api_doctor_login():
             return jsonify(success=False, error=err), 401
 
         user = res["user"]
-        print("Printing user data returned")
-        print(user)
+        
         # minimal session assignment
         session.clear()
         for k, v in user.items(): session[k] = v
@@ -83,39 +84,57 @@ def register_route():
 def doctor_forgot_password_page():
     return render_template("doctor_forgot_password.html")
 
+
+
 @bp.route("/doctor-clinic-seeding", methods=["GET", "POST"])
 def doctor_clinic_seed_form():
-    # Ensure user is logged in
     if 'doctor_id' not in session:
         return redirect(url_for('main.doctor_login_page'))
 
     if request.method == "POST":
+        doctor_id = session.get("doctor_id")
+
         # Extract form data
         clinic_name = request.form.get("clinicName")
-        house_no = request.form.get("houseNo")
-        street = request.form.get("street")
-        post_office = request.form.get("postOffice")
-        police_station = request.form.get("policeStation")
-        city = request.form.get("city")
-        pin_code = request.form.get("pinCode")
-        state = request.form.get("state")
-        country = request.form.get("country")
-        clinic_fees = request.form.get("clinicFees")
         clinic_contact = request.form.get("clinicContact")
-
-        # Extract schedule checkboxes
-        schedule = {
-            key: True for key in request.form.keys() if "_" in key
+        clinic_fees = request.form.get("clinicFees")
+        clinic_id = doctor_database_management._generate_clinic_id(clinic_name)
+        address = {
+            "house_no": request.form.get("houseNo"),
+            "street": request.form.get("street"),
+            "post_office": request.form.get("postOffice"),
+            "police_station": request.form.get("policeStation"),
+            "city": request.form.get("city"),
+            "pin_code": request.form.get("pinCode"),
+            "state": request.form.get("state"),
+            "country": request.form.get("country")
         }
 
-        print("Received clinic data:", clinic_name)
-        print("Schedule:", schedule)
+        # Convert schedule checkboxes into JSON matrix
+        schedule = {}
+        for day in ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]:
+            schedule[day] = []
 
-        # TODO: Save to DB here
+        for key in request.form.keys():
+            if "_" in key:
+                day, hour = key.split("_")
+                schedule[day].append(hour)
+
+        clinic_data = {
+            "clinic_id": clinic_id,
+            "clinic_name": clinic_name,
+            "clinic_contact": clinic_contact,
+            "clinic_fees": clinic_fees,
+            "address": address,
+            "schedule": schedule
+        }
+
+        # Save to DB
+        clinic_id = clinic_db.add_clinic(doctor_id, clinic_data)
+        print("Inserted clinic:", clinic_id)
 
         return redirect(url_for('main.doctor_clinic_seed_form'))
 
-    # GET → show form
     return render_template(
         "doctor_add_clinic.html",
         username=session.get("doctor_id"),
@@ -257,8 +276,7 @@ def doc_dashboard():
         return redirect(url_for('main.doctor_login_page'))
     
     doctor_data = dict(session)
-    print("Printing doctor data from routes.py doc_dashboard")
-    print(doctor_data)
+
     #clinics_list = find_clinics_by_doctor(user_id)
     #doctor_data['clinics'] = clinics_list
    
