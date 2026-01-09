@@ -83,14 +83,39 @@ def register_route():
 def doctor_forgot_password_page():
     return render_template("doctor_forgot_password.html")
 
-@bp.route("/doctor-clinic-seeding", methods=["GET"])
+@bp.route("/doctor-clinic-seeding", methods=["GET", "POST"])
 def doctor_clinic_seed_form():
     # Ensure user is logged in
     if 'doctor_id' not in session:
-        print("from doctor_clinic_seed_form......................")
-        print(session)
         return redirect(url_for('main.doctor_login_page'))
 
+    if request.method == "POST":
+        # Extract form data
+        clinic_name = request.form.get("clinicName")
+        house_no = request.form.get("houseNo")
+        street = request.form.get("street")
+        post_office = request.form.get("postOffice")
+        police_station = request.form.get("policeStation")
+        city = request.form.get("city")
+        pin_code = request.form.get("pinCode")
+        state = request.form.get("state")
+        country = request.form.get("country")
+        clinic_fees = request.form.get("clinicFees")
+        clinic_contact = request.form.get("clinicContact")
+
+        # Extract schedule checkboxes
+        schedule = {
+            key: True for key in request.form.keys() if "_" in key
+        }
+
+        print("Received clinic data:", clinic_name)
+        print("Schedule:", schedule)
+
+        # TODO: Save to DB here
+
+        return "Clinic saved successfully"
+
+    # GET → show form
     return render_template(
         "doctor_add_clinic.html",
         username=session.get("doctor_id"),
