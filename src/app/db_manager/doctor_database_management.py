@@ -46,6 +46,17 @@ def _generate_doctor_id() -> str:
     rand = f"{rand_int:07d}"  # fixed width 7 digits to reduce collision risk
     return f"DOC_ID_{ts}{rand}"
 
+
+
+def _generate_clinic_id(clinic_name: str) -> str:
+    # numeric timestamp (UTC) + cryptographically random 8-digit number
+    ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[:-3]  # up to milliseconds, digits only
+    rand_int = int.from_bytes(os.urandom(4), "big") % 10_000_000  # 0..9_999_999
+    rand = f"{rand_int:07d}"  # fixed width 7 digits to reduce collision risk
+    return f"CLINIC_ID_{clinic_name}_{rand}"
+
+
+
 def _hash_password(password: str) -> str:
     # Placeholder: replace with bcrypt or passlib in production
     import hashlib

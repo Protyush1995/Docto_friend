@@ -16,7 +16,9 @@
       --input-shadow: 0 6px 18px rgba(0,64,255,0.06);
       --border-radius: 12px;
     }
-    *{box-sizing:border-box}
+
+    *{ box-sizing:border-box; }
+
     body{
       margin:0;
       font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
@@ -25,10 +27,12 @@
       color:#0b1226;
       padding:24px;
     }
+
     .container{ max-width:1000px; margin:0 auto; }
 
     header{ display:flex; align-items:center; gap:16px; margin-bottom:20px; }
     .brand{ display:flex; align-items:center; gap:12px; }
+
     .logo {
       width:56px; height:56px; border-radius:10px;
       background:linear-gradient(135deg,var(--primary),#0066ff);
@@ -36,6 +40,7 @@
       color:#fff; font-weight:700; box-shadow: var(--card-shadow);
       font-size:20px;
     }
+
     h1{ margin:0; font-size:20px; color:var(--primary); }
     .sub { color:var(--muted); font-size:13px; margin-top:4px; }
 
@@ -48,7 +53,8 @@
     }
 
     form{ display:flex; flex-direction:column; gap:16px; }
-    label{ font-size:14px; color:var(--muted); margin-bottom:4px; font-weight: bold;}
+    label{ font-size:14px; color:var(--muted); margin-bottom:4px; font-weight: bold; }
+
     input, textarea{
       padding:8px;
       border-radius:6px;
@@ -58,270 +64,205 @@
       width:100%;
     }
 
-    table {
-      border-collapse: collapse;
-      width:100%;
-      margin-top:10px;
-    }
-    th, td {
-      border:1px solid rgba(0,64,255,0.12);
-      padding:6px;
-      text-align:left;
-      font-size:12px;
-    }
-    th {
-      background:linear-gradient(180deg, #eef4ff, #ffffff);
-      color:var(--primary);
-      font-weight:600;
-    }
-    th input[type="checkbox"] { margin-bottom:4px; }
-    td input[type="text"] { width:90%; font-size:11px; }
-    
     .btn {
       padding:10px 14px; border-radius:8px; border:none; cursor:pointer;
       background:linear-gradient(180deg,var(--primary),#0033cc); color:#fff; font-weight:600;
       font-size:14px;
     }
-    .ghost {
-      background:transparent; color:var(--primary); border:1px solid rgba(0,64,255,0.12);
-    }
-    footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px; }
 
-    
-    .schedule-table { border-collapse: collapse; width:100%; margin-top:10px; }
-    .schedule-table th, .schedule-table td {
-      border:1px solid rgba(0,64,255,0.12);
-      padding:6px;
-      text-align:center;
-      vertical-align:middle;
-      height:48px;
-    }
-    .schedule-table th { background:linear-gradient(180deg,#eef4ff,#ffffff); color:var(--primary); font-weight:600; font-size:13px; }
-    .time-col { text-align:left; padding-left:10px; font-weight:600; color:var(--muted); }
+    /* ---------------------- NEW SCHEDULING GRID ---------------------- */
 
-    /* checkbox fills visually but stays non-positioned */
-    .cell-checkbox { display:flex; align-items:center; justify-content:center; padding:0; }
-    .cell-checkbox input[type="checkbox"]{
-      width:86%;
-      height:86%;
-      appearance:none;
-      -webkit-appearance:none;
-      background:#fff;
-      border:1px solid rgba(0,64,255,0.12);
-      border-radius:6px;
-      cursor:pointer;
-      display:inline-block;
-      line-height:1;
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: 120px repeat(7, 1fr);
+      gap: 6px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      margin-top: 10px;
     }
-    .cell-checkbox input[type="checkbox"]:checked{
-      background:linear-gradient(180deg,var(--primary),#0033cc);
-      border-color:var(--primary);
-      color:#fff;
+
+    .day {
+      text-align: center;
+      font-weight: 600;
+      color: var(--primary);
+      padding-bottom: 8px;
+      font-size: 14px;
     }
-    .cell-checkbox input[type="checkbox"]:checked::after{
-      content: "✔";
-      display:inline-block;
-      color:#fff;
-      font-size:14px;
-      text-align:center;
-      width:100%;
-      height:100%;
+
+    .time-col {
+      font-weight: 600;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      font-size: 13px;
     }
-        
+
+    .slot {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .slot input {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .schedule-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .small-btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background: var(--primary);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .small-btn.clear {
+      background: #d32f2f;
+    }
+
   </style>
 </head>
+
 <body>
   <div class="container">
-    <header>
-      <div class="brand">
-        <div class="logo">DD</div>
-        <div>
-          <h1>Add Clinic</h1>
-          <div class="sub">Fill out the form to register a new clinic</div>
-        </div>
-      </div>
-    </header>
+
+<!-- UPDATED HEADER --> 
+ <header> 
+  <div class="brand"> 
+    <div class="logo">DD</div> 
+    <div> <h1>Add Clinic</h1> 
+      <div class="sub">Fill out the form to register a new clinic</div>
+     </div> 
+    </div>
+     <div style="display:flex; gap:10px; align-items:center;"> 
+      <a href="{{ url_for('main.doc_dashboard') }}" class="btn ghost">← Home</a> 
+      <form action="{{ url_for('main.logout') }}" method="POST" style="margin:0;"> 
+        <button type="submit" class="btn">Logout</button> 
+      </form>
+     </div>
+     </header>
 
     <section class="card">
-      <form>
-        <!-- Clinic Info -->
+      <form method="POST" action="/doctor-clinic-seeding">
+
         <div>
           <h3 style="color:var(--primary);">Clinic Name</h3>
           <input type="text" id="clinicName" name="clinicName" placeholder="eg : Doctopal Clinic" required>
         </div>
 
         <h3 style="color:var(--primary);">Clinic Address</h3>
+
         <div style="display:flex; gap:12px;">
-          <div style="flex:1"><label>House No</label><input type="text" name="houseNo" placeholder="Numbers only. eg : 20" required></div>
-          <div style="flex:1"><label>Street</label><input type="text" name="street" placeholder="eg : Malancha Road" required></div>
+          <div style="flex:1"><label>House No</label><input type="text" name="houseNo" required></div>
+          <div style="flex:1"><label>Street</label><input type="text" name="street" required></div>
         </div>
+
         <div style="display:flex; gap:12px;">
-          <div style="flex:1"><label>Post Office</label><input type="text" name="postOffice" placeholder="eg : Noapara" required></div>
-          <div style="flex:1"><label>Police Station</label><input type="text" name="policeStation" placeholder="eg : Barasat" required></div>
+          <div style="flex:1"><label>Post Office</label><input type="text" name="postOffice" required></div>
+          <div style="flex:1"><label>Police Station</label><input type="text" name="policeStation" required></div>
         </div>
+
         <div style="display:flex; gap:12px;">
-          <div style="flex:1"><label>City</label><input type="text" name="city" placeholder="eg : Kolkata" required></div>
-          <div style="flex:1"><label>Pin Code</label><input type="text" name="pinCode" placeholder="eg : 700123" required></div>
+          <div style="flex:1"><label>City</label><input type="text" name="city" required></div>
+          <div style="flex:1"><label>Pin Code</label><input type="text" name="pinCode" required></div>
         </div>
+
         <div style="display:flex; gap:12px;">
-          <div style="flex:1"><label>State</label><input type="text" name="state" placeholder="eg : West Bengal" required></div>
-          <div style="flex:1"><label>Country</label><input type="text" name="country" placeholder="eg : India" required></div>
+          <div style="flex:1"><label>State</label><input type="text" name="state" required></div>
+          <div style="flex:1"><label>Country</label><input type="text" name="country" required></div>
         </div>
 
         <div>
           <label for="clinicFees">Consultation Fees</label>
-          <input type="number" id="clinicFees" name="clinicFees" placeholder="eg : Rs 500" required>
+          <input type="number" id="clinicFees" name="clinicFees" required>
         </div>
 
         <div>
           <label for="clinicContact">Contact Number</label>
-          <input type="tel" id="clinicContact" name="clinicContact" placeholder="eg : +919836XXXXXX" required>
+          <input type="tel" id="clinicContact" name="clinicContact" required>
         </div>
-        
-        
 
+        <h3 style="color:var(--primary); margin-top:20px;">Visit Schedule</h3>
 
-        <div class="schedule-container">
-          <table class="schedule-table" aria-label="Visit Schedule">
-            <thead>
-              <tr>
-                <th>Visit Time</th>
-                <th>Monday</th>
-                <th>Tuesday</th>
-                <th>Wednesday</th>
-                <th>Thursday</th>
-                <th>Friday</th>
-                <th>Saturday</th>
-                <th>Sunday</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Rows: 8am–9am through 7pm–8pm (12 rows) -->
-              <tr>
-                <td class="time-col">08:00 — 09:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_08"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_08"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_08"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_08"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_08"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_08"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_08"></td>
-              </tr>
-              <tr>
-                <td class="time-col">09:00 — 10:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_09"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_09"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_09"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_09"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_09"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_09"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_09"></td>
-              </tr>
-              <tr>
-                <td class="time-col">10:00 — 11:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_10"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_10"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_10"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_10"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_10"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_10"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_10"></td>
-              </tr>
-              <tr>
-                <td class="time-col">11:00 — 12:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_11"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_11"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_11"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_11"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_11"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_11"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_11"></td>
-              </tr>
-              <tr>
-                <td class="time-col">12:00 — 13:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_12"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_12"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_12"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_12"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_12"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_12"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_12"></td>
-              </tr>
-              <tr>
-                <td class="time-col">13:00 — 14:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_13"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_13"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_13"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_13"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_13"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_13"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_13"></td>
-              </tr>
-              <tr>
-                <td class="time-col">14:00 — 15:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_14"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_14"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_14"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_14"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_14"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_14"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_14"></td>
-              </tr>
-              <tr>
-                <td class="time-col">15:00 — 16:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_15"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_15"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_15"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_15"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_15"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_15"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_15"></td>
-              </tr>
-              <tr>
-                <td class="time-col">16:00 — 17:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_16"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_16"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_16"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_16"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_16"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_16"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_16"></td>
-              </tr>
-              <tr>
-                <td class="time-col">17:00 — 18:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_17"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_17"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_17"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_17"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_17"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_17"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_17"></td>
-              </tr>
-              <tr>
-                <td class="time-col">18:00 — 19:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_18"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_18"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_18"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_18"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_18"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_18"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_18"></td>
-              </tr>
-              <tr>
-                <td class="time-col">19:00 — 20:00</td>
-                <td class="cell-checkbox"><input type="checkbox" name="mon_19"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="tue_19"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="wed_19"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="thu_19"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="fri_19"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sat_19"></td>
-                <td class="cell-checkbox"><input type="checkbox" name="sun_19"></td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="schedule-actions">
+          <button type="button" class="small-btn" onclick="selectAll()">Select All</button>
+          <button type="button" class="small-btn clear" onclick="clearAll()">Clear All</button>
         </div>
- 
 
-        <div style="display:flex; gap:10px; margin-top:10px;">
-          <button type="submit" class="btn">Submit</button>
-          
+        <div class="schedule-grid" id="scheduleGrid">
+          <div></div>
+          <div class="day">Mon</div>
+          <div class="day">Tue</div>
+          <div class="day">Wed</div>
+          <div class="day">Thu</div>
+          <div class="day">Fri</div>
+          <div class="day">Sat</div>
+          <div class="day">Sun</div>
+        </div>
+
+        <button type="submit" class="btn">Submit</button>
+
+      </form>
+    </section>
+
+  </div>
+
+  <script>
+    const start = 8;
+    const end = 20;
+    const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+    const grid = document.getElementById("scheduleGrid");
+
+    for (let hour = start; hour < end; hour++) {
+      const row = document.createElement("div");
+      row.style.display = "contents";
+
+      const timeLabel = document.createElement("div");
+      timeLabel.classList.add("time-col");
+      timeLabel.textContent = `${hour}:00 — ${hour+1}:00`;
+      row.appendChild(timeLabel);
+
+      days.forEach(day => {
+        const cell = document.createElement("div");
+        cell.classList.add("slot");
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+
+        /* FIX: Add name + value so form submits */
+        checkbox.name = `${day}_${hour}`;
+        checkbox.value = "1";
+
+        checkbox.classList.add("schedule-checkbox");
+
+        cell.appendChild(checkbox);
+        row.appendChild(cell);
+      });
+
+      grid.appendChild(row);
+    }
+
+    function selectAll() {
+      document.querySelectorAll(".schedule-checkbox").forEach(cb => cb.checked = true);
+    }
+
+    function clearAll() {
+      document.querySelectorAll(".schedule-checkbox").forEach(cb => cb.checked = false);
+    }
+  </script>
+
+</body>
+</html>
