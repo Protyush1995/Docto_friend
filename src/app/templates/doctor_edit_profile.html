@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Edit Doctor Profile</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --primary: #4d20cab8;
+      --bg: #f6f8ff;
+      --card-bg: #ffffff;
+      --muted: #6b7280;
+      --accent: #0b63ff;
+      --border-radius: 12px;
+      --card-shadow: 0 10px 30px rgba(0,64,255,0.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 400px at 10% 10%, rgba(0,64,255,0.06), transparent 10%),
+                  linear-gradient(180deg, var(--bg), #ffffff 60%);
+      color:#0b1226;
+      padding:24px;
+    }
+    .container{ max-width:900px; margin:0 auto; }
+    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .brand{ display:flex; gap:12px; align-items:center; }
+    .logo{ width:56px; height:56px; border-radius:10px; background:linear-gradient(135deg,var(--primary),#0066ff); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; box-shadow:var(--card-shadow); }
+    h1{ margin:0; font-size:20px; color:var(--primary); }
+    .sub{ color:var(--muted); font-size:13px; }
+
+    .card{
+      background:var(--card-bg);
+      border-radius:var(--border-radius);
+      padding:20px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.08);
+      border:1px solid rgba(0,64,255,0.05);
+    }
+
+    form{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; align-items:start; }
+    .full{ grid-column: 1 / -1; }
+    label{ display:block; font-size:13px; color:var(--muted); margin-bottom:6px; font-weight:600; }
+    input[type="text"], input[type="email"], input[type="tel"], textarea, select{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(6,42,138,0.08); background:#fff; font-size:14px;
+    }
+    textarea{ min-height:110px; resize:vertical; }
+    .row{ display:flex; gap:8px; }
+    .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+    .btn{ padding:10px 14px; border-radius:10px; border:none; cursor:pointer; background:linear-gradient(180deg,var(--primary),#0033cc); color:#fff; font-weight:600; }
+    .btn.ghost{ background:transparent; color:var(--primary); border:1px solid rgba(0,64,255,0.12); }
+    .hint{ font-size:12px; color:var(--muted); margin-top:6px; }
+
+    @media (max-width:760px){
+      form{ grid-template-columns: 1fr; }
+      .actions{ justify-content:stretch; flex-direction:column-reverse; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">DD</div>
+        <div>
+          <h1>Edit Profile</h1>
+          <div class="sub">Complete your doctor profile details</div>
+        </div>
+      </div>
+      <div>
+        <a href="/doctor/dashboard" class="btn btn-small btn-ghost" style="text-decoration:none; display:inline-block; padding:8px 10px;" >Back</a>
+      </div>
+    </header>
+
+    <main class="card">
+      <form id="editProfileForm" action="/doctor/update" method="POST" novalidate>
+        <!-- server templating can prefill value=" doctor_data.field " -->
+        <div class="full">
+          <label for="firstname">First name</label>
+          <input id="firstname" name="doctor_first_name" type="text" placeholder="First name" value="">
+        </div>
+
+        <div>
+          <label for="lastname">Last name</label>
+          <input id="lastname" name="doctor_last_name" type="text" placeholder="Last name" value="">
+        </div>
+
+        <div>
+          <label for="qual">Qualifications</label>
+          <input id="qual" name="doctor_qualifications" type="text" placeholder="e.g. MBBS, MD" value="">
+        </div>
+
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" value="">
+        </div>
+
+        <div>
+          <label for="phone">Primary contact number</label>
+          <input id="phone" name="primary_contact_number" type="tel" placeholder="+1 555 555 5555" value="">
+        </div>
+
+        <div>
+          <label for="altphone">Alternate contact number</label>
+          <input id="altphone" name="alternate_contact_number" type="tel" placeholder="+1 555 555 5555" value="">
+        </div>
+
+        <div>
+          <label for="license">License</label>
+          <input id="license" name="license" type="text" placeholder="License number" value="">
+        </div>
+
+        <div>
+          <label for="specialty">Specialty</label>
+          <input id="specialty" name="specialty" type="text" placeholder="e.g. Cardiology" value="">
+        </div>
+
+        <div class="full">
+          <label for="address">Practice address</label>
+          <textarea id="address" name="practice_address" placeholder="Full mailing/practice address"></textarea>
+        </div>
+
+        <div>
+          <label for="bio">Bio / About</label>
+          <textarea id="bio" name="bio" placeholder="Short professional bio"></textarea>
+        </div>
+
+        <div>
+          <label for="photo">Profile image URL</label>
+          <input id="photo" name="photo_url" type="text" placeholder="/static/image/doc_placeholder.png" value="">
+        </div>
+
+        <div>
+          <label for="years">Years of experience</label>
+          <input id="years" name="years_experience" type="text" placeholder="e.g. 10" value="">
+        </div>
+
+        <div>
+          <label for="fees">Default fees</label>
+          <input id="fees" name="default_fees" type="text" placeholder="e.g. 500" value="">
+        </div>
+
+        <div>
+          <label for="visitdays">Visit days</label>
+          <input id="visitdays" name="doctor_visit_days" type="text" placeholder="e.g. Mon, Wed, Fri" value="">
+        </div>
+
+        <div class="full">
+          <label for="other">Other JSON (for additional doctor_data keys)</label>
+          <textarea id="other" name="extra_json" placeholder='{"key":"value"}'></textarea>
+          <div class="hint">If your backend expects other keys, include them as JSON here (optional).</div>
+        </div>
+
+        <div class="full actions">
+          <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn">Save profile</button>
+        </div>
+      </form>
+    </main>
+
+    <footer style="margin-top:18px; text-align:center; color:var(--muted); font-size:13px;">
+      © 2025 Doctor Dashboard — demo
+    </footer>
+  </div>
+
+  <script>
+    // Simple client-side validations and JSON merge before submit
+    (function(){
+      const form = document.getElementById('editProfileForm');
+      const cancel = document.getElementById('cancelBtn');
+
+      cancel.addEventListener('click', () => { window.history.back(); });
+
+      form.addEventListener('submit', (e) => {
+        // Basic email validation
+        const email = form.email.value.trim();
+        if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+          e.preventDefault();
+          alert('Please enter a valid email address.');
+          form.email.focus();
+          return;
+        }
+
+        // If extra_json exists, validate it's valid JSON
+        const extra = form.extra_json.value.trim();
+        if(extra){
+          try { JSON.parse(extra); }
+          catch(err){
+            e.preventDefault();
+            alert('Extra JSON is invalid. Fix the format or remove it.');
+            form.extra_json.focus();
+            return;
+          }
+        }
+
+        // Allow submit; server should handle merging fields to doctor_data
+      });
+    })();
+  </script>
+</body>
+</html>

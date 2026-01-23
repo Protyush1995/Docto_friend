@@ -78,6 +78,9 @@ def register_route():
         current_app.logger.exception("Failed to save registration")
         return jsonify(success=False, error="internal_error"), 500
 
+@bp.route("/doctor-edit-profile", methods=["GET"])
+def doctor_edit_profile_form():
+    return render_template("doctor_edit_profile.html")
 
 @bp.route("/doctor-forgot-password", methods=["GET"])
 def doctor_forgot_password_page():
