@@ -1,4 +1,4 @@
-import csv
+import json
 import os
 import re
 from datetime import datetime
@@ -46,17 +46,6 @@ def _generate_doctor_id() -> str:
     rand = f"{rand_int:07d}"  # fixed width 7 digits to reduce collision risk
     return f"DOC_ID_{ts}{rand}"
 
-
-
-def _generate_clinic_id(clinic_name: str) -> str:
-    # numeric timestamp (UTC) + cryptographically random 8-digit number
-    ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[:-3]  # up to milliseconds, digits only
-    rand_int = int.from_bytes(os.urandom(4), "big") % 10_000_000  # 0..9_999_999
-    rand = f"{rand_int:07d}"  # fixed width 7 digits to reduce collision risk
-    return f"CLINIC_ID_{clinic_name}_{rand}"
-
-
-
 def _hash_password(password: str) -> str:
     # Placeholder: replace with bcrypt or passlib in production
     import hashlib
@@ -83,7 +72,7 @@ def append_registration_record(data: Dict) -> Dict:
         "lastname": data["lastname"].strip(),
         "email": data["email"].strip().lower(),
         "license": data["license"].strip(),
-        "home_address":"",
+        "permanent_address":"",
         "primary_contact_number":data["mobile"].strip(),
         "secondary_contact_number":0,
         "password_hash": password_hash,
@@ -92,12 +81,26 @@ def append_registration_record(data: Dict) -> Dict:
         "expertise":"",
         "practising_or_fellowship":"",
         "achievements":"",
+        "years_of_experience":0,
+        "default_fees":500,
     }
 
     #inserting data to MongoDb database
-    db.insert_user(user_document=record)
+    db.insert_record(user_document=record)
 
     return record
+
+def update_doctor_profile(data: Dict) -> Dict:
+
+    #updating profile data of MongoDb database
+    success = db.update_record (primary_key_name="doctor_id",primary_key_val=data["doctor_id"],updates=data)
+    print("Message returned by Mongo for profile update...........")
+    print(json.dumps(success))
+
+    return {"success":success["acknowledged"]}
+
+def get_doctor_by_id(doctor_id:str) -> Dict:
+    return db.find_by_id(id_val=doctor_id,id_field="doctor_id")
 
 def verify_password(plain: str, stored_hash: str) -> bool:
     if not plain or not stored_hash:

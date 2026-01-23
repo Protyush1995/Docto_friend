@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from typing import Dict, Optional
 import os,json
 from pathlib import Path
-from datetime import datetime
+
 
 class DatabaseOperations:
     """DatabaseOperations: MongoDB helper for doctor credential management.
@@ -58,13 +58,13 @@ class DatabaseOperations:
         except ConnectionFailure as exc:
             raise RuntimeError("Failed to connect to MongoDB") from exc
 
-    def create_collection(self,collection):
+    def create_collection(self,collection="doc_logins"):
         # Ensure the collection exists
         if collection not in self.db.list_collection_names():
             self.db.create_collection(collection)
         return collection
 
-    def insert_user(self, user_document: Dict):
+    def insert_record(self, user_document: Dict):
         # Create a user document
         if not user_document:
             print ("!!WARNING!! Empty user data!! nothing to enter in database!!")
@@ -74,6 +74,34 @@ class DatabaseOperations:
             result = self.collection.insert_one(user_document)
             return result.inserted_id  # Return the new user's ID
         
+    def update_record(self, primary_key_name: str, primary_key_val: str, updates: Dict) -> Dict:
+        """
+        Update a user document identified by doc_username with fields from updates.
+
+        :param primary_key_name: primary key field name of the collection to update ( eg :"doc_id")
+        :param primary_key_val: primary_key_val of the record to update (eg : matches value of "doc_id" field)
+        :param updates: dict of fields to set (e.g., {"email": "new@example.com"})
+        :return: dict with result info: {"matched_count": int, "modified_count": int, "acknowledged": bool}
+        """
+        if not primary_key_name or not primary_key_val:
+            raise ValueError("REQUIRED : Primary key name or vale is missing !!")
+        if not updates or not isinstance(updates, dict):
+            raise ValueError("updates must be a non-empty dict")
+
+        result = self.db[self.collection_name].update_one(
+            {primary_key_name : primary_key_val},
+            {"$set": updates},
+            upsert=False
+        )
+
+        return {
+            "matched_count": result.matched_count,
+            "modified_count": result.modified_count,
+            "acknowledged": result.acknowledged
+        }
+
+    
+    #Helper functions for uniqueness checks
     def find_by_email(self, email: str) -> Optional[Dict]:
         if not email: return None
         check = self.db[self.collection_name].find_one({"email": email.strip()})
@@ -89,7 +117,6 @@ class DatabaseOperations:
         print(check)
         return check
 
-    @staticmethod
     def find_user(self, doc_username, password):
         # Hash the password for verification
         hashed_password = self.hash_password(password)
@@ -102,83 +129,15 @@ class DatabaseOperations:
         })
         return user
     
-
-
-
-
-
-
-
-class ClinicDB:
-    def __init__(self, env_file=None):
+    def find_by_id(self, id_val: str, id_field: str) -> Optional[Dict]:
         """
-        :param env_file: Path or str to .env file. If None, defaults to sibling .env.doctors.
+        :param id_val : value of primary key to be searched
+        :param id_field : primary key field name to be searched
         """
-        
-        # resolve env_file to a Path before using .is_file()
-        if env_file is None:
-            env_path = Path(__file__).parent / ".env.clinics"
-        else:
-            env_path = Path(env_file)
-
-        if env_path.is_file():
-            load_dotenv(env_path)
-            print(f"Loaded environment variables from: {env_path}")
-        else:
-            raise RuntimeError(f".env file not found: {env_path}")
-
-        client_url = os.getenv("CLINIC_MONGO_URL")
-        db_name = os.getenv("CLINIC_DB_NAME")
-        collection_name = os.getenv("CLINIC_COLLECTION_NAME")
-        
-        missing = [n for n, v in (("CLINIC_MONGO_URL", client_url),
-                                ("CLINIC_DB_NAME", db_name),
-                                ("CLINIC_COLLECTION_NAME", collection_name)) if not v]
-        if missing:
-            raise RuntimeError(f"Missing environment variables: {', '.join(missing)}")
-
-        try:
-            # quick fail if server unreachable
-            self.client = MongoClient(client_url, serverSelectionTimeoutMS=5000)
-            self.client.admin.command("ping")
-            self.db = self.client[db_name]
-            self.collection_name = self.create_collection(collection_name)
-            self.collection = self.db[collection_name]
-            
-        except ConnectionFailure as exc:
-            raise RuntimeError("Failed to connect to MongoDB") from exc
-
-    def create_collection(self,collection):
-        # Ensure the collection exists
-        if collection not in self.db.list_collection_names():
-            self.db.create_collection(collection)
-        return collection
+        if not id_field or not id_val: return None
+        return self.db[self.collection_name].find_one({id_field: id_val})
 
 
-    def add_clinic(self, doctor_id: str, clinic_data: dict):
-        """
-        Insert a new clinic for a doctor.
-        clinic_data should already contain:
-        - clinic_name
-        - address
-        - fees
-        - contact
-        - schedule
-        """
-        print("******************************************************************************************")
-        print("Preparing NEW clinic record for database entry!!")
-        print(self.collection_name)
-        clinic_document = {
-            "doctor_id": doctor_id,
-            "clinic_id": clinic_data["clinic_id"],
-            "clinic_name": clinic_data["clinic_name"],
-            "clinic_contact": clinic_data["clinic_contact"],
-            "clinic_fees": clinic_data["clinic_fees"],
-            "address": clinic_data["address"],
-            "schedule": clinic_data["schedule"],
-            "created_at": datetime.utcnow().date().isoformat(),
-            "updated_at": datetime.utcnow().date().isoformat()
-        }
-        print(clinic_document)      
-        result = self.collection.insert_one(clinic_document)
-        return str(result.inserted_id)
+
+
+

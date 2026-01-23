@@ -63,67 +63,22 @@
       <div class="brand">
         <div class="logo">DD</div>
         <div>
-          <h1>Edit Profile</h1>
+          <h1>Edit Profile for <strong>Dr {{ doctor_data.lastname }}</strong></h1>
           <div class="sub">Complete your doctor profile details</div>
         </div>
       </div>
       <div>
-        <a href="/doctor/dashboard" class="btn btn-small btn-ghost" style="text-decoration:none; display:inline-block; padding:8px 10px;" >Back</a>
+        <a href="/doc_dashboard" class="btn btn-small btn-ghost" style="text-decoration:none; display:inline-block; padding:8px 10px;" >Back</a>
       </div>
     </header>
 
+    {% macro val_if(v) -%}
+            {%- if v is not none and (v|string).strip() != '' -%} "{{ v }}" {%- endif -%}
+    {%- endmacro %}
+
     <main class="card">
       <form id="editProfileForm" action="/doctor/update" method="POST" novalidate>
-        <!-- server templating can prefill value=" doctor_data.field " -->
-        <div class="full">
-          <label for="firstname">First name</label>
-          <input id="firstname" name="doctor_first_name" type="text" placeholder="First name" value="">
-        </div>
-
-        <div>
-          <label for="lastname">Last name</label>
-          <input id="lastname" name="doctor_last_name" type="text" placeholder="Last name" value="">
-        </div>
-
-        <div>
-          <label for="qual">Qualifications</label>
-          <input id="qual" name="doctor_qualifications" type="text" placeholder="e.g. MBBS, MD" value="">
-        </div>
-
-        <div>
-          <label for="email">Email</label>
-          <input id="email" name="email" type="email" placeholder="you@example.com" value="">
-        </div>
-
-        <div>
-          <label for="phone">Primary contact number</label>
-          <input id="phone" name="primary_contact_number" type="tel" placeholder="+1 555 555 5555" value="">
-        </div>
-
-        <div>
-          <label for="altphone">Alternate contact number</label>
-          <input id="altphone" name="alternate_contact_number" type="tel" placeholder="+1 555 555 5555" value="">
-        </div>
-
-        <div>
-          <label for="license">License</label>
-          <input id="license" name="license" type="text" placeholder="License number" value="">
-        </div>
-
-        <div>
-          <label for="specialty">Specialty</label>
-          <input id="specialty" name="specialty" type="text" placeholder="e.g. Cardiology" value="">
-        </div>
-
-        <div class="full">
-          <label for="address">Practice address</label>
-          <textarea id="address" name="practice_address" placeholder="Full mailing/practice address"></textarea>
-        </div>
-
-        <div>
-          <label for="bio">Bio / About</label>
-          <textarea id="bio" name="bio" placeholder="Short professional bio"></textarea>
-        </div>
+        <input type="hidden" name="doctor_id" id="doctor_id" value="{{ doctor_data.doctor_id }}">
 
         <div>
           <label for="photo">Profile image URL</label>
@@ -131,25 +86,75 @@
         </div>
 
         <div>
-          <label for="years">Years of experience</label>
-          <input id="years" name="years_experience" type="text" placeholder="e.g. 10" value="">
-        </div>
-
-        <div>
-          <label for="fees">Default fees</label>
-          <input id="fees" name="default_fees" type="text" placeholder="e.g. 500" value="">
-        </div>
-
-        <div>
-          <label for="visitdays">Visit days</label>
-          <input id="visitdays" name="doctor_visit_days" type="text" placeholder="e.g. Mon, Wed, Fri" value="">
+          <label for="fees">Member Since:</label>
+          <label>{{doctor_data.created_at}}</label>
         </div>
 
         <div class="full">
-          <label for="other">Other JSON (for additional doctor_data keys)</label>
-          <textarea id="other" name="extra_json" placeholder='{"key":"value"}'></textarea>
-          <div class="hint">If your backend expects other keys, include them as JSON here (optional).</div>
+          <label for="firstname">First name</label>
+          <input id="firstname" name="firstname" type="text" placeholder="First name" value={{ val_if(doctor_data.firstname) }}>
         </div>
+
+        <div>
+          <label for="lastname">Last name</label>
+          <input id="lastname" name="lastname" type="text" placeholder="Last name" value={{ val_if(doctor_data.lastname) }}>
+        </div>
+
+        <div>
+          <label for="qual">Qualifications</label>
+          <input id="qual" name="qualifications" type="text" placeholder="e.g. MBBS, MD" value={{ val_if(doctor_data.qualifications) }}>
+        </div>
+
+        <div>
+          <label for="license">License</label>
+          <label>{{doctor_data.license}}</label>
+        </div>
+
+        <div class="full">
+          <label for="address">Permanent address</label>
+          <textarea id="address" name="permanent_address" placeholder="Full permanent/mailing address" >{{ val_if(doctor_data.permanent_address) }}</textarea>
+        </div>
+
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" value={{ val_if(doctor_data.email) }}>
+        </div>
+
+        <div>
+          <label for="phone">Primary contact number</label>
+          <input id="phone" name="primary_contact_number" type="tel" placeholder="+1 555 555 5555" value={{ val_if(doctor_data.primary_contact_number) }}>
+        </div>
+
+        <div>
+          <label for="altphone">Alternate contact number</label>
+          <input id="altphone" name="secondary_contact_number" type="tel" placeholder="+1 555 555 5555" value={{ val_if(doctor_data.secondary_contact_number) }}>
+        </div>
+
+        <div>
+          <label for="specialty">Specialty</label>
+          <input id="specialty" name="expertise" type="text" placeholder="e.g. Cardiology" value={{ val_if(doctor_data.expertise) }}>
+        </div>
+
+        <div class="full">
+          <label for="achievements">Special Achievements</label>
+          <textarea id="achievements" name="achievements" placeholder="Special achievements" >{{ val_if(doctor_data.achievements) }}</textarea>
+        </div>
+
+        <div>
+          <label for="bio">Practising AND/OR Fellowship</label>
+          <textarea id="practise" name="practising_or_fellowship" placeholder="Practising at AND/OR Fellowship" >{{ val_if(doctor_data.practising_or_fellowship)}}</textarea>
+        </div>
+
+        <div>
+          <label for="years">Years of experience</label>
+          <input id="years" name="years_of_experience" type="text" placeholder="e.g. 10" value={{ val_if(doctor_data.years_of_experience)}}>
+        </div>
+
+        <div>
+          <label for="fees">Nominal visiting fees</label>
+          <input id="fees" name="default_fees" type="text" placeholder="e.g. 500" value={{ val_if(doctor_data.default_fees)}}>
+        </div>
+
 
         <div class="full actions">
           <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
@@ -164,38 +169,49 @@
   </div>
 
   <script>
-    // Simple client-side validations and JSON merge before submit
-    (function(){
-      const form = document.getElementById('editProfileForm');
-      const cancel = document.getElementById('cancelBtn');
+        (function(){
+        const form = document.getElementById('editProfileForm');
+        const cancel = document.getElementById('cancelBtn');
+        cancel.addEventListener('click', () => { window.history.back(); });
 
-      cancel.addEventListener('click', () => { window.history.back(); });
-
-      form.addEventListener('submit', (e) => {
-        // Basic email validation
-        const email = form.email.value.trim();
-        if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-          e.preventDefault();
-          alert('Please enter a valid email address.');
-          form.email.focus();
-          return;
-        }
-
-        // If extra_json exists, validate it's valid JSON
-        const extra = form.extra_json.value.trim();
-        if(extra){
-          try { JSON.parse(extra); }
-          catch(err){
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            alert('Extra JSON is invalid. Fix the format or remove it.');
-            form.extra_json.focus();
-            return;
-          }
-        }
+            const fd = new FormData(form);
+            const payload = {};
+            for (const [k,v] of fd.entries()){
+            if (!v) continue;
+            // convert numeric-looking fields to numbers
+            if (/^\d+$/.test(v)) payload[k] = Number(v);
+            else payload[k] = v.trim();
+            }
 
-        // Allow submit; server should handle merging fields to doctor_data
-      });
-    })();
-  </script>
+            // basic email validation
+            if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)){
+            alert('Please enter a valid email address.');
+            form.email.focus();
+            return;
+            }
+
+            try{
+            const resp = await fetch('/doctor-edit-profile/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const j = await resp.json();
+            if (resp.ok && j.success){
+                alert(j.message || 'Profile updated');
+                window.location.href = '/doc_dashboard';
+            } else {
+                alert(j.error || j.message || 'Update failed');
+            }
+            } catch(err){
+            console.error(err);
+            alert('Network error. Try again.');
+            }
+        });
+        })();
+</script>
+
 </body>
 </html>
