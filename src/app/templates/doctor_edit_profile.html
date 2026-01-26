@@ -68,7 +68,7 @@
         </div>
       </div>
       <div>
-        <a href="/doc_dashboard" class="btn btn-small btn-ghost" style="text-decoration:none; display:inline-block; padding:8px 10px;" >Back</a>
+        <a href="/doc_dashboard/{{ doctor_data.doctor_id }}" class="btn btn-small btn-ghost" style="text-decoration:none; display:inline-block; padding:8px 10px;" >Back</a>
       </div>
     </header>
 
@@ -178,18 +178,20 @@
             e.preventDefault();
             const fd = new FormData(form);
             const payload = {};
-            for (const [k,v] of fd.entries()){
-            if (!v) continue;
-            // convert numeric-looking fields to numbers
-            if (/^\d+$/.test(v)) payload[k] = Number(v);
-            else payload[k] = v.trim();
+            for (const [k,v] of fd.entries())
+            {
+                if (!v) continue;
+                // convert numeric-looking fields to numbers
+                if (/^\d+$/.test(v)) payload[k] = Number(v);
+                else payload[k] = v.trim();
             }
 
             // basic email validation
-            if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)){
-            alert('Please enter a valid email address.');
-            form.email.focus();
-            return;
+            if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email))
+            {
+                alert('Please enter a valid email address.');
+                form.email.focus();
+                return;
             }
 
             try{
@@ -198,16 +200,28 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
+            
             const j = await resp.json();
             if (resp.ok && j.success){
-                alert(j.message || 'Profile updated');
-                window.location.href = '/doc_dashboard';
-            } else {
-                alert(j.error || j.message || 'Update failed');
+                
+                const doctorId = j.user_id || j.doctor_id || (j.user && j.user.doctor_id);
+                if (doctorId) {
+                    console.log('Profile updated succeeded !!');
+                    window.location.href = j.redirect || `/doc_dashboard/${encodeURIComponent(doctorId)}`;
+                } 
+                else {
+                    console.log("doctor_id missing in response !!");
+                    alert("WARNING : Update succeeded but redirect failed. Contact admin!!");
+                }
+                
+            } 
+            else {
+                alert(j.error || j.message || 'Update failed!! Contact admin!!');
             }
-            } catch(err){
-            console.error(err);
-            alert('Network error. Try again.');
+            } 
+            catch(err){
+                console.error(err);
+                alert('Network error. Try again.');
             }
         });
         })();

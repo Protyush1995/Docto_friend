@@ -46,17 +46,16 @@ def api_doctor_login():
 
         user = res["user"]
         
-        # minimal session assignment
+        # Assigning session doctor_id
         session.clear()
-        for k, v in user.items(): session[k] = v
-        #session["doctor_name"] = f"{session.get('firstname','')} {session.get('lastname','')}".strip()
+        session["doctor_id"] = user["doctor_id"]
         
         # set a flag for "remember" if requested (requires configuring permanent_session_lifetime)
         if remember:
             session.permanent = True
 
         current_app.logger.info("Doctor %s logged in", session.get("doctor_id"))
-        return jsonify(success=True, redirect=url_for('main.doc_dashboard')), 200
+        return jsonify(success=True, user_id=user["doctor_id"], redirect=url_for('main.doc_dashboard', doctor_id=user["doctor_id"])), 200
 
     except Exception:
         current_app.logger.exception("Login error")
@@ -91,13 +90,15 @@ def doctor_edit_profile_form(doctor_id):
 def doctor_update_profile():
     data = request.get_json() or {}
     print(json.dumps(data))
-    print("Printing from doctor_update_profile in routes-------------------------------")
+    print("Printing from doctor_update_profile from routes-------------------------------")
     try:
         response = doctor_database_management.update_doctor_profile(data)
+        print(json.dumps(response))
+        print("Printing response from update profile from routes-------------------------------")
         # TODO: send verification email asynchronously
         if response["success"] :
-            return jsonify(success=True,message="Profile update successfull"), 201
-        else: return jsonify(success=False,message="Problem updating profile"), 201
+            return jsonify(success=True,user_id=response.get("doctor_id"),message="Profile update successfull"), 201
+        else: return jsonify(success=False,user_id=response.get("doctor_id"),message="Problem updating profile"), 201
     except ValueError as ve:
         return jsonify(success=False, error=str(ve)), 400
     except Exception as e:
@@ -158,10 +159,12 @@ def doctor_clinic_seed_form():
 
         return redirect(url_for('main.doctor_clinic_seed_form'))
 
+    username=session.get("doctor_id"),
+    doctor_data=doctor_database_management.get_doctor_by_id(doctor_id=username)
     return render_template(
         "doctor_add_clinic.html",
-        username=session.get("doctor_id"),
-        doctor_data=dict(session)
+        username=username,
+        doctor_data=doctor_data
     )
 
 @bp.route("/clinic-booking", methods=["GET"])
@@ -291,21 +294,21 @@ def submit_booking():
     current_app.logger.info("Saved booking %s to %s", patient_id, booking_filename)
     return jsonify({"patient_id": patient_id, "booking_file": booking_filename}), 200
 
-@bp.route('/doc_dashboard')
-def doc_dashboard():
-    user_id = session.get('doctor_id')
+@bp.route('/doc_dashboard/<doctor_id>', methods=["GET"])
+def doc_dashboard(doctor_id):
+    #user_id = doctor_id
 
-    if not user_id:
+    if not doctor_id:
         return redirect(url_for('main.doctor_login_page'))
     
-    doctor_data = dict(session)
-
+    #doctor_data = dict(session)
+    doctor_data = dict(doctor_database_management.get_doctor_by_id(doctor_id))
     #clinics_list = find_clinics_by_doctor(user_id)
     #doctor_data['clinics'] = clinics_list
    
     return render_template(
         'doctor_dashboard.html',
-        user_id=user_id,
+        user_id=doctor_id,
         doctor_data=doctor_data
         #clinics = clinics_list
     )

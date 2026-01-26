@@ -152,7 +152,14 @@
       const json = await res.json();
       if (res.ok && json.success) {
         // redirect to dashboard (adjust route as needed)
-        window.location.href = json.redirect || '{{ url_for("main.doc_dashboard") }}';
+        const doctorId = json.user_id || json.doctor_id || (json.user && json.user.doctor_id);
+        if (doctorId) {
+          window.location.href = json.redirect || `/doc_dashboard/${encodeURIComponent(doctorId)}`;
+        } else {
+          console.error("doctor_id missing in response !!", json);
+          alert("Login succeeded but redirect failed. Contact admin.");
+        }
+        
       } else {
         alert(json.error || 'Login failed');
       }

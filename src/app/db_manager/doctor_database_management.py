@@ -94,13 +94,18 @@ def update_doctor_profile(data: Dict) -> Dict:
 
     #updating profile data of MongoDb database
     success = db.update_record (primary_key_name="doctor_id",primary_key_val=data["doctor_id"],updates=data)
+    response = {"success":success["acknowledged"],"doctor_id":data["doctor_id"]}
     print("Message returned by Mongo for profile update...........")
     print(json.dumps(success))
+    print("response constructed for profile update...........")
+    print(json.dumps(response))
 
-    return {"success":success["acknowledged"]}
+    return response
 
 def get_doctor_by_id(doctor_id:str) -> Dict:
-    return db.find_by_id(id_val=doctor_id,id_field="doctor_id")
+    doctor_data = db.find_by_id(id_val=doctor_id,id_field="doctor_id")
+    del doctor_data["_id"] #removing mongodb ObjectId
+    return doctor_data
 
 def verify_password(plain: str, stored_hash: str) -> bool:
     if not plain or not stored_hash:
