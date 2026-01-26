@@ -32,9 +32,9 @@ def validate_registration(data: Dict) -> Optional[str]:
         return "Password must be at least 8 chars and include letters and numbers"
     
     # uniqueness checks against MongoDB for email and license_no
-    if db.find_by_email(email):
+    if db.find_by_id(id_val=email,id_field="email"):
         return "Email already registered"
-    if db.find_by_license(license_no):
+    if db.find_by_id(id_val=license_no,id_field="license"):
         return "License number already registered"
     
     return None
@@ -125,9 +125,9 @@ def authenticate_identifier(identifier: str, password: str) -> Dict:
 
     # determine lookup
     if EMAIL_RE.match(ident):
-        rec = db.find_by_email(ident)
+        rec = db.find_by_id(id_val=ident,id_field="email")
     else:
-        rec = db.find_by_license(ident)
+        rec = db.find_by_id(id_val=ident,id_field="license")
 
     if not rec:
         return {"success": False, "error": "Error !! NO USER FOUND!!"}

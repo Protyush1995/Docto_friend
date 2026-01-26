@@ -100,9 +100,17 @@ class DatabaseOperations:
             "acknowledged": result.acknowledged
         }
 
+    def find_by_id(self, id_val: str, id_field: str) -> Optional[Dict]:
+        """
+        :param id_val : value of primary key to be searched
+        :param id_field : primary key field name to be searched
+        """
+        if not id_field or not id_val: return None
+        return self.db[self.collection_name].find_one({id_field: id_val.strip()})
+
     
-    #Helper functions for uniqueness checks
-    def find_by_email(self, email: str) -> Optional[Dict]:
+    #Helper functions
+    """def find_by_email(self, email: str) -> Optional[Dict]:
         if not email: return None
         check = self.db[self.collection_name].find_one({"email": email.strip()})
         print("Email check against mongo =")
@@ -128,15 +136,8 @@ class DatabaseOperations:
             "password": password
         })
         return user
+    """
     
-    def find_by_id(self, id_val: str, id_field: str) -> Optional[Dict]:
-        """
-        :param id_val : value of primary key to be searched
-        :param id_field : primary key field name to be searched
-        """
-        if not id_field or not id_val: return None
-        return self.db[self.collection_name].find_one({id_field: id_val})
-
 
 
 
