@@ -30,8 +30,33 @@
 
     .container{ max-width:1000px; margin:0 auto; }
 
-    header{ display:flex; align-items:center; gap:16px; margin-bottom:20px; }
-    .brand{ display:flex; align-items:center; gap:12px; }
+    header
+    {
+      display:flex;
+      align-items:center;
+      justify-content:space-between; /* brand left, navigation right */
+      gap:16px;
+      margin-bottom:20px;
+    }
+
+    /* left column (brand) */
+    .brand
+    {
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    /* right column (navigation) */
+    .navigation
+    {
+      display:flex;
+      align-items:center;
+      justify-content:flex-end; /* right-align nav items inside nav container */
+      gap:10px;
+      /*width:100%;           ensure it can take remaining space if needed */
+      max-width:600px;     /* optional, remove or adjust as desired */
+    }
 
     .logo {
       width:56px; height:56px; border-radius:10px;
@@ -139,20 +164,17 @@
   <div class="container">
 
 <!-- UPDATED HEADER --> 
- <header> 
+<header> 
   <div class="brand"> 
     <div class="logo">DD</div> 
     <div> <h1>Add Clinic</h1> 
       <div class="sub">Fill out the form to register a new clinic</div>
      </div> 
-    </div>
-     <div style="display:flex; gap:10px; align-items:center;"> 
-      <a href="{{ url_for('main.doc_dashboard') }}" class="btn ghost">← Home</a> 
-      <form action="{{ url_for('main.logout') }}" method="POST" style="margin:0;"> 
-        <button type="submit" class="btn">Logout</button> 
-      </form>
-     </div>
-     </header>
+  </div>
+  <div class="navigation"> 
+    <a href="/doc_dashboard/{{ username }}" class="btn ghost">Home</a> 
+  </div>
+</header>
 
     <section class="card">
       <form method="POST" action="/doctor-clinic-seeding">
@@ -183,33 +205,195 @@
           <div style="flex:1"><label>State</label><input type="text" name="state" required></div>
           <div style="flex:1"><label>Country</label><input type="text" name="country" required></div>
         </div>
+        
+        <div style="display:flex; gap:12px;">
+          <div style="flex:1"><label>Contact Number</label><input type="tel" name="clinicContact" id="clinicContact" required></div>
+          <div style="flex:1"><label>Alternative Contact Number</label><input type="tel" name="clinicContactAlt" id="clinicContactAlt" ></div>
+        </div>
+
+        <div>
+          <label for="clinicemail">Email address</label>
+          <input type="email" id="clinicemail" name="clinicemail" placeholder="eg : doctopal_clinic@gmail.com" >
+        </div>
 
         <div>
           <label for="clinicFees">Consultation Fees</label>
           <input type="number" id="clinicFees" name="clinicFees" required>
-        </div>
-
-        <div>
-          <label for="clinicContact">Contact Number</label>
-          <input type="tel" id="clinicContact" name="clinicContact" required>
-        </div>
+        </div> 
 
         <h3 style="color:var(--primary); margin-top:20px;">Visit Schedule</h3>
+       
+        <!-- Schedule builder controls -->
+        <div style="margin-top:18px;">
+          <h3 style="color:var(--primary); margin-bottom:8px;">Visit Schedule</h3>
 
-        <div class="schedule-actions">
-          <button type="button" class="small-btn" onclick="selectAll()">Select All</button>
-          <button type="button" class="small-btn clear" onclick="clearAll()">Clear All</button>
-        </div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <label for="sched_day">Day</label>
+            <select id="sched_day" name="sched_day">
+              <option value="mon">Monday</option><option value="tue">Tuesday</option><option value="wed">Wednesday</option>
+              <option value="thu">Thursday</option><option value="fri">Friday</option><option value="sat">Saturday</option>
+              <option value="sun">Sunday</option>
+            </select>
 
-        <div class="schedule-grid" id="scheduleGrid">
-          <div></div>
-          <div class="day">Mon</div>
-          <div class="day">Tue</div>
-          <div class="day">Wed</div>
-          <div class="day">Thu</div>
-          <div class="day">Fri</div>
-          <div class="day">Sat</div>
-          <div class="day">Sun</div>
+            <label for="sched_start">Start time</label>
+            <select id="sched_start" name="sched_start"></select>
+
+            <label for="sched_end">End time</label>
+            <select id="sched_end" name="sched_end"></select>
+
+            <button type="button" id="sched_add" class="btn" style="margin-left:8px;">Add</button>
+            <button type="button" id="sched_clear" class="btn small-btn clear">Clear All</button>
+          </div>
+
+          <input type="hidden" id="schedule_json" name="schedule_json" value="">
+
+          <div style="margin-top:12px;">
+            <table id="schedule_table" style="width:100%; border-collapse:collapse;">
+              <thead>
+                <tr style="text-align:left; border-bottom:1px solid rgba(0,0,0,0.08);">
+                  <th style="padding:8px">Day</th>
+                  <th style="padding:8px">Start</th>
+                  <th style="padding:8px">End</th>
+                  <th style="padding:8px">Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+
+            <script>
+          (function(){
+            const startHour = 8, endHour = 20; // 08:00..20:00
+            const pad = n => String(n).padStart(2,'0');
+            function timeLabel(h){ return `${(h%12===0?12:h%12)}:00 ${h<12?'AM':'PM'}`; }
+            function isoTime(h){ return `${pad(h)}:00`; }
+
+            const startSel = document.getElementById('sched_start');
+            const endSel = document.getElementById('sched_end');
+            const daySel = document.getElementById('sched_day');
+            const addBtn = document.getElementById('sched_add');
+            const clearBtn = document.getElementById('sched_clear');
+            const tableBody = document.querySelector('#schedule_table tbody');
+            const hidden = document.getElementById('schedule_json');
+
+            // populate time selects (1-hour intervals)
+            for(let h = startHour; h <= endHour; h++){
+              const opt1 = document.createElement('option');
+              opt1.value = isoTime(h);
+              opt1.textContent = timeLabel(h);
+              startSel.appendChild(opt1);
+
+              const opt2 = document.createElement('option');
+              opt2.value = isoTime(h);
+              opt2.textContent = timeLabel(h);
+              endSel.appendChild(opt2);
+            }
+
+            // internal schedule representation: { mon: {start:'08:00', end:'12:00'}, ... }
+            const schedule = {};
+
+            function renderTable(){
+              tableBody.innerHTML = '';
+              const order = ['mon','tue','wed','thu','fri','sat','sun'];
+              const labels = {mon:'Monday', tue:'Tuesday', wed:'Wednesday', thu:'Thursday', fri:'Friday', sat:'Saturday', sun:'Sunday'};
+              for(const d of order){
+                const row = document.createElement('tr');
+                const cellDay = document.createElement('td');
+                cellDay.style.padding = '8px';
+                cellDay.textContent = labels[d];
+                row.appendChild(cellDay);
+
+                const cellStart = document.createElement('td');
+                cellStart.style.padding = '8px';
+                cellStart.textContent = (schedule[d] ? schedule[d].start : '—');
+                row.appendChild(cellStart);
+
+                const cellEnd = document.createElement('td');
+                cellEnd.style.padding = '8px';
+                cellEnd.textContent = (schedule[d] ? schedule[d].end : '—');
+                row.appendChild(cellEnd);
+
+                const cellActions = document.createElement('td');
+                cellActions.style.padding = '8px';
+                if(schedule[d]){
+                  const del = document.createElement('button');
+                  del.type = 'button';
+                  del.textContent = 'Delete';
+                  del.className = 'small-btn';
+                  del.style.marginRight = '6px';
+                  del.addEventListener('click', ()=>{ delete schedule[d]; renderTable(); syncHidden(); });
+                  
+                  cellActions.appendChild(del);
+                } else {
+                  cellActions.textContent = '';
+                }
+                row.appendChild(cellActions);
+
+                tableBody.appendChild(row);
+              }
+            }
+
+            function parseHM(t){ const [hh,mm]=t.split(':').map(Number); return hh*60+mm; }
+
+            function syncHidden(){
+              // convert to output format: { mon: ["08:00-12:00"], ... } (list to allow future multiple ranges)
+              const out = {};
+              for(const k in schedule) out[k] = [`${schedule[k].start}-${schedule[k].end}`];
+              hidden.value = JSON.stringify({ schedule: out, doctor_id: (document.getElementById('doctor_id') ? document.getElementById('doctor_id').value : null) });
+            }
+
+            addBtn.addEventListener('click', ()=>{
+              const day = daySel.value;
+              const start = startSel.value;
+              const end = endSel.value;
+
+              if(!day){ alert('Select a day.'); return; }
+              if(!start || !end){ alert('Select start and end times.'); return; }
+
+              if(parseHM(end) <= parseHM(start)){
+                alert('End time must be later than start time.');
+                return;
+              }
+
+              // optional: merge or reject overlapping; here we simply replace existing day entry
+              schedule[day] = { start, end };
+              renderTable();
+              syncHidden();
+            });
+
+            clearBtn.addEventListener('click', ()=>{
+              for(const k in schedule) delete schedule[k];
+              renderTable();
+              syncHidden();
+            });
+
+            // initialize table (in case server provided existing schedule in a hidden var)
+            (function initFromServer(){
+              try{
+                // if server injected existing schedule json in a hidden input or global var, parse it
+                const existing = document.getElementById('schedule_json_initial');
+                let initial = null;
+                if(existing && existing.value) initial = JSON.parse(existing.value);
+                else if(window.INIT_SCHEDULE) initial = window.INIT_SCHEDULE;
+                if(initial && initial.schedule){
+                  for(const [k, ranges] of Object.entries(initial.schedule)){
+                    if(Array.isArray(ranges) && ranges.length){
+                      // take first range "HH:MM-HH:MM"
+                      const [s,e] = ranges[0].split('-');
+                      schedule[k] = { start: s, end: e };
+                    }
+                  }
+                  renderTable();
+                  syncHidden();
+                }
+              }catch(err){ /* ignore parse errors */ }
+            })();
+
+            // final sync to ensure hidden has something
+            renderTable();
+            syncHidden();
+          })();
+          </script>
+          </div>
         </div>
 
         <button type="submit" class="btn">Submit</button>
@@ -219,50 +403,7 @@
 
   </div>
 
-  <script>
-    const start = 8;
-    const end = 20;
-    const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
-    const grid = document.getElementById("scheduleGrid");
-
-    for (let hour = start; hour < end; hour++) {
-      const row = document.createElement("div");
-      row.style.display = "contents";
-
-      const timeLabel = document.createElement("div");
-      timeLabel.classList.add("time-col");
-      timeLabel.textContent = `${hour}:00 — ${hour+1}:00`;
-      row.appendChild(timeLabel);
-
-      days.forEach(day => {
-        const cell = document.createElement("div");
-        cell.classList.add("slot");
-
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-
-        /* FIX: Add name + value so form submits */
-        checkbox.name = `${day}_${hour}`;
-        checkbox.value = "1";
-
-        checkbox.classList.add("schedule-checkbox");
-
-        cell.appendChild(checkbox);
-        row.appendChild(cell);
-      });
-
-      grid.appendChild(row);
-    }
-
-    function selectAll() {
-      document.querySelectorAll(".schedule-checkbox").forEach(cb => cb.checked = true);
-    }
-
-    function clearAll() {
-      document.querySelectorAll(".schedule-checkbox").forEach(cb => cb.checked = false);
-    }
-  </script>
 
 </body>
 </html>

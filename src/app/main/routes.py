@@ -159,13 +159,31 @@ def doctor_clinic_seed_form():
 
         return redirect(url_for('main.doctor_clinic_seed_form'))
 
-    username=session.get("doctor_id"),
+    username=session.get("doctor_id")
+    print("Printing username from add clinic................!!!!!!!!!!!1")
+    print(username)
     doctor_data=doctor_database_management.get_doctor_by_id(doctor_id=username)
     return render_template(
         "doctor_add_clinic.html",
         username=username,
         doctor_data=doctor_data
     )
+
+"""@bp.route("/doctor-clinic-seeding", methods=["GET"])
+def doctor_add_clinic():
+    if 'doctor_id' not in session:
+        return redirect(url_for('main.doctor_login_page'))
+
+    username=session.get("doctor_id")
+    print("Printing username from add clinic................!!!!!!!!!!!1")
+    print(username)
+    doctor_data=doctor_database_management.get_doctor_by_id(doctor_id=username)
+    return render_template(
+        "doctor_add_clinic.html",
+        username=username,
+        doctor_data=doctor_data
+    )"""
+
 
 @bp.route("/clinic-booking", methods=["GET"])
 def clinic_booking():

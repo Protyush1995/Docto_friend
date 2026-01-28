@@ -109,36 +109,6 @@ class DatabaseOperations:
         return self.db[self.collection_name].find_one({id_field: id_val.strip()})
 
     
-    #Helper functions
-    """def find_by_email(self, email: str) -> Optional[Dict]:
-        if not email: return None
-        check = self.db[self.collection_name].find_one({"email": email.strip()})
-        print("Email check against mongo =")
-        print(check)
-        
-        return check
-
-    def find_by_license(self, license_no: str) -> Optional[Dict]:
-        if not license_no: return None
-        check = self.db[self.collection_name].find_one({"license": license_no.strip()})
-        print("License check against mongo =")
-        print(check)
-        return check
-
-    def find_user(self, doc_username, password):
-        # Hash the password for verification
-        hashed_password = self.hash_password(password)
-        
-        # Check if the user exists with the correct username and password
-        user = self.collection.find_one({
-            "doc_username": doc_username,
-            "hashed_password": hashed_password,
-            "password": password
-        })
-        return user
-    """
     
-
-
 
 
