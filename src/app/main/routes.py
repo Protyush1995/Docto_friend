@@ -13,7 +13,7 @@ from flask import (
     url_for,
 )
 from . import bp
-from ..db_manager import doctor_database_management
+from ..db_manager import doctor_database_management,clinic_database_management
 from ..db_manager import db_operations
 
 #clinic_db = db_operations.ClinicDB()
@@ -117,50 +117,57 @@ def doctor_clinic_seed_form():
 
     if request.method == "POST":
         doctor_id = session.get("doctor_id")
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({"error":"invalid json"}), 400
 
-        # Extract form data
-        clinic_name = request.form.get("clinicName")
-        clinic_contact = request.form.get("clinicContact")
-        clinic_fees = request.form.get("clinicFees")
-        clinic_id = doctor_database_management._generate_clinic_id(clinic_name)
+        clinic_name = data.get("clinicName")
+        clinic_contact = data.get("clinicContact")
+        clinic_contact_alternative = data.get("clinicContactAlt")
+        clinic_fees = data.get("clinicFees")
+        clinic_email = data.get("clinicemail")
+
         address = {
-            "house_no": request.form.get("houseNo"),
-            "street": request.form.get("street"),
-            "post_office": request.form.get("postOffice"),
-            "police_station": request.form.get("policeStation"),
-            "city": request.form.get("city"),
-            "pin_code": request.form.get("pinCode"),
-            "state": request.form.get("state"),
-            "country": request.form.get("country")
+            "house_no": data.get("houseNo"),
+            "street": data.get("street"),
+            "post_office": data.get("postOffice"),
+            "police_station": data.get("policeStation"),
+            "city": data.get("city"),
+            "pin_code": data.get("pinCode"),
+            "state": data.get("state"),
+            "country": data.get("country")
         }
 
-        # Convert schedule checkboxes into JSON matrix
-        schedule = {}
-        for day in ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]:
+        # schedule comes as object under "schedule"
+        schedule = data.get("schedule")
+        """for day in ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]:
             schedule[day] = []
 
         for key in request.form.keys():
             if "_" in key:
                 day, hour = key.split("_")
-                schedule[day].append(hour)
+                schedule[day].append(hour)"""
 
         clinic_data = {
-            "clinic_id": clinic_id,
             "clinic_name": clinic_name,
             "clinic_contact": clinic_contact,
+            "clinic_contact_alternative":clinic_contact_alternative,
+            "clinic_email":clinic_email,
             "clinic_fees": clinic_fees,
-            "address": address,
-            "schedule": schedule
+            "clinic_address": address,
+            "visit_schedule": schedule,
+            "doctor_id":doctor_id,
         }
 
         # Save to DB
-        #clinic_id = clinic_db.add_clinic(doctor_id, clinic_data)
-        #print("Inserted clinic:", clinic_id)
-
-        return redirect(url_for('main.doctor_clinic_seed_form'))
+        response = clinic_database_management.append_clinic_registration_record(clinic_data)
+        print("Inserted clinic:", response)
+        #print("Printing clinic details from backend......................................")
+        #print(json.dumps(clinic_data))
+        #return redirect(url_for('main.doctor_clinic_seed_form'))
 
     username=session.get("doctor_id")
-    print("Printing username from add clinic................!!!!!!!!!!!1")
+    print("Printing username from add clinic................!!!!!!!!!!!")
     print(username)
     doctor_data=doctor_database_management.get_doctor_by_id(doctor_id=username)
     return render_template(
@@ -169,7 +176,9 @@ def doctor_clinic_seed_form():
         doctor_data=doctor_data
     )
 
-"""@bp.route("/doctor-clinic-seeding", methods=["GET"])
+"""
+
+@bp.route("/doctor-clinic-seeding", methods=["GET"])
 def doctor_add_clinic():
     if 'doctor_id' not in session:
         return redirect(url_for('main.doctor_login_page'))
@@ -182,7 +191,9 @@ def doctor_add_clinic():
         "doctor_add_clinic.html",
         username=username,
         doctor_data=doctor_data
-    )"""
+    )
+
+"""
 
 
 @bp.route("/clinic-booking", methods=["GET"])
