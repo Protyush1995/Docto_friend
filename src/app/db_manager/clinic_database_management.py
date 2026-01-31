@@ -1,16 +1,17 @@
 import json
 import os
 import re
+from pathlib import Path
 from datetime import datetime
 from typing import Dict, Optional
 from .db_operations import DatabaseOperations
 
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-LICENSE_RE = re.compile(r"^[A-Z0-9\-]{5,20}$", re.I)
-PASS_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
 
-clinic_db = DatabaseOperations(env_file="C:\Users\Protyush\Desktop\docto_friend\Docto_friend\src\app\db_manager\.env.clinics")
+base = Path(__file__).parent
+clinic_env = (base / ".env.clinics").resolve()
+clinic_db = DatabaseOperations(env_file=str(clinic_env))
 
 def _generate_clinic_id() -> str:
     # numeric timestamp (UTC) + cryptographically random 8-digit number
@@ -37,22 +38,21 @@ def append_clinic_registration_record(data: Dict) -> Dict:
     record = {
         "clinic_id": clinic_id,
         "doctor_id": data["doctor_id"].strip(),
-        "clinicname": data["clinicName"].strip(),
-        "email": data["clinicemail"].strip(),
-        "clinic_address":"",
+        "clinicname": data["clinic_name"].strip(),
+        "email": data["clinic_email"].strip(),
+        "clinic_address":data["clinic_address"],
         "primary_contact_number":data["clinic_contact"].strip(),
         "secondary_contact_number":data["clinic_contact_alternative"].strip(),
         "created_at": datetime.utcnow().date().isoformat(),
         "services_offered":"",
-        "visit_schedule":data["schedule"],
-        "doctor_consultation_fees":data["clinicFees"],
+        "visit_schedule":data["visit_schedule"],
+        "doctor_consultation_fees":data["clinic_fees"],
     }
 
     #inserting data to MongoDb database
     response = clinic_db.insert_record(user_document=record)
 
     return response
-
 
 def get_clinic_by_doctor_id(doctor_id:str) -> Dict:
     doctor_data = clinic_db.find_by_id(id_val=doctor_id,id_field="doctor_id")
