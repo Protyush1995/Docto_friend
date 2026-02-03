@@ -16,7 +16,6 @@ from . import bp
 from ..db_manager import doctor_database_management,clinic_database_management
 from ..db_manager import db_operations
 
-#clinic_db = db_operations.ClinicDB()
 
 @bp.route("/", methods=["GET"])
 def doctor_login_page():
@@ -140,13 +139,6 @@ def doctor_clinic_seed_form():
 
         # schedule comes as object under "schedule"
         schedule = data.get("schedule")
-        """for day in ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]:
-            schedule[day] = []
-
-        for key in request.form.keys():
-            if "_" in key:
-                day, hour = key.split("_")
-                schedule[day].append(hour)"""
 
         clinic_data = {
             "clinic_name": clinic_name,
@@ -162,9 +154,6 @@ def doctor_clinic_seed_form():
         # Save to DB
         response = clinic_database_management.append_clinic_registration_record(clinic_data)
         print("Inserted clinic:", response)
-        #print("Printing clinic details from backend......................................")
-        #print(json.dumps(clinic_data))
-        #return redirect(url_for('main.doctor_clinic_seed_form'))
 
     username=session.get("doctor_id")
     print("Printing username from add clinic................!!!!!!!!!!!")
@@ -175,26 +164,6 @@ def doctor_clinic_seed_form():
         username=username,
         doctor_data=doctor_data
     )
-
-"""
-
-@bp.route("/doctor-clinic-seeding", methods=["GET"])
-def doctor_add_clinic():
-    if 'doctor_id' not in session:
-        return redirect(url_for('main.doctor_login_page'))
-
-    username=session.get("doctor_id")
-    print("Printing username from add clinic................!!!!!!!!!!!1")
-    print(username)
-    doctor_data=doctor_database_management.get_doctor_by_id(doctor_id=username)
-    return render_template(
-        "doctor_add_clinic.html",
-        username=username,
-        doctor_data=doctor_data
-    )
-
-"""
-
 
 @bp.route("/clinic-booking", methods=["GET"])
 def clinic_booking():

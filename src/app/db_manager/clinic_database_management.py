@@ -1,6 +1,10 @@
 import json
 import os
 import re
+import io
+import qrcode
+from base64 import b64encode
+from bson.binary import Binary
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Optional
@@ -12,6 +16,33 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 base = Path(__file__).parent
 clinic_env = (base / ".env.clinics").resolve()
 clinic_db = DatabaseOperations(env_file=str(clinic_env))
+
+def _generate_clinic_qr(clinic_id: str, doctor_id: str) -> bytes:
+    """
+    Returns PNG bytes for a QR encoding a URL pointing to /clinic-booking
+    with query params clinic_id and doctor_id.
+    """
+    # Build a compact URL/payload. Use absolute URL if you want (domain optional).
+    # Example: /clinic-booking?clinic_id=CLINIC_ID_...&doctor_id=DOC123
+    payload = f"/clinic-booking?clinic_id={clinic_id}&doctor_id={doctor_id}"
+    qr = qrcode.QRCode(version=1, box_size=10, border=2, error_correction=qrcode.constants.ERROR_CORRECT_M)
+    qr.add_data(payload)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+
+    # Get the current file's directory.
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    
+    # Define the file path (you can specify a filename as needed).
+    file_path = os.path.join(current_directory, f"clinic_qr_{clinic_id}_{doctor_id}.png")
+    
+    # Save the image to the specified file path.
+    img.save(file_path)
+
+    return buf.getvalue()
+
 
 def _generate_clinic_id() -> str:
     # numeric timestamp (UTC) + cryptographically random 8-digit number
@@ -33,8 +64,7 @@ def append_clinic_registration_record(data: Dict) -> Dict:
 
 
     clinic_id = _generate_clinic_id()
-    #password_hash = _hash_password(data["password"])
-
+    qr_png = _generate_clinic_qr(clinic_id, data["doctor_id"].strip())
     record = {
         "clinic_id": clinic_id,
         "doctor_id": data["doctor_id"].strip(),
@@ -47,6 +77,7 @@ def append_clinic_registration_record(data: Dict) -> Dict:
         "services_offered":"",
         "visit_schedule":data["visit_schedule"],
         "doctor_consultation_fees":data["clinic_fees"],
+        "clinic_qr":qr_png,
     }
 
     #inserting data to MongoDb database

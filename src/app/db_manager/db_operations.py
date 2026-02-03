@@ -84,7 +84,7 @@ class DatabaseOperations:
 
     def insert_record(self, user_document: Dict):
         # Create a user document
-        print(f"DB LOg : Received user Document ------ {json.dumps(user_document)}")
+        # print(f"DB LOg : Received user Document ------ {json.dumps(user_document)}")
         if not user_document:
             print ("!!WARNING!! Empty user data!! nothing to enter in database!!")
             return None
