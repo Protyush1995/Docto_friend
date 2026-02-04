@@ -303,6 +303,7 @@ def doc_dashboard(doctor_id):
     if isinstance(clinics_list, dict):
         clinics_list = [clinics_list]
 
+    #Converting schedules for ease of display
     for clinic in clinics_list:
         clinic["clinic_address"] = dict_to_string(d=clinic["clinic_address"],fmt="vo")
         clinic["visit_schedule"] = dict_to_string(d=clinic["visit_schedule"],fmt="kv")

@@ -209,8 +209,8 @@
 
         <div class="right-panel" style="flex:0 0 220px; display:flex; flex-direction:column; gap:12px;">
           <div class="stat" style="padding:12px;">
-            <h3 id="totalClinics" style="margin:0 0 6px 0; font-size:20px;">3</h3>
-            <p style="margin:0; font-size:13px; color:var(--muted);">Total Clinics Registered</p>
+            <h3 id="totalClinics" style="margin:0 0 6px 0; font-size:20px;">{{ clinics | length }}</h3>
+            <p style="margin:0; font-size:13px; color:var(--muted);">Registered Clinics</p>
           </div>
 
           <div class="stat" style="padding:12px;">
@@ -244,7 +244,7 @@
 
                   <div class="clinic-meta">
                       <h3>{{ clinic.clinicname }}</h3>
-                      <p>ID: {{ clinic.clinic_id }}</p>
+                      <p>Registered since: {{ clinic.created_at }}</p>
                   </div>
               </div>
 
