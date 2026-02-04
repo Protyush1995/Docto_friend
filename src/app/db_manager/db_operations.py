@@ -126,8 +126,30 @@ class DatabaseOperations:
         :param id_val : value of primary key to be searched
         :param id_field : primary key field name to be searched
         """
+        print(f"DB Operations LOG : Entering find by ID function with {id_field} = {id_val} : Database Name = {self.db_name} : Collection Name {self.collection_name}")
         if not id_field or not id_val: return None
-        return self.collection.find_one({id_field: id_val.strip()})
+        cursor = self.collection.find({id_field: id_val.strip()})
+        if cursor:
+            print("DB Operations LOG : Query matched, records have been found !")
+            cursor = list(cursor)
+            print(f"DB Operations LOG : Total records found {len(cursor)}")
+            for d in cursor:
+                if "_id" in d:
+                    del d["_id"]
+                    print(f"DB Operations LOG : Record after making JSON serializable : type = {type(d)}")
+                    #print(json.dumps(d))
+                    #TODO remove this block after solving issue 25
+                    if "clinic_qr" in d: d["clinic_qr"] = str(d["clinic_qr"])
+
+            if isinstance(cursor, list) and len(cursor) == 1:
+                # singular: exactly one element
+                return cursor[0]
+
+        return cursor
+    
+
+    
+
 
     
     

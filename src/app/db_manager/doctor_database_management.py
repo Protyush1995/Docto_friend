@@ -104,7 +104,6 @@ def update_doctor_profile(data: Dict) -> Dict:
 
 def get_doctor_by_id(doctor_id:str) -> Dict:
     doctor_data = db.find_by_id(id_val=doctor_id,id_field="doctor_id")
-    del doctor_data["_id"] #removing mongodb ObjectId
     return doctor_data
 
 def verify_password(plain: str, stored_hash: str) -> bool:

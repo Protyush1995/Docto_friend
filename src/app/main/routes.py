@@ -104,7 +104,6 @@ def doctor_update_profile():
         current_app.logger.exception("Failed to update doctor profile !! Contact Admin!!")
         return jsonify(success=False, error="internal_error"), 500
 
-
 @bp.route("/doctor-forgot-password", methods=["GET"])
 def doctor_forgot_password_page():
     return render_template("doctor_forgot_password.html")
@@ -156,8 +155,8 @@ def doctor_clinic_seed_form():
         print("Inserted clinic:", response)
 
     username=session.get("doctor_id")
-    print("Printing username from add clinic................!!!!!!!!!!!")
-    print(username)
+    #print("Printing username from add clinic................!!!!!!!!!!!")
+    #print(username)
     doctor_data=doctor_database_management.get_doctor_by_id(doctor_id=username)
     return render_template(
         "doctor_add_clinic.html",
@@ -294,24 +293,50 @@ def submit_booking():
 
 @bp.route('/doc_dashboard/<doctor_id>', methods=["GET"])
 def doc_dashboard(doctor_id):
-    #user_id = doctor_id
-
     if not doctor_id:
         return redirect(url_for('main.doctor_login_page'))
     
-    #doctor_data = dict(session)
-    doctor_data = dict(doctor_database_management.get_doctor_by_id(doctor_id))
-    #clinics_list = find_clinics_by_doctor(user_id)
-    #doctor_data['clinics'] = clinics_list
-   
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
+    clinics_list = clinic_database_management.get_clinic_by_doctor_id(doctor_id)
+    print(f"Printing clinic list TYPE from doctor dashboard route::list type = {type(clinics_list)}")
+
+    if isinstance(clinics_list, dict):
+        clinics_list = [clinics_list]
+
+    for clinic in clinics_list:
+        clinic["clinic_address"] = dict_to_string(d=clinic["clinic_address"],fmt="vo")
+        clinic["visit_schedule"] = dict_to_string(d=clinic["visit_schedule"],fmt="kv")
+
+    doctor_data['clinics'] = clinics_list
+    print(f"Printing clinic list from doctor dashboard::list type = {type(clinics_list)} ::: {clinics_list}")
+
     return render_template(
         'doctor_dashboard.html',
         user_id=doctor_id,
-        doctor_data=doctor_data
-        #clinics = clinics_list
+        doctor_data=doctor_data,
+        clinics = clinics_list
     )
 
 @bp.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.clear()  # Clear the session
     return redirect(url_for('main.doctor_login_page'))  # Redirect to login page
+
+
+#helper functions
+def dict_to_string(d: dict, fmt: str = "vo") -> str:
+    """
+    Convert dict to string.
+    fmt="kv" -> "KEY1 , Val1 . KEY2 , Val2" (key value pair, in insertion order)
+    fmt="vo" -> "Val1,Val2,Val3"  (values only, in insertion order)
+    """
+    if not isinstance(d, dict):
+        raise TypeError("d must be a dict")
+    if fmt == "kv":
+        parts = [f"{k} : {v}" for k, v in d.items()]
+        return " . ".join(parts)
+    elif fmt == "vo":
+        vals = [str(v) for v in d.values()]
+        return ", ".join(vals)
+    else:
+        raise ValueError("fmt must be 'kv' or 'vo'")

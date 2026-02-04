@@ -239,22 +239,20 @@
 
               <div class="clinic-head">
                   <div class="clinic-avatar">
-                      {{ clinic.clinic_name[0] }}
+                      {{ clinic.clinicname }}
                   </div>
 
                   <div class="clinic-meta">
-                      <h3>{{ clinic.clinic_name }}</h3>
+                      <h3>{{ clinic.clinicname }}</h3>
                       <p>ID: {{ clinic.clinic_id }}</p>
                   </div>
               </div>
 
               <div class="clinic-info">
                   <div class="chip">{{ clinic.clinic_address }}</div>
-                  <div class="chip">Fees: {{ clinic.clinic_fees }}</div>
-                  <div class="chip">Contact: {{ clinic.clinic_contact }}</div>
-                  <div class="chip">Visit Days: {{ clinic.doctor_visit_days }}</div>
-                  <div class="chip">Doctor: {{ clinic.doctor_first_name }} {{ clinic.doctor_last_name }}</div>
-                  <div class="chip">Qualifications: {{ clinic.doctor_qualifications }}</div>
+                  <div class="chip">Fees: {{ clinic.doctor_consultation_fees }}</div>
+                  <div class="chip">Contact: {{ clinic.primary_contact_number }} / {{clinic.secondary_contact_number}}</div>
+                  <div class="chip">Visit Days: {{ clinic.visit_schedule }}</div>
               </div>
 
               <div style="margin-top:12px; display:flex; gap:8px;">

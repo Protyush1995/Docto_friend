@@ -43,7 +43,6 @@ def _generate_clinic_qr(clinic_id: str, doctor_id: str) -> bytes:
 
     return buf.getvalue()
 
-
 def _generate_clinic_id() -> str:
     # numeric timestamp (UTC) + cryptographically random 8-digit number
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[:-3]  # up to milliseconds, digits only
@@ -87,5 +86,4 @@ def append_clinic_registration_record(data: Dict) -> Dict:
 
 def get_clinic_by_doctor_id(doctor_id:str) -> Dict:
     doctor_data = clinic_db.find_by_id(id_val=doctor_id,id_field="doctor_id")
-    del doctor_data["_id"] #removing mongodb ObjectId
     return doctor_data
