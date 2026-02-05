@@ -167,7 +167,20 @@
       border:1px solid rgba(0,64,255,0.06); display:flex; align-items:center; justify-content:center;
       color:var(--primary); font-weight:700;
     }
-    .clinic-meta h3{ margin:0; font-size:15px; color:#062a8a; }
+    
+    .clinic-meta h3 { margin:0; font-size:15px; color:#062a8a; display:flex; align-items:center; gap:8px; }
+    .edit-icon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--primary);
+      text-decoration:none;
+      padding:4px;
+      border-radius:6px;
+    }
+    .edit-icon svg{ display:block; width:16px; height:16px; }
+    .edit-icon:hover{ background: rgba(0,64,255,0.06); }
+    
     .clinic-meta p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
 
     .clinic-info { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
@@ -348,7 +361,15 @@
                     </div>
 
                     <div class="clinic-meta">
-                        <h3>{{ clinic.clinicname }}</h3>
+                        <h3>{{ clinic.clinicname }}
+                           <a class="edit-icon" aria-label="Edit clinic" title="Edit Clinic Details">
+                              <!-- simple pencil SVG -->
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"/>
+                                <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
+                              </svg>
+                            </a>
+                        </h3>
                         <p>Registered since: {{ clinic.created_at }}</p>
                     </div>
                 </div>
@@ -360,10 +381,6 @@
                     <div class="chip"><strong>Visit Days:</strong> {{ clinic.visit_schedule }}</div>
                 </div>
 
-                <div style="margin-top:12px; display:flex; gap:8px;">
-                    <button class="btn">View</button>
-                    <button class="btn ghost">Edit</button>
-                </div>
             </div>
             <div class="clinic-image">
               <a href="{{ clinic.clinic_qr_data_uri }}" download="clinic_{{ clinic.clinicname }}.png" class="qr-download" aria-label="Download QR">
