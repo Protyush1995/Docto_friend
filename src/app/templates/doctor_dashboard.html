@@ -122,7 +122,7 @@
       padding: 14px;
       border-radius: 12px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.545);
-      border: 1px solid rgba(0,64,255,0.05);
+      border: 1px solid rgba(123, 0, 255, 0.867);
 
       display: flex;
       gap: 12px;
@@ -152,7 +152,6 @@
       width: auto;
       max-width: 160px; /* ensure image doesn't push card wider */
       display: block;
-      border-radius: 8px;
       object-fit: contain;
     }
 
@@ -175,10 +174,60 @@
     .chip {
       background:linear-gradient(180deg, #eef4ff, #ffffff);
       color:var(--primary);
-      padding:6px 8px; border-radius:8px; font-size:13px; border:1px solid rgba(0,64,255,0.06);
+      padding:6px 8px; border-radius:8px; font-size:10px; border:1px solid rgba(225, 0, 255, 0.499);
     }
 
     footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px; }
+
+    .qr-download{
+      position:relative;
+      display:inline-block;
+      height:100%;
+      line-height:0;
+      text-decoration:none;
+      color:inherit;
+    }
+
+    .qr-download img{
+      height:100%;
+      width:auto;
+      max-width:160px;
+      display:block;
+      border-radius:8px;
+      object-fit:contain;
+    }
+
+    /* hint */
+    .qr-hint{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%) translateY(8px);
+      bottom:8px;
+      background:rgba(0,0,0,0.72);
+      color:#fff;
+      font-size:12px;
+      padding:6px 8px;
+      border-radius:8px;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease;
+      white-space:nowrap;
+    }
+
+    /* show hint on hover/focus */
+    .qr-download:hover .qr-hint,
+    .qr-download:focus .qr-hint{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    /* small visual affordance (cursor) */
+    .qr-download:hover img,
+    .qr-download:focus img{
+      filter:brightness(0.98);
+      cursor:pointer;
+    }
+
 
     /* keep mobile behavior: stack and full width under 760px */
     @media (max-width:760px){
@@ -305,10 +354,10 @@
                 </div>
 
                 <div class="clinic-info">
-                    <div class="chip">{{ clinic.clinic_address }}</div>
-                    <div class="chip">Fees: {{ clinic.doctor_consultation_fees }}</div>
-                    <div class="chip">Contact: {{ clinic.primary_contact_number }} / {{clinic.secondary_contact_number}}</div>
-                    <div class="chip">Visit Days: {{ clinic.visit_schedule }}</div>
+                    <div class="chip"><strong>Address:</strong> {{ clinic.clinic_address }}</div>
+                    <div class="chip"><strong>Fees:</strong> {{ clinic.doctor_consultation_fees }}</div>
+                    <div class="chip"><strong>Contact:</strong> {{ clinic.primary_contact_number }} / {{clinic.secondary_contact_number}}</div>
+                    <div class="chip"><strong>Visit Days:</strong> {{ clinic.visit_schedule }}</div>
                 </div>
 
                 <div style="margin-top:12px; display:flex; gap:8px;">
@@ -317,7 +366,10 @@
                 </div>
             </div>
             <div class="clinic-image">
-              <img src="{{ clinic.clinic_qr_data_uri }}" alt="Clinic image">
+              <a href="{{ clinic.clinic_qr_data_uri }}" download="clinic_{{ clinic.clinicname }}.png" class="qr-download" aria-label="Download QR">
+                <img src="{{ clinic.clinic_qr_data_uri }}" alt="Clinic QR">
+                <span class="qr-hint">Download QR</span>
+              </a>
             </div>
 
           </div>
