@@ -118,7 +118,44 @@
       border-radius:12px;
       box-shadow:0 2px 6px rgba(0, 0, 0, 0.545);
       border:1px solid rgba(0,64,255,0.05);
+      
     }
+
+    .clinic-card{
+      position:relative;
+      overflow:visible;         /* allow image to extend if needed */
+      display:flex;
+      gap:12px;
+      align-items:stretch;
+    }
+
+    /* content area */
+    .clinic-card .content{
+      flex:1 1 auto;
+      min-width:0;
+      padding-right:12px;
+    }
+
+    /* image container: let width adjust to image aspect, but cap it */
+    .clinic-image{
+      flex: 0 0 auto;
+      height:100%;
+      display:flex;
+      align-items:stretch;
+      overflow:visible;
+    }
+
+    /* make image scale to card height, keep full image visible */
+    .clinic-image img{
+      height:100%;
+      width:auto;              /* preserve aspect, no cropping */
+      max-width:180px;        /* reasonable cap to avoid huge width; adjust as needed */
+      display:block;
+      border-radius:8px;
+      object-fit:contain;     /* not strictly needed with width:auto/height:100% */
+    }
+
+
     .clinic-head{ display:flex; gap:12px; align-items:center; }
     .clinic-avatar{
       width:56px; height:56px; border-radius:8px; overflow:hidden; background:#f2f8ff;
@@ -236,29 +273,33 @@
 
           {% for clinic in clinics %}
           <div class="clinic-card">
+            <div class="content">
+                <div class="clinic-head">
+                    <div class="clinic-avatar">
+                        {{ clinic.clinicname }}
+                    </div>
 
-              <div class="clinic-head">
-                  <div class="clinic-avatar">
-                      {{ clinic.clinicname }}
-                  </div>
+                    <div class="clinic-meta">
+                        <h3>{{ clinic.clinicname }}</h3>
+                        <p>Registered since: {{ clinic.created_at }}</p>
+                    </div>
+                </div>
 
-                  <div class="clinic-meta">
-                      <h3>{{ clinic.clinicname }}</h3>
-                      <p>Registered since: {{ clinic.created_at }}</p>
-                  </div>
-              </div>
+                <div class="clinic-info">
+                    <div class="chip">{{ clinic.clinic_address }}</div>
+                    <div class="chip">Fees: {{ clinic.doctor_consultation_fees }}</div>
+                    <div class="chip">Contact: {{ clinic.primary_contact_number }} / {{clinic.secondary_contact_number}}</div>
+                    <div class="chip">Visit Days: {{ clinic.visit_schedule }}</div>
+                </div>
 
-              <div class="clinic-info">
-                  <div class="chip">{{ clinic.clinic_address }}</div>
-                  <div class="chip">Fees: {{ clinic.doctor_consultation_fees }}</div>
-                  <div class="chip">Contact: {{ clinic.primary_contact_number }} / {{clinic.secondary_contact_number}}</div>
-                  <div class="chip">Visit Days: {{ clinic.visit_schedule }}</div>
-              </div>
-
-              <div style="margin-top:12px; display:flex; gap:8px;">
-                  <button class="btn">View</button>
-                  <button class="btn ghost">Edit</button>
-              </div>
+                <div style="margin-top:12px; display:flex; gap:8px;">
+                    <button class="btn">View</button>
+                    <button class="btn ghost">Edit</button>
+                </div>
+            </div>
+            <div class="clinic-image">
+              <img src="{{ clinic.clinic_qr_data_uri }}" alt="Clinic image">
+            </div>
 
           </div>
           {% endfor %}

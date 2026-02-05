@@ -2,6 +2,9 @@ import json
 import os
 import re
 import io
+from io import BytesIO
+from PIL import Image
+import base64
 import qrcode
 from base64 import b64encode
 from bson.binary import Binary
@@ -43,6 +46,15 @@ def _generate_clinic_qr(clinic_id: str, doctor_id: str) -> bytes:
 
     return buf.getvalue()
 
+# Helper: bytes -> PIL.Image
+def bytes_to_pil_image(png_bytes: bytes) -> Image.Image:
+    return Image.open(BytesIO(png_bytes))
+
+# Helper: bytes -> base64 data URI for embedding in HTML
+def bytes_to_data_uri(png_bytes: bytes) -> str:
+    b64 = base64.b64encode(png_bytes).decode("ascii")
+    return f"data:image/png;base64,{b64}"
+
 def _generate_clinic_id() -> str:
     # numeric timestamp (UTC) + cryptographically random 8-digit number
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[:-3]  # up to milliseconds, digits only
@@ -63,7 +75,8 @@ def append_clinic_registration_record(data: Dict) -> Dict:
 
 
     clinic_id = _generate_clinic_id()
-    qr_png = _generate_clinic_qr(clinic_id, data["doctor_id"].strip())
+    qr_png_bytes = _generate_clinic_qr(clinic_id, data["doctor_id"].strip())
+    qr_png_data_uri = bytes_to_data_uri(png_bytes=qr_png_bytes)
     record = {
         "clinic_id": clinic_id,
         "doctor_id": data["doctor_id"].strip(),
@@ -76,7 +89,8 @@ def append_clinic_registration_record(data: Dict) -> Dict:
         "services_offered":"",
         "visit_schedule":data["visit_schedule"],
         "doctor_consultation_fees":data["clinic_fees"],
-        "clinic_qr":qr_png,
+        "clinic_qr_bytes":qr_png_bytes,
+        "clinic_qr_data_uri":qr_png_data_uri,
     }
 
     #inserting data to MongoDb database

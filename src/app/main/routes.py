@@ -2,6 +2,7 @@ import csv
 import os, json
 import random
 from datetime import datetime
+from io import BytesIO
 
 from flask import (
     render_template,
@@ -308,21 +309,23 @@ def doc_dashboard(doctor_id):
         clinic["clinic_address"] = dict_to_string(d=clinic["clinic_address"],fmt="vo")
         clinic["visit_schedule"] = dict_to_string(d=clinic["visit_schedule"],fmt="kv")
 
-    doctor_data['clinics'] = clinics_list
-    print(f"Printing clinic list from doctor dashboard::list type = {type(clinics_list)} ::: {clinics_list}")
+    
+    filtered_list = [remove_bytes_from_dict(x) for x in clinics_list ]
+    print(f"Printing clinic list from doctor dashboard::list type = {type(filtered_list)} ::: {filtered_list}")
+    doctor_data['clinics'] = filtered_list
+    #print(f"Printing clinic list from doctor dashboard::list type = {type(clinics_list)} ::: {clinics_list}")
 
     return render_template(
         'doctor_dashboard.html',
         user_id=doctor_id,
         doctor_data=doctor_data,
-        clinics = clinics_list
+        clinics = filtered_list
     )
 
 @bp.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.clear()  # Clear the session
     return redirect(url_for('main.doctor_login_page'))  # Redirect to login page
-
 
 #helper functions
 def dict_to_string(d: dict, fmt: str = "vo") -> str:
@@ -341,3 +344,6 @@ def dict_to_string(d: dict, fmt: str = "vo") -> str:
         return ", ".join(vals)
     else:
         raise ValueError("fmt must be 'kv' or 'vo'")
+
+def remove_bytes_from_dict(d: dict) -> dict:
+    return {k: v for k, v in d.items() if not isinstance(v, bytes)}
