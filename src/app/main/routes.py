@@ -18,6 +18,8 @@ from ..db_manager import doctor_database_management,clinic_database_management
 from ..db_manager import db_operations
 
 
+
+
 @bp.route("/", methods=["GET"])
 def doctor_login_page():
     return render_template("doctor_login.html")
@@ -89,12 +91,10 @@ def doctor_edit_profile_form(doctor_id):
 @bp.route("/doctor-edit-profile/", methods=["POST"])
 def doctor_update_profile():
     data = request.get_json() or {}
-    print(json.dumps(data))
-    print("Printing from doctor_update_profile from routes-------------------------------")
+    print(f"ROUTE LOG : Printing from doctor_update_profile from routes-------------------------------{json.dumps(data)}")
     try:
         response = doctor_database_management.update_doctor_profile(data)
-        print(json.dumps(response))
-        print("Printing response from update profile from routes-------------------------------")
+        print(f"ROUTE LOG : Printing response from update profile from routes-------------------------------{json.dumps(response)}")
         # TODO: send verification email asynchronously
         if response["success"] :
             return jsonify(success=True,user_id=response.get("doctor_id"),message="Profile update successfull"), 201
@@ -299,7 +299,7 @@ def doc_dashboard(doctor_id):
     
     doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
     clinics_list = clinic_database_management.get_clinic_by_doctor_id(doctor_id)
-    print(f"Printing clinic list TYPE from doctor dashboard route::list type = {type(clinics_list)}")
+    print(f"ROUTE LOG : Printing clinic list TYPE from doctor dashboard route::list type = {type(clinics_list)}")
 
     if isinstance(clinics_list, dict):
         clinics_list = [clinics_list]
@@ -311,13 +311,17 @@ def doc_dashboard(doctor_id):
 
     
     filtered_list = [remove_bytes_from_dict(x) for x in clinics_list ]
-    print(f"Printing clinic list from doctor dashboard::list type = {type(filtered_list)} ::: {filtered_list}")
+    print(f"ROUTE LOG : Printing clinic list from doctor dashboard::list type = {type(filtered_list)} ::: {filtered_list}")
     doctor_data['clinics'] = filtered_list
-    #print(f"Printing clinic list from doctor dashboard::list type = {type(clinics_list)} ::: {clinics_list}")
-
+    profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    
+    print(f"ROUTE LOG : Generated profile pic uri = {profile_pic_uri}")
+    
+    
     return render_template(
         'doctor_dashboard.html',
         user_id=doctor_id,
+        profile_pic_uri=profile_pic_uri,
         doctor_data=doctor_data,
         clinics = filtered_list
     )

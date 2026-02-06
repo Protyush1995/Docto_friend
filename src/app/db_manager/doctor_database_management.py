@@ -57,7 +57,7 @@ def append_registration_record(data: Dict) -> Dict:
     Returns the saved record dict (without plaintext password).
     Raises ValueError on validation errors or Exception on IO errors.
     """
-    print("Preparing NEW user record for database entry!!")
+    print("DOCTOR DB MANAGEMENT LOG : Preparing NEW user record for database entry!!")
     err = validate_registration(data)
     if err:
         raise ValueError(err)
@@ -95,11 +95,11 @@ def update_doctor_profile(data: Dict) -> Dict:
     #updating profile data of MongoDb database
     success = db.update_record (primary_key_name="doctor_id",primary_key_val=data["doctor_id"],updates=data)
     response = {"success":success["acknowledged"],"doctor_id":data["doctor_id"]}
-    print("Message returned by Mongo for profile update...........")
+    print("DOCTOR DB MANAGEMENT LOG : Message returned by Mongo for profile update...........")
     print(json.dumps(success))
-    print("response constructed for profile update...........")
+    print("DOCTOR DB MANAGEMENT LOG : Response constructed for profile update...........")
     print(json.dumps(response))
-
+    print("DOCTOR DB MANAGEMENT LOG : Returning constructed response...........")
     return response
 
 def get_doctor_by_id(doctor_id:str) -> Dict:

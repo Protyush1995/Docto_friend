@@ -80,10 +80,21 @@
       <form id="editProfileForm" action="/doctor/update" method="POST" novalidate>
         <input type="hidden" name="doctor_id" id="doctor_id" value="{{ doctor_data.doctor_id }}">
 
-        <div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="avatar">
+            <img id="avatarImg" src="{{ url_for('static', filename='image/doc_placeholder.png') }}" alt="Doctor" style="width:96px;height:96px;border-radius:12px;object-fit:cover;">
+          </div>
+          <div>
+            <label for="photoFile">Upload profile image (JPG/PNG, ≤2MB)</label>
+            <input id="photoFile" type="file" accept="image/png,image/jpeg">
+            <div class="hint" id="photoHint">No file chosen</div>
+          </div>
+        </div>
+
+        <!--<div>
           <label for="photo">Profile image URL</label>
           <input id="photo" name="photo_url" type="text" placeholder="/static/image/doc_placeholder.png" value="">
-        </div>
+        </div>-->
 
         <div>
           <label for="fees">Member Since:</label>
@@ -168,7 +179,7 @@
     </footer>
   </div>
 
-  <script>
+  <!--<script>
         (function(){
         const form = document.getElementById('editProfileForm');
         const cancel = document.getElementById('cancelBtn');
@@ -225,7 +236,105 @@
             }
         });
         })();
+</script>-->
+<script>
+(function(){
+  const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+  const form = document.getElementById('editProfileForm');
+  const cancel = document.getElementById('cancelBtn');
+  const fileInput = document.getElementById('photoFile');
+  const avatarImg = document.getElementById('avatarImg');
+  const photoHint = document.getElementById('photoHint');
+
+  // globals used by submit handler
+  window.base64Image = null;
+  window.imageMime = null;
+  window.imageFilename = null;
+
+  cancel.addEventListener('click', () => { window.history.back(); });
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) {
+      photoHint.textContent = 'No file chosen';
+      window.base64Image = null;
+      return;
+    }
+    if (!['image/png','image/jpeg'].includes(file.type)) {
+      alert('Only JPG and PNG images are allowed.');
+      fileInput.value = '';
+      photoHint.textContent = 'Invalid file type';
+      window.base64Image = null;
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      alert('File too large. Max 2 MB.');
+      fileInput.value = '';
+      photoHint.textContent = 'File too large';
+      window.base64Image = null;
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      avatarImg.src = ev.target.result; // show preview
+      photoHint.textContent = file.name + ' (' + Math.round(file.size/1024) + ' KB)';
+      const parts = ev.target.result.split(',');
+      window.base64Image = parts[1] || null;
+      window.imageMime = file.type;
+      window.imageFilename = file.name;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // existing submit logic preserved, but attach image if present
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const payload = {};
+    for (const [k,v] of fd.entries()) {
+      if (!v) continue;
+      if (/^\d+$/.test(v)) payload[k] = Number(v);
+      else payload[k] = v.trim();
+    }
+
+    if (window.base64Image) {
+      payload.image_data = window.base64Image;
+      payload.image_mime = window.imageMime;
+      payload.image_filename = window.imageFilename;
+    }
+
+    if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
+      alert('Please enter a valid email address.');
+      form.email.focus();
+      return;
+    }
+
+    try {
+      const resp = await fetch('/doctor-edit-profile/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const j = await resp.json();
+      if (resp.ok && j.success) {
+        const doctorId = j.user_id || j.doctor_id || (j.user && j.user.doctor_id);
+        if (doctorId) {
+          window.location.href = j.redirect || `/doc_dashboard/${encodeURIComponent(doctorId)}`;
+        } else {
+          alert("WARNING : Update succeeded but redirect failed. Contact admin!!");
+        }
+      } else {
+        alert(j.error || j.message || 'Update failed!! Contact admin!!');
+      }
+    } catch(err) {
+      console.error(err);
+      alert('Network error. Try again.');
+    }
+  });
+})();
 </script>
+
 
 </body>
 </html>

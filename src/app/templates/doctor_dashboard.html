@@ -275,8 +275,9 @@
       <aside class="profile-card card">
           <div class="profile-row">
               <div class="avatar">
-                  <img src="{{ url_for('static', filename='image/doc_placeholder.png') }}" alt="Doctor">
+                  <img src="{{ profile_pic_uri }}" alt="Doctor">
               </div>
+
               <div class="profile-meta">
                   <h3><strong>ID :</strong> {{user_id}}</h3>
                   <h2>Dr. <strong>{{ doctor_data.lastname }} </strong></h2>
