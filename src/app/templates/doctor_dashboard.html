@@ -357,11 +357,11 @@
             <div class="content">
                 <div class="clinic-head">
                     <div class="clinic-avatar">
-                        {{ initials(clinic.clinicname) }}
+                        <a aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ initials(clinic.clinicname) }}</a>
                     </div>
 
                     <div class="clinic-meta">
-                        <h3>{{ clinic.clinicname }}
+                        <h3><a aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ clinic.clinicname }}</a>
                            <a class="edit-icon" aria-label="Edit clinic" title="Edit Clinic Details">
                               <!-- simple pencil SVG -->
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
