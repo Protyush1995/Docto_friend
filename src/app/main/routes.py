@@ -86,7 +86,13 @@ def doctor_edit_profile_form(doctor_id):
     data = doctor_database_management.get_doctor_by_id(doctor_id)
     if not data:
         abort(404)
-    return render_template("doctor_edit_profile.html", doctor_data=data)
+
+    if "image_data" in data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(data["image_data"],data['image_mime'])
+    else:
+        profile_pic_uri = "Profile Picture Placeholder"
+
+    return render_template("doctor_edit_profile.html", doctor_data=data, profile_pic_uri=profile_pic_uri)
 
 @bp.route("/doctor-edit-profile/", methods=["POST"])
 def doctor_update_profile():
