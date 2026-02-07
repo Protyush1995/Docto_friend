@@ -173,25 +173,26 @@ def doctor_clinic_seed_form():
 
 @bp.route("/clinic-booking", methods=["GET"])
 def clinic_booking():
-    qr = request.args.get("qr", "").strip()
-    if not qr:
-        return render_template("clinic_booking.html", error_message="Missing qr parameter"), 400
 
-    csv_path = os.path.join(os.path.dirname(__file__), "..", "db_manager", "doctor_db_dataframe.csv")
-    record = None
-    if os.path.exists(csv_path):
-        with open(csv_path, newline="", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for r in reader:
-                if r.get("qr_filename") == qr:
-                    record = r
-                    break
+    clinic_id = request.args.get("clinic_id", "").strip()
+    doctor_id = request.args.get("doctor_id", "").strip()
 
-    if not record:
-        return render_template("clinic_booking.html", error_message="Record not found"), 404
+    if not clinic_id or not doctor_id : return jsonify({"error": "Arguments missing! Clinic ID or Doctor ID missing!!"}), 404
+    
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
+    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=clinic_id)
 
-    days = [d.strip() for d in (record.get("doctor_visit_days") or "").split(",") if d.strip()]
-    return render_template("clinic_booking.html", record=record, visit_days=days)
+    if not doctor_data or not clinic_data : return jsonify({"WARNING": "Clinic Data or Doctor Data missing!!"}), 404
+    
+    if "image_data" in doctor_data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    else:
+        profile_pic_uri = None
+
+    clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
+    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="vo")
+
+    return render_template("clinic_booking.html",doctor_data=doctor_data,clinic_data=clinic_data,profile_pic_uri=profile_pic_uri,clinic_address=clinic_address,visit_schedule=visit_schedule) 
 
 @bp.route("/send-otp", methods=["POST"])
 def send_otp():
@@ -319,8 +320,12 @@ def doc_dashboard(doctor_id):
     filtered_list = [remove_bytes_from_dict(x) for x in clinics_list ]
     print(f"ROUTE LOG : Printing clinic list from doctor dashboard::list type = {type(filtered_list)} ::: {filtered_list}")
     doctor_data['clinics'] = filtered_list
-    profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
-    
+
+    if "image_data" in doctor_data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    else:
+        profile_pic_uri = None
+
     print(f"ROUTE LOG : Generated profile pic uri = {profile_pic_uri}")
     
     

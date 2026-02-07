@@ -26,16 +26,16 @@
 
 <!-- Dummy record with doctor image -->
 <div class="card" id="clinicCard" style="display:flex; gap:1rem; align-items:center;">
-  <img src="C:\Users\Protyush\Desktop\doctor_friend_ai\src\app\static\image\doc_placeholder.png" alt="Doctor photo"
+  <img src="{{profile_pic_uri}}" alt="Doctor photo"
        style="width:120px;height:120px;border-radius:8px;object-fit:cover;border:1px solid #ccc;">
   <div>
-    <h2 id="doctorName" style="margin:0 0 0.25rem 0">Dr. Tonmoy Tikader</h2>
-    <p><strong>Clinic:</strong> <span id="clinicName">SIBALAY ABASAN</span>
-       <span class="muted">(<span id="clinicId">CLINID_SIBALAY_ABASAN_1</span>)</span></p>
-    <p><strong>Qualifications:</strong> <span id="doctorQual">MBBS, Surgeon</span></p>
-    <p><strong>Address:</strong> <span id="clinicAddress">Malancha Road, Noapara, Barasat, Kolkata -700125</span></p>
-    <p><strong>Clinic Contact:</strong> <span id="clinicContact">1234567890</span></p>
-    <p><strong>Clinic Fees:</strong> ₹<span id="clinicFees">500</span></p>
+    <h2 id="doctorName" style="margin:0 0 0.25rem 0">Dr. {{doctor_data.firstname}} {{doctor_data.firstname}}</h2>
+    <p><strong>Clinic:</strong> <span id="clinicName">{{clinic_data.clinicname}}</span>
+       <span class="muted">(<span id="clinicId">{{clinic_data.clinic_id}}</span>)</span></p>
+    <p><strong>Qualifications:</strong> <span id="doctorQual">{{doctor_data.qualifications}}, {{doctor_data.expertise}}</span></p>
+    <p><strong>Address:</strong> <span id="clinicAddress">{{clinic_address}}</span></p>
+    <p><strong>Clinic Contact:</strong> <span id="clinicContact">{{clinic_data.primary_contact_number}} / {{clinic_data.secondary_contact_number}}</span></p>
+    <p><strong>Clinic Fees:</strong> ₹<span id="clinicFees">{{clinic_data.doctor_consultation_fees}}</span></p>
   </div>
 </div>
 

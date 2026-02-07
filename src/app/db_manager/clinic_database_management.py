@@ -20,14 +20,14 @@ base = Path(__file__).parent
 clinic_env = (base / ".env.clinics").resolve()
 clinic_db = DatabaseOperations(env_file=str(clinic_env))
 
-def _generate_clinic_qr(clinic_id: str, doctor_id: str) -> bytes:
+def _generate_clinic_qr(clinic_id: str, doctor_id: str, host: str = "http://localhost:5000") -> bytes:
     """
     Returns PNG bytes for a QR encoding a URL pointing to /clinic-booking
     with query params clinic_id and doctor_id.
     """
     # Build a compact URL/payload. Use absolute URL if you want (domain optional).
     # Example: /clinic-booking?clinic_id=CLINIC_ID_...&doctor_id=DOC123
-    payload = f"/clinic-booking?clinic_id={clinic_id}&doctor_id={doctor_id}"
+    payload = f"{host}/clinic-booking?clinic_id={clinic_id}&doctor_id={doctor_id}"
     qr = qrcode.QRCode(version=1, box_size=10, border=2, error_correction=qrcode.constants.ERROR_CORRECT_M)
     qr.add_data(payload)
     qr.make(fit=True)
@@ -139,3 +139,7 @@ def append_clinic_registration_record(data: Dict) -> Dict:
 def get_clinic_by_doctor_id(doctor_id:str) -> Dict:
     doctor_data = clinic_db.find_by_id(id_val=doctor_id,id_field="doctor_id")
     return doctor_data
+
+def get_clinic_by_clinic_id(clinic_id:str) -> Dict:
+    clinic_data = clinic_db.find_by_id(id_val=clinic_id,id_field="clinic_id")
+    return clinic_data
