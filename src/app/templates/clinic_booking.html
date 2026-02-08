@@ -19,6 +19,21 @@
     #message { margin-top:0.75rem; }
     .field-error { color:#b00020; font-size:0.9rem; margin-top:0.25rem; display:none; }
     .field-invalid { border-color:#b00020; }
+
+
+    /* Add/replace these rules */
+  .card { display:flex; gap:1rem; align-items:center; border:1px solid #ddd; border-radius:8px; padding:1rem; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
+  .card-img { width:120px; height:120px; flex:0 0 120px; border-radius:8px; object-fit:cover; border:1px solid #ccc; }
+  .card-body { flex:1 1 auto; min-width:0; } /* min-width:0 prevents overflow in flex */
+  .card-body h2 { margin:0 0 .25rem 0; word-break:break-word; }
+  .card-body p { margin:.25rem 0; color:#333; word-break:break-word; }
+
+  /* Responsive: stack vertically on small screens */
+  @media (max-width:600px) {
+    .card { flex-direction:column; align-items:flex-start; }
+    .card-img { width:100%; height:auto; flex:0 0 auto; max-height:240px; }
+    .card-body { width:100%; }
+  }
   </style>
 </head>
 <body>
@@ -28,8 +43,8 @@
 <div class="card" id="clinicCard" style="display:flex; gap:1rem; align-items:center;">
   <img src="{{profile_pic_uri}}" alt="Doctor photo"
        style="width:120px;height:120px;border-radius:8px;object-fit:cover;border:1px solid #ccc;">
-  <div>
-    <h2 id="doctorName" style="margin:0 0 0.25rem 0">Dr. {{doctor_data.firstname}} {{doctor_data.firstname}}</h2>
+  <div class="card-body">
+    <h2 id="doctorName" style="margin:0 0 0.25rem 0">Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h2>
     <p><strong>Clinic:</strong> <span id="clinicName">{{clinic_data.clinicname}}</span>
        <span class="muted">(<span id="clinicId">{{clinic_data.clinic_id}}</span>)</span></p>
     <p><strong>Qualifications:</strong> <span id="doctorQual">{{doctor_data.qualifications}}, {{doctor_data.expertise}}</span></p>

@@ -457,7 +457,7 @@
             const data = await resp.json().catch(()=>null);
             console.log('Server response:', data);
             // optional redirect if server returns { redirect: "/..." }
-            if (data && data.redirect) window.location = data.redirect;
+            if (data.success && data.redirect) window.location = "/doc_dashboard/{{ username }}";
             else alert('Submitted successfully.');
           } catch (err) {
             console.error('Submit error', err);

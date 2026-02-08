@@ -160,6 +160,7 @@ def doctor_clinic_seed_form():
         # Save to DB
         response = clinic_database_management.append_clinic_registration_record(clinic_data)
         print("Inserted clinic:", response)
+        return jsonify(success=True,doctor_id=doctor_id,message="Clinic has been inserted successfully!!",redirect=True), 201
 
     username=session.get("doctor_id")
     #print("Printing username from add clinic................!!!!!!!!!!!")
@@ -341,6 +342,43 @@ def doc_dashboard(doctor_id):
 def logout():
     session.clear()  # Clear the session
     return redirect(url_for('main.doctor_login_page'))  # Redirect to login page
+
+@bp.route('/doc_clinic_update/<doctor_id>/<clinic_id>', methods=["GET"])
+def doc_clinic_update(doctor_id:str,clinic_id:str):
+    if not doctor_id or not clinic_id:
+        return redirect(url_for('main.doctor_login_page'))
+    
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
+    clinic = clinic_database_management.get_clinic_by_clinic_id(clinic_id)
+    print(f"ROUTE LOG : Printing clinic list TYPE from doctor dashboard route::list type = {type(clinic)}")
+    """
+    if isinstance(clinics_list, dict):
+        clinics_list = [clinics_list]
+
+    #Converting schedules for ease of display
+    for clinic in clinics_list:
+        clinic["clinic_address"] = dict_to_string(d=clinic["clinic_address"],fmt="vo")
+        clinic["visit_schedule"] = dict_to_string(d=clinic["visit_schedule"],fmt="kv")
+
+    
+    filtered_list = [remove_bytes_from_dict(x) for x in clinics_list ]
+    print(f"ROUTE LOG : Printing clinic list from doctor dashboard::list type = {type(filtered_list)} ::: {filtered_list}")
+    doctor_data['clinics'] = filtered_list
+
+    if "image_data" in doctor_data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    else:
+        profile_pic_uri = None
+
+    print(f"ROUTE LOG : Generated profile pic uri = {profile_pic_uri}")"""
+    
+    
+    return render_template(
+        'doctor_clinic_update.html',
+        user_id=doctor_id,
+        doctor_data=doctor_data,
+        clinic = clinic
+    )
 
 #helper functions
 def dict_to_string(d: dict, fmt: str = "vo") -> str:
