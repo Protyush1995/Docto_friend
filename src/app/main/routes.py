@@ -391,11 +391,20 @@ def doc_clinic_update_post(doctor_id:str,clinic_id:str):
         return jsonify(success=False, error="internal_error"), 500
     
 
-@bp.route('/clinic_dashboard', methods=["GET"])
-def doc_clinic_dashboard():
+@bp.route('/clinic_dashboard/<doctor_id>/<clinic_id>', methods=["GET"])
+def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
     
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
+    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id)
+    clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
+    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="kv")
+
     return render_template(
-        'clinic_dashboard.html'
+        'clinic_dashboard.html',
+        doctor_data = doctor_data,
+        clinic_data = clinic_data,
+        clinic_address = clinic_address,
+        visit_schedule = visit_schedule
     )
 #helper functions
 def dict_to_string(d: dict, fmt: str = "vo") -> str:

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Prabhati Surgicare — Clinic Dashboard (Demo)</title>
+  <title>{{clinic_data.clinicname}} — Clinic Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
@@ -66,12 +66,12 @@
         <div class="logo">CD</div>
         <div>
           <h1>Clinic Dashboard</h1>
-          <div class="sub">Prabhati Surgicare — demo data</div>
+          <div class="sub">{{clinic_data.clinicname}} — for {{doctor_data.firstname}} {{doctor_data.lastname}}</div>
         </div>
       </div>
       <div>
-        <button class="btn ghost" onclick="alert('Back to clinics (demo)')">Back to Clinics</button>
-        <button class="btn" onclick="alert('Edit clinic (demo)')">Edit Clinic</button>
+        <a class="btn ghost" href="/doc_dashboard/{{doctor_data.doctor_id}}" title="Dashboard Dr {{doctor_data.firstname}} {{doctor_data.lastname}}">Back to Dashboard</a>
+        <a class="btn" href="/doc_clinic_update/{{doctor_data.doctor_id}}/{{clinic_data.clinic_id}}" title="Edit Clinic Details">Edit Clinic</a>
       </div>
     </header>
 
@@ -81,8 +81,8 @@
           <div class="clinic-head">
             <div class="clinic-avatar">PS</div>
             <div class="meta">
-              <h2>Prabhati Surgicare</h2>
-              <p>Registered: 2026-02-08</p>
+              <h2>{{clinic_data.clinicname}}</h2>
+              <p>Registered: {{clinic_data.created_at}}</p>
               <div class="actions">
                 <button class="btn" onclick="alert('Open appointments (demo)')">Appointments</button>
                 <button class="btn ghost" onclick="location.href='mailto:test@gmail.com'">Email Clinic</button>
@@ -93,29 +93,23 @@
 
           <div class="info-list">
             <div class="row"><div class="label"><strong>Contact</strong></div>
-              <div class="value">9876877688 / 9087688788</div>
+              <div class="value">{{clinic_data.primary_contact_number}} / {{clinic_data.secondary_contact_number}}</div>
             </div>
 
             <div class="row"><div class="label"><strong>Consultation Fee</strong></div>
-              <div class="value">₹699</div>
+              <div class="value">₹{{clinic_data.doctor_consultation_fees}}</div>
             </div>
 
             <div class="row"><div class="label"><strong>Email</strong></div>
-              <div class="value">test@gmail.com</div>
+              <div class="value">{{clinic_data.email}}</div>
             </div>
 
             <div class="row"><div class="label"><strong>Address</strong></div>
-              <div class="value address">
-34 Malancha Road, Noapara (PS: Barasat), Kolkata — 700125, WB, India
+              <div class="value address"> {{clinic_address}}
               </div>
             </div>
 
             <div class="row"><div class="label"><strong>Visit Schedule</strong></div>
-              <div class="value visit-schedule">
-                <div class="schedule-day"><span class="dot"></span><strong>Mon:</strong> 08:00-14:00</div>
-                <div class="schedule-day"><span class="dot"></span><strong>Wed:</strong> 08:00-14:00</div>
-                <div class="schedule-day"><span class="dot"></span><strong>Thu:</strong> 08:00-14:00</div>
-              </div>
             </div>
 
             <div class="row"><div class="label"><strong>Services</strong></div>
@@ -124,9 +118,9 @@
           </div>
 
           <div class="chips" aria-hidden="true">
-            <div class="chip">Clinic ID: CLINIC_ID_202602080527270360950692</div>
-            <div class="chip">Doctor ID: DOC_ID_202602040331167411108877</div>
-            <div class="chip">Member since: 2026-02-08</div>
+            <div class="chip">Clinic ID: {{clinic_data.clinic_id}}</div>
+            <div class="chip">Doctor ID: {{doctor_data.doctor_id}}</div>
+            <div class="chip">Doctor Member since: {{doctor_data.created_at}}</div>
           </div>
 
           <div class="stats-strip" role="region" aria-label="clinic stats">
@@ -140,8 +134,8 @@
       <aside class="side">
         <div class="card side-card">
           <div class="qr">
-            <a id="qrLink" href="data:image/png;base64,iVBORw0KGgoAAFjnF7SuBiJsX/WtjU++RgroDXBnyKYK6hPC77D0DlhPcayeNtAAAAAElFTkSuQmCC" download="clinic_Prabhati_Surgicare.png">
-              <img id="qrImg" src="data:image/png;base64,iVBORw0KGgoAAFjnF7SuBiJsX/WtjU++RgroDXBnyKYK6hPC77D0DlhPcayeNtAAAAAElFTkSuQmCC" alt="Clinic QR">
+            <a id="qrLink" href="{{ clinic_data.clinic_qr_data_uri }}" download="clinic_{{clinic_data.clinicname}}.png">
+              <img id="qrImg" src="{{ clinic_data.clinic_qr_data_uri }}" alt="Clinic QR">
             </a>
             <div style="display:flex;gap:8px;margin-top:8px">
               <button class="btn" id="downloadQr">Download</button>
@@ -197,5 +191,84 @@
       document.getElementById('checkedIn').textContent = stats.checkedIn;
     })();
   </script>
+
+  <script>
+    // Server must HTML-escape / JSON-encode the template value.
+    // If using a server template engine that auto-escapes, render as raw JSON:
+    window.__clinicVisitScheduleString = {{ visit_schedule | tojson }};
+    // If your template system doesn't have tojson, ensure proper quoting:
+    // window.__clinicVisitScheduleString = "{{visit_schedule}}";
+  </script>
+
+  <!-- helper script from Coach goes here (parseScheduleString, buildAndInsertVisitSchedule, autoInsert) -->
+  <script>
+    // If you didn't use the autoInsert I included, explicitly call:
+    if (window.__clinicVisitScheduleString) {
+      buildAndInsertVisitSchedule(window.__clinicVisitScheduleString);
+    }
+  </script>
+
+  <script>
+    function parseScheduleString(input) {
+      if (!input || typeof input !== 'string') return [];
+      const parts = input.split(/\s*\.\s*/).map(s => s.trim()).filter(Boolean);
+      const out = [];
+      for (const part of parts) {
+        const m = part.match(/^([a-zA-Z]+)\s*:\s*\[([^\]]*)\]\s*$/);
+        if (!m) continue;
+        const dayKey = m[1].toLowerCase();
+        const raw = m[2].trim();
+        const slots = raw === '' ? [] : raw.split(',').map(s => s.trim().replace(/^['"]|['"]$/g,'')).filter(Boolean);
+        if (slots.length) out.push({ day: dayKey, slots });
+      }
+      return out;
+    }
+
+    function buildVisitScheduleElement(parsedArray) {
+      const container = document.createElement('div');
+      container.className = 'value visit-schedule';
+      for (const item of parsedArray) {
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'schedule-day';
+        const dot = document.createElement('span'); dot.className = 'dot'; dayDiv.appendChild(dot);
+        const strong = document.createElement('strong');
+        strong.textContent = item.day.charAt(0).toUpperCase() + item.day.slice(1) + ':';
+        dayDiv.appendChild(strong);
+        dayDiv.appendChild(document.createTextNode(' ' + item.slots.join(', ')));
+        container.appendChild(dayDiv);
+      }
+      return container;
+    }
+
+    function buildAndInsertVisitSchedule(inputString, containerSelector = null) {
+      const parsed = parseScheduleString(inputString);
+      if (!parsed.length) return null;
+      const el = buildVisitScheduleElement(parsed);
+
+      let target = containerSelector ? document.querySelector(containerSelector) : null;
+      if (!target) {
+        document.querySelectorAll('.row').forEach(r => {
+          const label = r.querySelector('.label');
+          if (label && /visit schedule/i.test(label.textContent)) target = r;
+        });
+      }
+      if (!target) return null;
+      const existing = target.querySelector('.visit-schedule');
+      if (existing) existing.remove();
+      target.appendChild(el);
+      return el;
+    }
+
+    // Run after DOM ready to be safe
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        if (window.__clinicVisitScheduleString) buildAndInsertVisitSchedule(window.__clinicVisitScheduleString);
+      });
+    } else {
+      if (window.__clinicVisitScheduleString) buildAndInsertVisitSchedule(window.__clinicVisitScheduleString);
+    }
+  </script>
+
+
 </body>
 </html>
