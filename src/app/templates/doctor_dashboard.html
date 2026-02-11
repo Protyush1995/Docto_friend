@@ -59,7 +59,7 @@
       border-radius:var(--border-radius);
       padding:18px;
       box-shadow:0 2px 6px rgba(0, 0, 0, 0.545);
-      border:1px solid rgba(0,64,255,0.06);
+      border:3px solid rgba(0,64,255,0.06);
     }
     .profile-row{display:flex; gap:12px; align-items:center}
     .avatar{
@@ -81,7 +81,7 @@
       font-size:13px;
     }
     .ghost {
-      background:transparent; color:var(--primary); border:1px solid rgba(0,64,255,0.12);
+      background:transparent; color:var(--primary); border:2px solid rgba(0,64,255,0.12);
       box-shadow:none;
     }
 
@@ -99,7 +99,7 @@
       border-radius:var(--border-radius);
       padding:16px;
       box-shadow:0 2px 6px rgba(0, 0, 0, 0.545);
-      border:1px solid rgba(0,64,255,0.05);
+      border:3px solid rgba(0,64,255,0.05);
     }
     .stat h3{ margin:0; font-size:28px; color:var(--primary); }
     .stat p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
@@ -122,7 +122,7 @@
       padding: 14px;
       border-radius: 12px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.545);
-      border: 1px solid rgba(123, 0, 255, 0.867);
+      border: 3px solid rgba(123, 0, 255, 0.867);
 
       display: flex;
       gap: 12px;
@@ -183,7 +183,59 @@
     
     .clinic-meta p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
 
-    .clinic-info { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+    /* make clinic-info vertically scrollable without visible scrollbars */
+.clinic-info {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-direction: column;    /* stack chips vertically for top-to-bottom scrolling */
+  flex-wrap: nowrap;
+  max-height: 120px;        /* adjust to desired visible area */
+  overflow-y: auto;         /* allow vertical scrolling */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* smooth touch scrolling on iOS */
+  padding-right: 8px;       /* prevent last item from touching hidden scrollbar area */
+  position: relative;
+}
+
+/* hide scrollbars — cross-browser */
+.clinic-info::-webkit-scrollbar {      /* Chrome, Edge, Safari */
+  width: 0;
+  height: 0;
+}
+.clinic-info {
+  scrollbar-width: none;   /* Firefox */
+  -ms-overflow-style: none;/* IE 10+ */
+}
+
+/* optional: subtle top/bottom fade so overflow feels natural and seamless */
+.clinic-info::before,
+.clinic-info::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 18px;
+  z-index: 1;
+}
+.clinic-info::before {
+  top: 0;
+  background: linear-gradient(to bottom, var(--card-bg), rgba(255,255,255,0));
+  /* for dark mode, this will naturally use --card-bg from .dark */
+}
+.clinic-info::after {
+  bottom: 0;
+  background: linear-gradient(to top, var(--card-bg), rgba(255,255,255,0));
+}
+
+/* ensure chips keep their look when stacked */
+.chip {
+  white-space: normal;
+  word-break: break-word;
+  margin: 0; /* spacing handled by gap */
+}
+
     .chip {
       background:linear-gradient(180deg, #eef4ff, #ffffff);
       color:var(--primary);
@@ -248,6 +300,69 @@
       .profile-card{ flex:1 1 auto; max-width:100%; width:100%; }
       .stats{ flex:1 1 auto; max-width:100%; width:100%; }
     }
+
+    :root{
+      --primary: #4d20cab8;
+      --bg: #f6f8ff;
+      --card-bg: #ffffff;
+      --muted: #6b7280;
+      --accent: #0b63ff;
+      --card-shadow: 0 10px 30px rgba(0,64,255,0.08);
+      --input-shadow: 0 6px 18px rgba(0,64,255,0.06);
+      --border-radius: 12px;
+      transition: background-color 220ms linear, color 220ms linear;
+    }
+
+    /* Dark variables */
+    .dark {
+      --primary: #9aaef5;
+      --bg: #0b1220;
+      --card-bg: #0f1724;
+      --muted: #9aa4b2;
+      --accent: #5aa0ff;
+      --card-shadow: 0 6px 18px rgba(0,0,0,0.6);
+    }
+
+    /* base elements use variables */
+    body{
+      margin:0;
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: color-mix(in srgb, var(--primary) 85%, black 15%);
+      padding:24px;
+      transition: background-color 220ms ease, color 220ms ease;
+    }
+
+    /* use --card-bg for all card surfaces */
+    .profile-card, .stat, .clinic-card, .card, .chip {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--card-shadow);
+      border: 3px solid rgba(235, 237, 243, 0.06);
+      transition: background-color 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+    }
+
+    /* adjust text uses */
+    h1, .profile-meta h2 { color: var(--primary); }
+    .sub, .profile-meta p, .stat p, .clinic-meta p, footer { color: var(--muted); }
+
+    /* button styles should adapt */
+    .btn {
+      background: linear-gradient(180deg,var(--primary), #0033cc);
+      color: #fff;
+    }
+    .ghost {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid rgba(0,64,255,0.12);
+    }
+
+    /* small utility for reduced motion users */
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+
+
   </style>
 </head>
 <body>
@@ -362,8 +477,8 @@
                     </div>
 
                     <div class="clinic-meta">
-                        <h3><a href="/clinic_dashboard/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ clinic.clinicname }}</a>
-                           <a href="/doc_clinic_update/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" class="edit-icon" aria-label="Edit clinic" title="Edit Clinic Details">
+                        <h3><a class="ghost" href="/clinic_dashboard/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ clinic.clinicname }}</a>
+                           <a class="ghost" href="/doc_clinic_update/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" class="edit-icon" aria-label="Edit clinic" title="Edit Clinic Details">
                               <!-- simple pencil SVG -->
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"/>
@@ -408,6 +523,7 @@
     document.getElementById('upcomingAppointments').textContent = 12;
     document.getElementById('patientsToday').textContent = 4;
   </script>
+
   <script>
       (function(){
         // Parse server-rendered JSON
@@ -462,7 +578,37 @@
       })();
   </script>
 
+  <script>
+    // Theme toggle: toggles .dark on <html> and persists selection
+    const THEME_KEY = 'doctor_dashboard_theme';
 
+    function applyTheme(name) {
+      if (name === 'dark') document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+    }
+
+    function toggleTheme() {
+      const current = localStorage.getItem(THEME_KEY) || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      localStorage.setItem(THEME_KEY, next);
+      applyTheme(next);
+      // update Settings button label (optional)
+      const btn = document.querySelector('.btn.ghost');
+      if (btn) btn.textContent = next === 'dark' ? 'Light mode' : 'Dark mode';
+    }
+
+    // Init on load
+    (function(){
+      const saved = localStorage.getItem(THEME_KEY) || 'light';
+      applyTheme(saved);
+      const settingsBtn = document.querySelector('.btn.ghost');
+      if (settingsBtn) {
+        settingsBtn.addEventListener('click', toggleTheme);
+        // set initial text
+        settingsBtn.textContent = saved === 'dark' ? 'Light mode' : 'Dark mode';
+      }
+    })();
+  </script>
 
 </body>
 
