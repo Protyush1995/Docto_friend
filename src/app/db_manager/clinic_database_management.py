@@ -20,6 +20,7 @@ base = Path(__file__).parent
 clinic_env = (base / ".env.clinics").resolve()
 clinic_db = DatabaseOperations(env_file=str(clinic_env))
 
+#TODO change host later as necessary
 def _generate_clinic_qr(clinic_id: str, doctor_id: str, host: str = "http://192.168.29.115:5000") -> bytes:
     """
     Returns PNG bytes for a QR encoding a URL pointing to /clinic-booking
@@ -92,7 +93,6 @@ def base64_string_to_data_uri(b64_input: Union[str, bytes], mime: Optional[str] 
     mime = mime or 'application/octet-stream'
     return f"data:{mime};base64,{cleaned}"
 
-
 def _generate_clinic_id() -> str:
     # numeric timestamp (UTC) + cryptographically random 8-digit number
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[:-3]  # up to milliseconds, digits only
@@ -134,6 +134,17 @@ def append_clinic_registration_record(data: Dict) -> Dict:
     #inserting data to MongoDb database
     response = clinic_db.insert_record(user_document=record)
 
+    return response
+
+def update_clinic_profile(data: Dict) -> Dict:
+    #updating profile data of MongoDb database
+    success = clinic_db.update_record (primary_key_name="clinic_id",primary_key_val=data["clinic_id"],updates=data)
+    response = {"success":success["acknowledged"],"clinic_id":data["clinic_id"]}
+    print("DOCTOR DB MANAGEMENT LOG : Message returned by Mongo for clinic profile update...........")
+    print(json.dumps(success))
+    print("DOCTOR DB MANAGEMENT LOG : Response constructed for clinic profile update...........")
+    print(json.dumps(response))
+    print("DOCTOR DB MANAGEMENT LOG : Returning constructed response...........")
     return response
 
 def get_clinic_by_doctor_id(doctor_id:str) -> Dict:

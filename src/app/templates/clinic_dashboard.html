@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Prabhati Surgicare — Clinic Dashboard (Demo)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --primary:#4d20cab8; --bg:#f6f8ff; --card:#fff; --muted:#6b7280; --accent:#0b63ff;
+      --radius:12px; --card-shadow:0 6px 18px rgba(0,64,255,0.06);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#fff);color:#0b1226;padding:20px}
+    .container{max-width:980px;margin:0 auto}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--primary),#0066ff);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+    h1{margin:0;font-size:18px;color:var(--primary)}
+    .sub{color:var(--muted);font-size:13px}
+
+    .grid{display:grid;grid-template-columns:1fr 340px;gap:16px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr} .side{order:-1}}
+
+    .card{background:var(--card);padding:16px;border-radius:var(--radius);box-shadow:var(--card-shadow);border:1px solid rgba(0,64,255,0.06)}
+    .clinic-head{display:flex;gap:14px;align-items:center}
+    .clinic-avatar{width:72px;height:72px;border-radius:10px;background:#f2f8ff;border:1px solid rgba(0,64,255,0.06);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--primary);font-size:20px}
+    .meta h2{margin:0;font-size:18px;color:#062a8a}
+    .meta p{margin:6px 0 0 0;color:var(--muted);font-size:13px}
+
+    .actions{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+    .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(180deg,var(--primary),#0033cc);color:#fff;font-weight:600;font-size:13px}
+    .btn.ghost{background:transparent;color:var(--primary);border:1px solid rgba(0,64,255,0.12)}
+
+    .info-list{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+    .row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .label{color:var(--muted);font-size:13px;width:140px}
+    .value{font-size:14px;color:#07102a}
+
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .chip{background:linear-gradient(180deg,#eef4ff,#fff);color:var(--primary);padding:6px 8px;border-radius:8px;font-size:12px;border:1px solid rgba(123,0,255,0.12)}
+
+    .side .qr{display:flex;flex-direction:column;gap:8px;align-items:center}
+    .qr img{width:220px;height:auto;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:#fff}
+    .qr a{display:inline-block;text-decoration:none}
+    .qr .hint{font-size:13px;color:var(--muted)}
+
+    .address{white-space:pre-line;word-break:break-word}
+
+    .visit-schedule{margin-top:8px}
+    .schedule-day{display:flex;gap:8px;align-items:center}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+
+    .stats-strip{display:flex;gap:10px;margin-top:14px}
+    .stat{flex:1;padding:10px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid rgba(0,64,255,0.04);text-align:center}
+    .stat h3{margin:0;color:var(--primary);font-size:18px}
+    .stat p{margin:6px 0 0 0;color:var(--muted);font-size:12px}
+
+    footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
+    pre.debug{background:#fff;padding:12px;border-radius:8px;border:1px dashed rgba(0,0,0,0.06);overflow:auto;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">CD</div>
+        <div>
+          <h1>Clinic Dashboard</h1>
+          <div class="sub">Prabhati Surgicare — demo data</div>
+        </div>
+      </div>
+      <div>
+        <button class="btn ghost" onclick="alert('Back to clinics (demo)')">Back to Clinics</button>
+        <button class="btn" onclick="alert('Edit clinic (demo)')">Edit Clinic</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <main>
+        <div class="card">
+          <div class="clinic-head">
+            <div class="clinic-avatar">PS</div>
+            <div class="meta">
+              <h2>Prabhati Surgicare</h2>
+              <p>Registered: 2026-02-08</p>
+              <div class="actions">
+                <button class="btn" onclick="alert('Open appointments (demo)')">Appointments</button>
+                <button class="btn ghost" onclick="location.href='mailto:test@gmail.com'">Email Clinic</button>
+                <button class="btn ghost" onclick="location.href='tel:9876877688'">Call</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-list">
+            <div class="row"><div class="label"><strong>Contact</strong></div>
+              <div class="value">9876877688 / 9087688788</div>
+            </div>
+
+            <div class="row"><div class="label"><strong>Consultation Fee</strong></div>
+              <div class="value">₹699</div>
+            </div>
+
+            <div class="row"><div class="label"><strong>Email</strong></div>
+              <div class="value">test@gmail.com</div>
+            </div>
+
+            <div class="row"><div class="label"><strong>Address</strong></div>
+              <div class="value address">
+34 Malancha Road, Noapara (PS: Barasat), Kolkata — 700125, WB, India
+              </div>
+            </div>
+
+            <div class="row"><div class="label"><strong>Visit Schedule</strong></div>
+              <div class="value visit-schedule">
+                <div class="schedule-day"><span class="dot"></span><strong>Mon:</strong> 08:00-14:00</div>
+                <div class="schedule-day"><span class="dot"></span><strong>Wed:</strong> 08:00-14:00</div>
+                <div class="schedule-day"><span class="dot"></span><strong>Thu:</strong> 08:00-14:00</div>
+              </div>
+            </div>
+
+            <div class="row"><div class="label"><strong>Services</strong></div>
+              <div class="value">Not specified</div>
+            </div>
+          </div>
+
+          <div class="chips" aria-hidden="true">
+            <div class="chip">Clinic ID: CLINIC_ID_202602080527270360950692</div>
+            <div class="chip">Doctor ID: DOC_ID_202602040331167411108877</div>
+            <div class="chip">Member since: 2026-02-08</div>
+          </div>
+
+          <div class="stats-strip" role="region" aria-label="clinic stats">
+            <div class="stat"><h3 id="todayPatients">4</h3><p>Patients Today</p></div>
+            <div class="stat"><h3 id="upcoming">12</h3><p>Upcoming Appointments</p></div>
+            <div class="stat"><h3 id="checkedIn">2</h3><p>Checked in</p></div>
+          </div>
+        </div>
+      </main>
+
+      <aside class="side">
+        <div class="card side-card">
+          <div class="qr">
+            <a id="qrLink" href="data:image/png;base64,iVBORw0KGgoAAFjnF7SuBiJsX/WtjU++RgroDXBnyKYK6hPC77D0DlhPcayeNtAAAAAElFTkSuQmCC" download="clinic_Prabhati_Surgicare.png">
+              <img id="qrImg" src="data:image/png;base64,iVBORw0KGgoAAFjnF7SuBiJsX/WtjU++RgroDXBnyKYK6hPC77D0DlhPcayeNtAAAAAElFTkSuQmCC" alt="Clinic QR">
+            </a>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn" id="downloadQr">Download</button>
+              <button class="btn ghost" id="copyLink">Copy data URI</button>
+            </div>
+            <div class="hint">Tap QR to open / long-press to save on mobile</div>
+          </div>
+
+          <div style="margin-top:14px">
+            <div class="label"><strong>Quick actions</strong></div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn ghost" onclick="alert('Print QR (demo)')">Print QR</button>
+              <button class="btn ghost" onclick="alert('Share (demo)')">Share</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="card">
+          <div class="label"><strong>Notes</strong></div>
+          <div style="margin-top:8px;color:var(--muted);font-size:13px">No notes yet.</div>
+        </div>
+      </aside>
+    </div>
+
+    <footer>© 2026 Clinic Dashboard — demo data only</footer>
+
+    
+  </div>
+
+  <script>
+    // Demo client helpers
+    document.getElementById('copyLink')?.addEventListener('click', function(){
+      const uri = document.getElementById('qrImg').src;
+      if(navigator.clipboard){
+        navigator.clipboard.writeText(uri).then(()=> alert('Clinic QR data URI copied (demo)'));
+      } else {
+        prompt('Copy the QR data URI', uri);
+      }
+    });
+
+    document.getElementById('downloadQr')?.addEventListener('click', function(){
+      const a = document.createElement('a');
+      a.href = document.getElementById('qrImg').src;
+      a.download = "clinic_Prabhati_Surgicare.png";
+      document.body.appendChild(a); a.click(); a.remove();
+    });
+
+    // Replace demo stats programmatically (optional)
+    (function(){
+      const stats = { todayPatients: 4, upcoming: 12, checkedIn: 2 };
+      document.getElementById('todayPatients').textContent = stats.todayPatients;
+      document.getElementById('upcoming').textContent = stats.upcoming;
+      document.getElementById('checkedIn').textContent = stats.checkedIn;
+    })();
+  </script>
+</body>
+</html>

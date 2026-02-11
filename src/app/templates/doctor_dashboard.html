@@ -358,11 +358,11 @@
             <div class="content">
                 <div class="clinic-head">
                     <div class="clinic-avatar">
-                        <a aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ initials(clinic.clinicname) }}</a>
+                        <a href="/clinic_dashboard" aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ initials(clinic.clinicname) }}</a>
                     </div>
 
                     <div class="clinic-meta">
-                        <h3><a aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ clinic.clinicname }}</a>
+                        <h3><a href="/clinic_dashboard" aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ clinic.clinicname }}</a>
                            <a href="/doc_clinic_update/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" class="edit-icon" aria-label="Edit clinic" title="Edit Clinic Details">
                               <!-- simple pencil SVG -->
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">

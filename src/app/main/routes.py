@@ -350,36 +350,53 @@ def doc_clinic_update(doctor_id:str,clinic_id:str):
     
     doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
     clinic = clinic_database_management.get_clinic_by_clinic_id(clinic_id)
-    print(f"ROUTE LOG : Printing clinic list TYPE from doctor dashboard route::list type = {type(clinic)}")
-    """
-    if isinstance(clinics_list, dict):
-        clinics_list = [clinics_list]
 
-    #Converting schedules for ease of display
-    for clinic in clinics_list:
-        clinic["clinic_address"] = dict_to_string(d=clinic["clinic_address"],fmt="vo")
-        clinic["visit_schedule"] = dict_to_string(d=clinic["visit_schedule"],fmt="kv")
+    # Serializing visit schedult to be rendered at client side............
+    vs = clinic.get('visit_schedule') or {}
+    schedule_array = []
+    for day, ranges in vs.items():
+        for r in ranges:
+            if '-' in r:
+                start, end = r.split('-', 1)
+                schedule_array.append({"day": day, "start": start, "end": end})
+    visit_schedule_serialized = schedule_array  # pass this to template
+    print(f"ROUTE LOG : Printing serialized visit schedule for client side rendering :::::: {visit_schedule_serialized}")
 
-    
-    filtered_list = [remove_bytes_from_dict(x) for x in clinics_list ]
-    print(f"ROUTE LOG : Printing clinic list from doctor dashboard::list type = {type(filtered_list)} ::: {filtered_list}")
-    doctor_data['clinics'] = filtered_list
-
-    if "image_data" in doctor_data:
-        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
-    else:
-        profile_pic_uri = None
-
-    print(f"ROUTE LOG : Generated profile pic uri = {profile_pic_uri}")"""
-    
-    
     return render_template(
         'doctor_clinic_update.html',
-        user_id=doctor_id,
-        doctor_data=doctor_data,
-        clinic = clinic
+        user_id = doctor_id,
+        doctor_data = doctor_data,
+        clinic = clinic,
+        visit_schedule_serialized = visit_schedule_serialized
     )
 
+
+@bp.route('/doc_clinic_update/<doctor_id>/<clinic_id>', methods=["POST"])
+def doc_clinic_update_post(doctor_id:str,clinic_id:str):
+
+    print(f"ROUTE LOG : Enterinng clinic data update post method !!")
+    data = request.get_json() or {}
+    print(f"ROUTE LOG : Printing data received servers side at UPDATE CLINIC for doc = {doctor_id} , clinic = {clinic_id} -------------------------------{json.dumps(data)}")
+    try:
+        response = clinic_database_management.update_clinic_profile(data)
+        print(f"ROUTE LOG : Printing response from update profile from routes-------------------------------{json.dumps(response)}")
+        # TODO: send verification email asynchronously
+        if response["success"] :
+            return jsonify(success=True,user_id=doctor_id,message="Clinic update successfull"), 201
+        else: return jsonify(success=False,user_id=doctor_id,message="Problem updating Clinic profile"), 201
+    except ValueError as ve:
+        return jsonify(success=False, error=str(ve)), 400
+    except Exception as e:
+        current_app.logger.exception("Failed to update Clinic profile !! Contact Admin!!")
+        return jsonify(success=False, error="internal_error"), 500
+    
+
+@bp.route('/clinic_dashboard', methods=["GET"])
+def doc_clinic_dashboard():
+    
+    return render_template(
+        'clinic_dashboard.html'
+    )
 #helper functions
 def dict_to_string(d: dict, fmt: str = "vo") -> str:
     """

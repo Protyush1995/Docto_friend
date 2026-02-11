@@ -60,23 +60,23 @@
         </div>
       </div>
       <div class="navigation">
-        <a href="/doc_dashboard/{{ username }}" class="btn ghost">Home</a>
+        <a href="/doc_dashboard/{{user_id}}" class="btn ghost">Home</a>
       </div>
     </header>
 
     <section class="card">
-      <form id="editClinicForm" method="POST" action="/doctor-clinic-update">
+      <form id="editClinicForm" method="POST" >
         <input type="hidden" name="clinic_id" id="clinic_id" value="{{ clinic.clinic_id }}">
 
         <div>
           <label>Clinic Name</label>
-          <input type="text" id="clinicName" name="clinicName" required>
+          <input type="text" id="clinicname" name="clinicname" required>
         </div>
 
         <div style="display:flex; gap:12px;">
           <div style="flex:1">
             <label>House No</label>
-            <input type="text" id="houseNo" name="houseNo">
+            <input type="text" id="house_no" name="house_no">
           </div>
           <div style="flex:1">
             <label>Street</label>
@@ -85,13 +85,13 @@
         </div>
 
         <div style="display:flex; gap:12px;">
-          <div style="flex:1"><label>Post Office</label><input type="text" id="postOffice" name="postOffice"></div>
-          <div style="flex:1"><label>Police Station</label><input type="text" id="policeStation" name="policeStation"></div>
+          <div style="flex:1"><label>Post Office</label><input type="text" id="post_office" name="post_office"></div>
+          <div style="flex:1"><label>Police Station</label><input type="text" id="police_station" name="police_station"></div>
         </div>
 
         <div style="display:flex; gap:12px;">
           <div style="flex:1"><label>City</label><input type="text" id="city" name="city"></div>
-          <div style="flex:1"><label>Pin Code</label><input type="text" id="pinCode" name="pinCode"></div>
+          <div style="flex:1"><label>Pin Code</label><input type="text" id="pin_code" name="pin_code"></div>
         </div>
 
         <div style="display:flex; gap:12px;">
@@ -100,18 +100,18 @@
         </div>
 
         <div style="display:flex; gap:12px;">
-          <div style="flex:1"><label>Contact Number</label><input type="tel" id="clinicContact" name="clinicContact"></div>
-          <div style="flex:1"><label>Alternative Contact</label><input type="tel" id="clinicContactAlt" name="clinicContactAlt"></div>
+          <div style="flex:1"><label>Contact Number</label><input type="tel" id="primary_contact_number" name="primary_contact_number"></div>
+          <div style="flex:1"><label>Alternative Contact</label><input type="tel" id="secondary_contact_number" name="secondary_contact_number"></div>
         </div>
 
         <div>
           <label>Email address</label>
-          <input type="email" id="clinicemail" name="clinicemail">
+          <input type="email" id="email" name="email">
         </div>
 
         <div>
           <label>Consultation Fees (₹)</label>
-          <input type="number" id="clinicFees" name="clinicFees" min="0">
+          <input type="number" id="doctor_consultation_fees" name="doctor_consultation_fees" min="0">
         </div>
 
         <!-- Schedule builder -->
@@ -131,7 +131,7 @@
           <button type="button" id="sched_clear" class="btn small-btn clear">Clear All</button>
         </div>
 
-        <input type="hidden" id="schedule_json" name="schedule_json" value='{{ clinic.visit_schedule | tojson | safe }}'>
+        <input type="hidden" id="schedule_json" name="schedule_json" value='{{ visit_schedule_serialized | tojson | safe }}'>
 
         <table class="schedule-table" id="schedule_table">
           <thead><tr><th>Day</th><th>Start</th><th>End</th><th>Actions</th></tr></thead>
@@ -153,8 +153,8 @@
       // Helper: time options (every 15 minutes)
       function pad(n){return n.toString().padStart(2,'0')}
       const times = [];
-      for(let h=0;h<24;h++){
-        for(let m=0;m<60;m+=15){
+      for(let h=8;h<20;h++){
+        for(let m=0;m<60;m+=60){
           times.push(pad(h)+':'+pad(m));
         }
       }
@@ -165,34 +165,99 @@
         const o2 = document.createElement('option'); o2.value = t; o2.textContent = t; endSel.appendChild(o2);
       });
 
+      // Coach: helper to convert client payload -> DB structure
+      function transformClientToDb(client) {
+        const db = {};
+
+        // direct mappings if present
+        const direct = [
+          "clinic_id","clinicname","email",
+          "primary_contact_number","secondary_contact_number",
+          "doctor_consultation_fees"
+        ];
+        for (const k of direct) {
+          if (client[k] !== undefined) db[k] = client[k];
+        }
+
+        // address group
+        const addrKeys = ["house_no","street","post_office","police_station","city","pin_code","state","country"];
+        const address = {};
+        let hasAddress = false;
+        for (const k of addrKeys) {
+          if (client[k] !== undefined) {
+            address[k] = client[k];
+            hasAddress = true;
+          }
+        }
+        if (hasAddress) db.clinic_address = address;
+
+        // schedule_json -> visit_schedule
+        if (client.schedule_json !== undefined) {
+          try {
+            const arr = JSON.parse(client.schedule_json);
+            const visit_schedule = {};
+            for (const item of arr) {
+              if (!item || !item.day || !item.start || !item.end) continue;
+              const day = item.day.toLowerCase();
+              const slot = `${item.start}-${item.end}`;
+              if (!visit_schedule[day]) visit_schedule[day] = [];
+              visit_schedule[day].push(slot);
+            }
+            db.visit_schedule = visit_schedule;
+          } catch (e) {
+            // invalid JSON: skip schedule
+          }
+        }
+
+        return db;
+      }
+
+
       // Map day short to label
       const dayMap = {mon:'Monday', tue:'Tuesday', wed:'Wednesday', thu:'Thursday', fri:'Friday', sat:'Saturday', sun:'Sunday'};
-
-      // Read clinic JSON injected by Jinja (if present)
-      let clinic = {};
-      try { clinic = JSON.parse(document.getElementById('schedule_json').value || '{}') || {}; } catch(e){ clinic = {}; }
 
       // Populate form fields from server-side clinic object (Jinja also sets input values above)
       const setIf = (id, val) => { const el = document.getElementById(id); if(el && (val !== undefined && val !== null)) el.value = val; }
 
       // Fields mapping — adjust keys to your backend model
-      setIf('clinicName', '{{ clinic.clinicname | default("") }}');
-      setIf('houseNo',   '{{ clinic.clinic_address.house_no | default("") }}');
+      setIf('clinicname', '{{ clinic.clinicname | default("") }}');
+      setIf('house_no',   '{{ clinic.clinic_address.house_no | default("") }}');
       setIf('street',    '{{ clinic.clinic_address.street | default("") }}');
-      setIf('postOffice','{{ clinic.clinic_address.post_office | default("") }}');
-      setIf('policeStation','{{ clinic.clinic_address.police_station | default("") }}');
+      setIf('post_office','{{ clinic.clinic_address.post_office | default("") }}');
+      setIf('police_station','{{ clinic.clinic_address.police_station | default("") }}');
       setIf('city',      '{{ clinic.clinic_address.city | default("") }}');
-      setIf('pinCode',   '{{ clinic.clinic_address.pin_code | default("") }}');
+      setIf('pin_code',   '{{ clinic.clinic_address.pin_code | default("") }}');
       setIf('state',     '{{ clinic.clinic_address.state | default("") }}');
       setIf('country',   '{{ clinic.clinic_address.country | default("") }}');
-      setIf('clinicContact','{{ clinic.primary_contact_number | default("") }}');
-      setIf('clinicContactAlt','{{ clinic.secondary_contact_number | default("") }}');
-      setIf('clinicemail','{{ clinic.email | default("") }}');
-      setIf('clinicFees','{{ clinic.doctor_consultation_fees | default("") }}');
+      setIf('primary_contact_number','{{ clinic.primary_contact_number | default("") }}');
+      setIf('secondary_contact_number','{{ clinic.secondary_contact_number | default("") }}');
+      setIf('email','{{ clinic.email | default("") }}');
+      setIf('doctor_consultation_fees','{{ clinic.doctor_consultation_fees | default("") }}');
 
       // Schedule UI management
       const tableBody = document.querySelector('#schedule_table tbody');
-      let schedule = Array.isArray(clinic.schedule) ? clinic.schedule.slice() : (clinic.schedule_json ? (function(){ try { return JSON.parse(clinic.schedule_json);} catch(e){return [];} })() : []);
+      // Read clinic JSON injected by Jinja (if present)
+      // Single source: accept serialized array OR old object shape
+      let schedule = [];
+      try {
+        const raw = JSON.parse(document.getElementById('schedule_json').value || '[]');
+        console.log( raw )
+        if (Array.isArray(raw)) {
+          schedule = raw.slice();
+        } else if (raw && typeof raw === 'object') {
+          Object.keys(raw).forEach(day => {
+            (raw[day] || []).forEach(range => {
+              const [start, end] = range.split('-', 2);
+              if (start && end) schedule.push({ day, start, end });
+            });
+          });
+        }
+        renderSchedule()
+      } catch (e) {
+        console.log("Error loading schedule sent from server side!!")
+        console.log(e)
+        schedule = [];
+      }
 
       function renderSchedule() {
         tableBody.innerHTML = '';
@@ -212,17 +277,33 @@
         document.getElementById('schedule_json').value = JSON.stringify(schedule);
       }
 
-      // Add schedule row
       document.getElementById('sched_add').addEventListener('click', ()=>{
-        const day = document.getElementById('sched_day').value;
-        const start = document.getElementById('sched_start').value;
-        const end = document.getElementById('sched_end').value;
-        if(!day || !start || !end){ alert('Please pick day, start and end'); return; }
-        if(start >= end){ alert('Start time must be before end time'); return; }
-        // push and render
-        schedule.push({ day: day, start: start, end: end });
-        renderSchedule();
+      const day = document.getElementById('sched_day').value;
+      const start = document.getElementById('sched_start').value;
+      const end = document.getElementById('sched_end').value;
+      if(!day || !start || !end){ return; }
+      if(start >= end){ return; }
+
+      // Remove any existing entries for the same day that overlap or are identical
+      schedule = schedule.filter(s => {
+        if (s.day !== day) return true; // keep other days
+        // keep entry only if it does NOT overlap new interval
+        return (end <= s.start) || (start >= s.end);
       });
+
+      // Insert the new entry
+      schedule.push({ day: day, start: start, end: end });
+
+      // Optional: keep schedule sorted by day then start time
+      const dayOrder = { mon:0,tue:1,wed:2,thu:3,fri:4,sat:5,sun:6 };
+      schedule.sort((a,b)=>{
+        if(a.day !== b.day) return dayOrder[a.day] - dayOrder[b.day];
+        return a.start.localeCompare(b.start);
+      });
+
+      renderSchedule();
+    });
+
 
       document.getElementById('sched_clear').addEventListener('click', ()=>{
         if(!confirm('Clear all schedule entries?')) return;
@@ -230,25 +311,64 @@
         renderSchedule();
       });
 
-      // Initial render: if server injected schedule_json, use it
-      if(typeof clinic.schedule_json === 'string' && clinic.schedule_json.trim().length){
+      const form = document.getElementById('editClinicForm');
+      if (!form) throw new Error('editClinicForm not found');
+
+      form.addEventListener('submit', async(ev)=>{
+        ev.preventDefault(); // STOP actual network request
+        // Sync schedule hidden input
+        const scheduleInput = document.getElementById('schedule_json');
+        try { if (scheduleInput) scheduleInput.value = JSON.stringify(JSON.parse(scheduleInput.value||'[]')); } catch(e){console.log(e)}
+
+        // Build plain object from form
+        const obj = {};
+        new FormData(form).forEach((v,k) => {
+          // coerce clinicFees to number if needed
+          obj[k] = obj[k] ? (Array.isArray(obj[k]) ? [...obj[k], v] : [obj[k], v]) : v;
+        });
+        // convert single-element arrays back to value
+        Object.keys(obj).forEach(k => { if(Array.isArray(obj[k]) && obj[k].length===1) obj[k]=obj[k][0]; });
+        
+        //constructing url and data to feed
+        const url = `/doc_clinic_update/{{ user_id }}/{{ clinic.clinic_id }}`
+        data_to_JSON_db = transformClientToDb(obj)
+
         try {
-          const parsed = JSON.parse(clinic.schedule_json);
-          if(Array.isArray(parsed)) schedule = parsed;
-        } catch(e){}
-      }
-      renderSchedule();
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data_to_JSON_db),
+            credentials: 'same-origin' // include cookies if needed (CSRF session)
+          });
 
-      // Before submit: ensure schedule_json contains latest schedule
-      document.getElementById('editClinicForm').addEventListener('submit', function(e){
-        document.getElementById('schedule_json').value = JSON.stringify(schedule);
-        // Basic validation example
-        if(!document.getElementById('clinicName').value.trim()){
-          e.preventDefault(); alert('Clinic name required'); return false;
+          if (!resp.ok) {
+            const text = await resp.text().catch(()=>null);
+            console.error('Server error', resp, text);
+            alert('Save failed: ' + resp + ' ' + text);
+            return;
+          }
+
+          // Success: handle redirect or JSON response
+          const contentType = resp.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const data = await resp.json();
+            console.log('Server JSON:', data);
+            // if server returns HTML redirect page, you can navigate
+            window.location.href = '/doc_dashboard/{{user_id}}'
+          } else {
+            const text = await resp.text();
+            console.log('Server response:', text);
+            // if server returns HTML redirect page, you can navigate
+            window.location.href = '/doc_dashboard/{{user_id}}' 
+          }
+          alert('Clinic saved successfully.');
+        } catch (err) {
+          console.error('Fetch error', err);
+          alert('Network error while saving clinic.');
         }
-        return true;
       });
-
+    
+    
     })();
   </script>
 </body>
