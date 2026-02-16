@@ -17,18 +17,20 @@ from .db_operations import DatabaseOperations
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 base = Path(__file__).parent
-clinic_env = (base / ".env.clinics").resolve()
-clinic_db = DatabaseOperations(env_file=str(clinic_env))
+patient_env = (base / ".env.patients").resolve()
+patient_db = DatabaseOperations(env_file=str(patient_env))
 
 #TODO change host later as necessary
-def _generate_clinic_qr(clinic_id: str, doctor_id: str, host: str = "http://192.168.1.4:5000") -> bytes:
+def _generate_patient_qr(patient_id: str, clinic_id: str, doctor_id: str, host: str = "http://192.168.29.115:5000") -> bytes:
     """
     Returns PNG bytes for a QR encoding a URL pointing to /clinic-booking
     with query params clinic_id and doctor_id.
     """
     # Build a compact URL/payload. Use absolute URL if you want (domain optional).
     # Example: /clinic-booking?clinic_id=CLINIC_ID_...&doctor_id=DOC123
-    payload = f"{host}/clinic-booking?clinic_id={clinic_id}&doctor_id={doctor_id}"
+
+    # TODO patient payload needs to redirect to generate prescription page for doctors only
+    payload = f"{host}/patient-prescription-update?patient_id={patient_id}&clinic_id={clinic_id}&doctor_id={doctor_id}"
     qr = qrcode.QRCode(version=1, box_size=10, border=2, error_correction=qrcode.constants.ERROR_CORRECT_M)
     qr.add_data(payload)
     qr.make(fit=True)
@@ -40,7 +42,7 @@ def _generate_clinic_qr(clinic_id: str, doctor_id: str, host: str = "http://192.
     current_directory = os.path.dirname(os.path.abspath(__file__))
     
     # Define the file path (you can specify a filename as needed).
-    file_path = os.path.join(current_directory, f"clinic_qr_{clinic_id}_{doctor_id}.png")
+    file_path = os.path.join(current_directory, f"patient_qr_{clinic_id}_{doctor_id}.png")
     
     # Save the image to the specified file path.
     img.save(file_path)
@@ -93,14 +95,14 @@ def base64_string_to_data_uri(b64_input: Union[str, bytes], mime: Optional[str] 
     mime = mime or 'application/octet-stream'
     return f"data:{mime};base64,{cleaned}"
 
-def _generate_clinic_id() -> str:
+def _generate_patient_id() -> str:
     # numeric timestamp (UTC) + cryptographically random 8-digit number
     ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[:-3]  # up to milliseconds, digits only
     rand_int = int.from_bytes(os.urandom(4), "big") % 10_000_000  # 0..9_999_999
     rand = f"{rand_int:07d}"  # fixed width 7 digits to reduce collision risk
-    return f"CLINIC_ID_{ts}{rand}"
+    return f"PATIENT_ID_{ts}{rand}"
 
-def append_clinic_registration_record(data: Dict) -> Dict:
+def append_patient_registration_record(data: Dict) -> Dict:
     """
     Validate and append registration record to CSV.
     Returns the saved record dict (without plaintext password).
@@ -112,45 +114,54 @@ def append_clinic_registration_record(data: Dict) -> Dict:
     #    raise ValueError(err)
 
 
-    clinic_id = _generate_clinic_id()
-    qr_png_bytes = _generate_clinic_qr(clinic_id, data["doctor_id"].strip())
+    patient_id = _generate_patient_id()
+    qr_png_bytes = _generate_patient_qr(patient_id, data["clinic_id"].strip(), data["doctor_id"].strip())
     qr_png_data_uri = bytes_to_data_uri(png_bytes=qr_png_bytes)
     record = {
-        "clinic_id": clinic_id,
+        "patient_id":patient_id,
+        "clinic_id": data["clinic_id"].strip(),
         "doctor_id": data["doctor_id"].strip(),
-        "clinicname": data["clinic_name"].strip(),
-        "email": data["clinic_email"].strip(),
-        "clinic_address":data["clinic_address"],
-        "primary_contact_number":data["clinic_contact"].strip(),
-        "secondary_contact_number":data["clinic_contact_alternative"].strip(),
-        "created_at": datetime.utcnow().date().isoformat(),
-        "services_offered":"",
-        "visit_schedule":data["visit_schedule"],
+        "patient_name": data["patient_name"].strip(),
+        "age": data["age"],
+        "sex": data["sex"].strip(),
+        "occupation":"",
+        "patient_address":"",
+        "patient_mobile":data["patient_mobile"].strip(),
+        "created_at": data["created_at"].strip(),
+        "visit_day":data["visit_day"],
         "doctor_consultation_fees":data["clinic_fees"],
-        "clinic_qr_bytes":qr_png_bytes,
-        "clinic_qr_data_uri":qr_png_data_uri,
+        "patient_qr_bytes":qr_png_bytes,
+        "patient_qr_data_uri":qr_png_data_uri,
     }
 
     #inserting data to MongoDb database
-    response = clinic_db.insert_record(user_document=record)
+    #response = patient_db.insert_record(user_document=record)
+    #response["patient_qr_data_uri"] = qr_png_data_uri
 
-    return response
+    result = patient_db.insert_record(user_document=record)  # returns InsertOneResult or ObjectId
+    # if insert returns InsertOneResult:
+    inserted_id = getattr(result, "inserted_id", result)  # handles both cases
+    record_copy = dict(record)
+    record_copy["_id"] = inserted_id
+    record_copy["patient_qr_data_uri"] = qr_png_data_uri
+    return record_copy
 
-def update_clinic_profile(data: Dict) -> Dict:
+
+def update_patient_profile(data: Dict) -> Dict:
     #updating profile data of MongoDb database
-    success = clinic_db.update_record (primary_key_name="clinic_id",primary_key_val=data["clinic_id"],updates=data)
+    success = patient_db.update_record (primary_key_name="patient_id",primary_key_val=data["patient_id"],updates=data)
     response = {"success":success["acknowledged"],"clinic_id":data["clinic_id"]}
-    print("CLINIC DB MANAGEMENT LOG : Message returned by Mongo for clinic profile update...........")
+    print("PATIENT DB MANAGEMENT LOG : Message returned by Mongo for clinic profile update...........")
     print(json.dumps(success))
-    print("CLINIC DB MANAGEMENT LOG : Response constructed for clinic profile update...........")
+    print("PATIENT DB MANAGEMENT LOG : Response constructed for clinic profile update...........")
     print(json.dumps(response))
-    print("CLINIC DB MANAGEMENT LOG : Returning constructed response...........")
+    print("PATIENT DB MANAGEMENT LOG : Returning constructed response...........")
     return response
 
 def get_clinic_by_doctor_id(doctor_id:str) -> Dict:
-    doctor_data = clinic_db.find_by_id(id_val=doctor_id,id_field="doctor_id")
+    doctor_data = patient_db.find_by_id(id_val=doctor_id,id_field="doctor_id")
     return doctor_data
 
 def get_clinic_by_clinic_id(clinic_id:str) -> Dict:
-    clinic_data = clinic_db.find_by_id(id_val=clinic_id,id_field="clinic_id")
+    clinic_data = patient_db.find_by_id(id_val=clinic_id,id_field="clinic_id")
     return clinic_data

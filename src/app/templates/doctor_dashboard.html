@@ -37,13 +37,37 @@
     .brand{
       display:flex; align-items:center; gap:12px;
     }
-    .logo {
-      width:56px; height:56px; border-radius:10px;
-      background:linear-gradient(135deg,var(--primary),#0066ff);
-      display:flex; align-items:center; justify-content:center;
-      color:#fff; font-weight:700; box-shadow: var(--card-shadow);
-      font-size:20px;
+    .logo{
+      width:100px;                 /* slightly larger */
+      height:100px;
+      border-radius:0;            /* no box around it */
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-size: contain;   /* show entire sticker without cropping */
+      background-position: center;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px;                /* optional breathing space */
+      box-shadow: none;
+      border: none;
+      font-size:20px;             /* can be removed if not showing text */
+      line-height:0;
     }
+
+    /* if you want it perfectly sharp on high-density screens */
+    .logo img {
+      display:block;
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      image-rendering: -webkit-optimize-contrast; /* improves clarity for some PNGs */
+    }
+
+/* alternate HTML if you prefer an <img> (avoids CSS URL path issues) */
+/* <div class="logo"><img src="/static/image/logo.jpg" alt="Logo"></div> */
+
+
     h1{ margin:0; font-size:20px; color:var(--primary); }
     .sub { color:var(--muted); font-size:13px; margin-top:4px; }
 
@@ -369,7 +393,7 @@
   <div class="container">
     <header>
       <div class="brand">
-        <div class="logo">DD</div>
+        <div class="logo"  aria-hidden="true"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpg') }}" alt="Logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
         <div>
           <h1>Doctor Dashboard</h1>
           <div class="sub">Overview of your profile and clinics</div>

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Update Patient — Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; padding:1rem; max-width:900px; margin:auto; color:#0066cc;}
+    .card { border:1px solid #ddd; border-radius:8px; padding:1rem; box-shadow:0 2px 6px rgba(0,0,0,0.08); display:flex; gap:1rem; align-items:center; margin-bottom:1rem; }
+    .card-img { width:120px; height:120px; flex:0 0 120px; border-radius:8px; object-fit:cover; border:1px solid #ccc; }
+    .card-body { flex:1 1 auto; min-width:0; }
+    .card-body h2 { margin:0 0 .25rem 0; word-break:break-word; }
+    .card-body p { margin:.25rem 0; color:#333; word-break:break-word; }
+    label { display:block; margin-top:0.6rem; font-weight:600; }
+    input, select, textarea, button { width:100%; padding:0.5rem; box-sizing:border-box; margin-top:0.25rem; }
+    .muted { color:#666; font-size:0.9rem; }
+    .row { display:flex; gap:0.5rem; }
+    .success { color:green; }
+    .error { color:#b00020; }
+    #message { margin-top:0.75rem; }
+    .field-error { color:#b00020; font-size:0.9rem; margin-top:0.25rem; display:none; }
+    .field-invalid { border-color:#b00020; }
+
+    @media (max-width:600px) {
+      .card { flex-direction:column; align-items:flex-start; }
+      .card-img { width:100%; height:auto; flex:0 0 auto; max-height:240px; }
+      .card-body { width:100%; }
+      .row { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Update Patient Details</h1>
+
+  <!-- Clinic/doctor card (keeps original theme) -->
+  <div class="card" id="clinicCard">
+    <img class="card-img" src="https://via.placeholder.com/120" alt="Doctor photo">
+    <div class="card-body">
+      <h2 id="doctorName">Dr. Demo Doctor</h2>
+      <p><strong id="doctorExpertise">General Medicine</strong></p>
+      <p><strong>Clinic:</strong> <span id="clinicName">Demo Clinic</span></p>
+      <p><strong>Address:</strong> <span id="clinicAddress">123 Demo Street</span></p>
+      <p style="display:none" id="clinicId">CLINIC123</p>
+    </div>
+  </div>
+
+  <!-- Update patient card -->
+  <div class="card" style="flex-direction:column; align-items:stretch;">
+    <div class="card-body">
+      <h2>Update Patient Record</h2>
+
+      <!-- Lookup -->
+      <label>Lookup by Patient ID or Mobile</label>
+      <div class="row" style="margin-top:0.25rem;">
+        <div style="flex:1">
+          <input id="lookupPatientId" placeholder="Patient ID (e.g., P20260213083000123)">
+        </div>
+        <div style="flex:1">
+          <input id="lookupMobile" placeholder="Or Mobile (10-digit)">
+        </div>
+        <div style="flex:0 0 120px">
+          <button id="lookupBtn" type="button">Lookup</button>
+        </div>
+      </div>
+      <div id="lookupError" class="field-error">Patient not found</div>
+
+      <!-- Edit form -->
+      <label style="margin-top:1rem;">Patient First Name</label>
+      <input id="editFirstName" placeholder="First name">
+      <div id="firstNameError" class="field-error">Please enter a valid first name</div>
+
+      <label>Patient Last Name</label>
+      <input id="editLastName" placeholder="Last name">
+      <div id="lastNameError" class="field-error">Please enter a valid last name</div>
+
+      <label>Sex</label>
+      <select id="editSex">
+        <option value="">Select</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Others</option>
+      </select>
+      <div id="sexError" class="field-error">Please select sex</div>
+
+      <label>Mobile</label>
+      <input id="editMobile" placeholder="10-digit mobile">
+      <div id="mobileError" class="field-error">Please enter a valid mobile</div>
+
+      <label>Patient ID (read-only)</label>
+      <input id="editPatientId" readonly>
+
+      <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+        <button id="saveBtn" type="button" style="flex:1;">Save Changes</button>
+        <button id="downloadBtn" type="button" style="flex:1;">Download CSV</button>
+      </div>
+
+      <div id="message" style="margin-top:0.5rem;"></div>
+    </div>
+  </div>
+
+  <script>
+    // Mock patient store (in-memory demo)
+    const patients = {
+      // patientId: { firstName, lastName, sex, mobile, patientId }
+      "P20260213083010001": { firstName:"Asha", lastName:"Kumar", sex:"Female", mobile:"9876543210", patientId:"P20260213083010001" },
+      "P20260213083010002": { firstName:"Ravi", lastName:"Singh", sex:"Male", mobile:"9123456780", patientId:"P20260213083010002" }
+    };
+
+    const msgEl = document.getElementById('message');
+    function msg(t, ok=true) { msgEl.textContent = t; msgEl.className = ok ? 'success' : 'error'; }
+
+    function showFieldError(id, show) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.display = show ? 'block' : 'none';
+      const input = el.previousElementSibling && el.previousElementSibling.tagName
+                    ? el.previousElementSibling
+                    : null;
+      if (input && input.classList) {
+        if (show) input.classList.add('field-invalid'); else input.classList.remove('field-invalid');
+      }
+    }
+
+    function isValidMobile(v){ return /^\d{10}$/.test(v); }
+    function isNonEmpty(v){ return typeof v === 'string' && v.trim().length>0; }
+
+    // Lookup logic: by patientId or mobile
+    document.getElementById('lookupBtn').addEventListener('click', () => {
+      const pid = document.getElementById('lookupPatientId').value.trim();
+      const mobile = document.getElementById('lookupMobile').value.trim();
+      let found = null;
+
+      if (pid && patients[pid]) found = patients[pid];
+      else if (mobile) {
+        found = Object.values(patients).find(p => p.mobile === mobile) || null;
+      }
+
+      if (!found) {
+        document.getElementById('editFirstName').value = '';
+        document.getElementById('editLastName').value = '';
+        document.getElementById('editSex').value = '';
+        document.getElementById('editMobile').value = '';
+        document.getElementById('editPatientId').value = '';
+        showFieldError('lookupError', true);
+        msg('Patient not found', false);
+        return;
+      }
+
+      showFieldError('lookupError', false);
+      document.getElementById('editFirstName').value = found.firstName;
+      document.getElementById('editLastName').value = found.lastName;
+      document.getElementById('editSex').value = found.sex || '';
+      document.getElementById('editMobile').value = found.mobile;
+      document.getElementById('editPatientId').value = found.patientId;
+      msg('Patient loaded', true);
+    });
+
+    // Save changes to in-memory store
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const first = document.getElementById('editFirstName').value.trim();
+      const last = document.getElementById('editLastName').value.trim();
+      const sex = document.getElementById('editSex').value;
+      const mobile = document.getElementById('editMobile').value.trim();
+      const pid = document.getElementById('editPatientId').value.trim();
+
+      let ok = true;
+      if (!isNonEmpty(first)) { showFieldError('firstNameError', true); ok=false; } else showFieldError('firstNameError', false);
+      if (!isNonEmpty(last)) { showFieldError('lastNameError', true); ok=false; } else showFieldError('lastNameError', false);
+      if (!isNonEmpty(sex)) { showFieldError('sexError', true); ok=false; } else showFieldError('sexError', false);
+      if (!isValidMobile(mobile)) { showFieldError('mobileError', true); ok=false; } else showFieldError('mobileError', false);
+      if (!isNonEmpty(pid)) { msg('Load a patient before saving', false); return; }
+
+      if (!ok) { msg('Please correct highlighted fields', false); return; }
+
+      // update store (mock)
+      patients[pid] = { firstName:first, lastName:last, sex:sex, mobile:mobile, patientId:pid };
+      msg('Patient updated: ' + pid, true);
+    });
+
+    // Download updated CSV row
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const pid = document.getElementById('editPatientId').value.trim();
+      if (!pid || !patients[pid]) { msg('Load a patient to download', false); return; }
+      const p = patients[pid];
+
+      const clinicId = document.getElementById('clinicId').textContent || 'CLINIC';
+      const clinicName = document.getElementById('clinicName').textContent || 'Clinic';
+      const doctorName = document.getElementById('doctorName').textContent || 'Doctor';
+      const headers = ["patient_id","first_name","last_name","sex","mobile","clinic_id","clinic_name","doctor_name","updated_at"];
+      const row = [
+        p.patientId,
+        p.firstName,
+        p.lastName,
+        p.sex,
+        p.mobile,
+        clinicId,
+        clinicName,
+        doctorName,
+        new Date().toISOString()
+      ];
+
+      const csv = headers.join(',') + "\n" + row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',') + "\n";
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
+      a.href = url;
+      a.download = `${clinicId}__${clinicName.replace(/\s+/g,'_')}__${p.patientId}__${today}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      msg('CSV downloaded', true);
+    });
+
+    // Small helpers: hide errors when editing
+    ['editFirstName','editLastName','editSex','editMobile','lookupPatientId','lookupMobile'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', () => {
+        ['firstNameError','lastNameError','sexError','mobileError','lookupError'].forEach(e => showFieldError(e,false));
+        msg('');
+      });
+    });
+  </script>
+</body>
+</html>

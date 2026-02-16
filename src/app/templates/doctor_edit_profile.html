@@ -23,6 +23,32 @@
       color:#0b1226;
       padding:24px;
     }
+       .logo { 
+      width:100px;                 /* slightly larger */
+      height:100px;
+      border-radius:0;            /* no box around it */
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-size: contain;   /* show entire sticker without cropping */
+      background-position: center;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px;                /* optional breathing space */
+      box-shadow: none;
+      border: none;
+      font-size:20px;             /* can be removed if not showing text */
+      line-height:0;
+    }
+
+    /* if you want it perfectly sharp on high-density screens */
+    .logo img {
+      display:block;
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      image-rendering: -webkit-optimize-contrast; /* improves clarity for some PNGs */
+    }
     .container{ max-width:900px; margin:0 auto; }
     header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
     .brand{ display:flex; gap:12px; align-items:center; }
@@ -61,7 +87,7 @@
   <div class="container">
     <header>
       <div class="brand">
-        <div class="logo">DD</div>
+        <div class="logo"><img src="{{ url_for('static', filename='image/doctopal_logo.png') }}" alt="Logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
         <div>
           <h1>Edit Profile for <strong>Dr {{ doctor_data.lastname }}</strong></h1>
           <div class="sub">Complete your doctor profile details</div>
@@ -292,10 +318,22 @@
     e.preventDefault();
     const fd = new FormData(form);
     const payload = {};
-    for (const [k,v] of fd.entries()) {
+    for (const [k, v] of fd.entries()) {
       if (!v) continue;
-      if (/^\d+$/.test(v)) payload[k] = Number(v);
-      else payload[k] = v.trim();
+
+      const el = form.elements[k];
+      // treat textarea values as raw strings (preserve newlines)
+      if (el && el.tagName === 'TEXTAREA') {
+        payload[k] = String(v); // keep \n characters intact
+        continue;
+      }
+
+      // convert numeric-only to Number
+      if (/^\d+$/.test(v)) {
+        payload[k] = Number(v);
+      } else {
+        payload[k] = String(v).trim();
+      }
     }
 
     if (window.base64Image) {

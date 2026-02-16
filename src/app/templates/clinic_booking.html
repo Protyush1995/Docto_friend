@@ -5,10 +5,11 @@
   <title>Appointment Booking</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body { font-family: Arial, sans-serif; padding:1rem; max-width:900px; margin:auto; color:#0066cc; }
+    body { font-family: Arial, sans-serif; padding:1rem; max-width:900px; margin:auto; color:#0066cc;}
     .card { border:1px solid #ddd; border-radius:8px; padding:1rem; box-shadow:0 2px 6px rgba(0, 0, 0, 0.545); margin-bottom:1rem; }
     .card h2 { margin:0 0 0.25rem 0; }
     .card p { margin:0.25rem 0; color:#333; }
+    span { white-space: pre-wrap;}
     label { display:block; margin-top:0.6rem; font-weight:600; }
     input, select, textarea, button { width:100%; padding:0.5rem; box-sizing:border-box; margin-top:0.25rem; }
     .muted { color:#666; font-size:0.9rem; }
@@ -37,20 +38,24 @@
   </style>
 </head>
 <body>
-  <h1>Doctor Appointment Booking</h1>
+  <h1>Book Appointment for Dr {{doctor_data.firstname}} {{doctor_data.lastname}} at {{clinic_data.clinicname}}</h1>
+<span id="clinicId" data-clinic-id="{{ clinic_data.clinic_id }}" hidden></span>
+<span id="doctorId" data-doctor-id="{{ doctor_data.doctor_id }}" hidden></span>
 
-<!-- Dummy record with doctor image -->
+
 <div class="card" id="clinicCard" style="display:flex; gap:1rem; align-items:center;">
   <img src="{{profile_pic_uri}}" alt="Doctor photo"
        style="width:120px;height:120px;border-radius:8px;object-fit:cover;border:1px solid #ccc;">
   <div class="card-body">
     <h2 id="doctorName" style="margin:0 0 0.25rem 0">Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h2>
-    <p><strong>Clinic:</strong> <span id="clinicName">{{clinic_data.clinicname}}</span>
-       <span class="muted">(<span id="clinicId">{{clinic_data.clinic_id}}</span>)</span></p>
-    <p><strong>Qualifications:</strong> <span id="doctorQual">{{doctor_data.qualifications}}, {{doctor_data.expertise}}</span></p>
+    <p><span id="doctorExpertise"><strong>{{doctor_data.expertise}}</strong></span></p>
+    <p><span id="doctorQual"><strong>{{doctor_data.qualifications}}</strong></span></p>
+      <p><span id="doctorFellow">{{doctor_data.practising_or_fellowship}}</span></p>
+    <p><span id="doctorAchievements"><strong>{{doctor_data.achievements}}</strong></span></p>
+    <p><strong>Clinic:</strong> <span id="clinicName">{{clinic_data.clinicname}}</span></p>
     <p><strong>Address:</strong> <span id="clinicAddress">{{clinic_address}}</span></p>
-    <p><strong>Clinic Contact:</strong> <span id="clinicContact">{{clinic_data.primary_contact_number}} / {{clinic_data.secondary_contact_number}}</span></p>
-    <p><strong>Clinic Fees:</strong> ₹<span id="clinicFees">{{clinic_data.doctor_consultation_fees}}</span></p>
+    <p><strong>Contact:</strong> <span id="clinicContact">{{clinic_data.primary_contact_number}} / {{clinic_data.secondary_contact_number}}</span></p>
+    <p><strong>Consultation Fees:</strong> ₹<span id="clinicFees">{{clinic_data.doctor_consultation_fees}}</span></p>
   </div>
 </div>
 
@@ -63,15 +68,26 @@
 
     <script>
     (function populateVisitDays() {
-        const pad = n => String(n).padStart(2,'0');
-        const now = new Date();
-        // get Sunday of the week that includes today (0 = Sunday)
-        const day = now.getDay();
+        const pad = n => String(n).padStart(2,'0'); // 2 tuesday 0 sunday
+
+        // get next-or-same Tuesday (2 = Tuesday, 0 = Sunday)
+        function nextOrSameWeekday(weekday /*0=Sun..6=Sat*/) {
+          const now = new Date();
+          const diff = (weekday - now.getDay() + 7) % 7;
+          const d = new Date(now);
+          d.setDate(now.getDate() + diff);
+          d.setHours(0,0,0,0);
+          return d;
+        }
+
+        const now = nextOrSameWeekday(2); // now is Tuesday (today if Tuesday, otherwise next Tuesday)
+        // get Sunday of the week that includes this Tuesday
+        const day = now.getDay(); // will be 2
         const sunday = new Date(now);
         sunday.setDate(now.getDate() - day);
 
         const schedule = [
-        {name:'Monday', time:'(01:30pm - 04:00pm)'},
+        {name:'Saturday', time:'(01:30pm - 04:00pm)'},
         {name:'Tuesday', time:'(01:30pm - 04:00pm)'},
         {name:'Wednesday', time:'(02:30pm - 04:00pm)'},
         {name:'Thursday', time:'(01:30pm - 04:00pm)'}
@@ -138,6 +154,12 @@
             </label>
             <div id="sexError" class="field-error">Please enter a valid value for Sex</div>
         </div>
+        <div style="flex:0 0 120px">
+          <label>Age
+            <input id="patientAge" placeholder="Age" inputmode="numeric" />
+          </label>
+          <div id="ageError" class="field-error">Please enter a valid age (0–120)</div>
+        </div>
     </div>
 
     <div class="row" style="margin-top:0.5rem;">
@@ -155,6 +177,14 @@
         </div>
     </div>
 
+    <div style="margin-top:0.75rem; display:flex; align-items:center; gap:0.5rem;">
+      <label style="display:flex; align-items:center; gap:0.5rem; font-weight:600;">
+        <input type="checkbox" id="otpToggle" checked>
+        Enable OTP Verification
+      </label>
+    </div>
+
+
     <div class="row" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
         <div style="flex:1">
             <button type="button" id="sendOtpBtn" style="width:100%;">Send OTP</button>
@@ -169,9 +199,84 @@
     <div id="message"></div>
   </form>
 
+  <!-- Modal -->
+  <div id="bookingSuccessModal" class="modal" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); z-index:9999;">
+    <div style="background:#fff; border-radius:8px; width:360px; max-width:90%; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.2);">
+      <h3 id="modalTitle" style="margin:0 0 8px 0;color:#6c019e;">Booking Confirmed</h3>
+      <div id="bookingCard" style="background:#f9f9f9; padding:12px; border-radius:6px; text-align:left; width:100%;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <img id="modalDoctorPhoto" src="{{profile_pic_uri}}" alt="doctor" style="width:72px;height:72px;border-radius:6px;object-fit:cover;border:1px solid #ddd;">
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:16px; color:#6c019e;" id="modalDoctorName">Dr Name</div>
+            <div id="modalDoctorQual" style="font-size:13px;color:#444;"></div>
+            <div id="modalDoctorExpert" style="font-size:13px;color:#444;"></div>
+            <div id="modalClinicName" style="font-weight:700; font-size:13px;color:#6c019e; margin-top:6px;"></div>
+            <div id="modalClinicAddress" style="font-size:12px;color:#555;"></div>
+            <div id="modalClinicContact" style="font-size:12px;color:#555;"></div>
+            <div id="modalVisitDay" style="font-weight:700; font-size:13px;color:#6c019e; margin-top:4px;"></div>
+          </div>
+        </div>
+        <hr style="margin:8px 0;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <h3>Booking token</h3>
+          <img id="modalQr" src="" alt="QR" style="width:120px;height:120px;border:1px solid #eee;background:#fff;padding:4px;">
+          <div style="flex:1;font-size:14px;color:#6c019e;">
+            <div><strong>Patient:</strong> <span style="color:#555;" id="modalPatientName"></span></div>
+            <div><strong>Mobile:</strong> <span style="color:#555;" id="modalPatientMobile"></span></div>
+            <div><strong>Age / Sex:</strong> <span style="color:#555;" id="modalPatientAgeSex"></span></div>
+          </div>
+        </div>
+      </div>
+
+
+      <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
+        <button id="modalCloseBtn" type="button" style="padding:8px 12px;">Close</button>
+        <button id="modalDownloadBtn" type="button" style="padding:8px 12px;">Download Card (PNG)</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="" crossorigin="anonymous"></script>
+
+
   <script>
+    const CLINIC_ID = {{ clinic_data.clinic_id | tojson }}; 
+    const DOCTOR_ID = {{ doctor_data.doctor_id | tojson }}
     // Dummy OTP flow and CSV save (client-only)
     let currentOtp = null;
+
+    //verify otp logic
+    let otpEnabled = true;
+
+    const otpToggle = document.getElementById('otpToggle');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const submitBookingBtn = document.getElementById('submitBookingBtn');
+    const otpInput = document.getElementById('otpInput');
+
+    otpToggle.addEventListener('change', function() {
+      otpEnabled = this.checked;
+
+      if (!otpEnabled) {
+        // Disable OTP flow
+        sendOtpBtn.disabled = true;
+        verifyOtpBtn.disabled = true;
+        otpInput.disabled = true;
+
+        submitBookingBtn.disabled = false; // allow direct booking
+        currentOtp = null;
+        msg('OTP verification disabled');
+      } else {
+        // Enable OTP flow
+        sendOtpBtn.disabled = false;
+        verifyOtpBtn.disabled = true;
+        otpInput.disabled = false;
+
+        submitBookingBtn.disabled = true; // require OTP verification
+        msg('OTP verification enabled');
+      }
+    }); // verify otp logic end
+
     const msgEl = document.getElementById('message');
     const msg = (t, ok=true) => {
       msgEl.textContent = t;
@@ -228,50 +333,81 @@
       if (otpVal && !/^\d{4,6}$/.test(otpVal)) { ok = false; if (showErrors) setFieldError('otpError', true); }
       else setFieldError('otpError', false);
 
+      // inside validateAll(), after mobile/otp checks add:
+      const ageVal = document.getElementById('patientAge').value.trim();
+      if (!isValidAge(ageVal)) { ok = false; if (showErrors) setFieldError('ageError', true); }
+      else setFieldError('ageError', false);
+
       return ok;
     }
 
-    // Live validation hooks
-    ['patientFirstName','patientLastName','patientSex','visitDay','patientMobile','otpInput'].forEach(id => {
+    function isValidAge(val) {
+      if (!val && val !== 0) return false;
+      const n = Number(val);
+      return Number.isInteger(n) && n >= 0 && n <= 120;
+    }
+
+    // add 'patientAge' to live validation hooks
+    ['patientFirstName','patientLastName','patientSex','patientAge','visitDay','patientMobile','otpInput','patientAge'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
-      el.addEventListener('input', () => {
-        validateAll(true);
+      el.addEventListener('input', () => { validateAll(true); });
+      el.addEventListener('change', () => { validateAll(true); });
+    });
+    
+    if (otpEnabled)
+    { 
+      document.getElementById('sendOtpBtn').addEventListener('click', () => {
+        const mobile = document.getElementById('patientMobile').value.trim();
+        // Show field-specific message if mobile invalid
+        if (!isValidMobile(mobile)) {
+          setFieldError('mobileError', true);
+          msg('Please enter a valid value for Patient Mobile', false);
+          return;
+        }
+        setFieldError('mobileError', false);
+
+        const payload = { patient_mobile: mobile };
+        
+        // POST JSON to server
+        fetch('/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        .then(async res => {
+          const data = await res.json().catch(()=>null);
+          if (res.ok && data && data.success) {
+            msg('otp sent to mobile number : '+ mobile);
+            // reset demo state
+            currentOtp = data.otp || null;
+            document.getElementById('verifyOtpBtn').disabled = false;
+          } else {
+            const err = data && data.error ? data.error : (res.statusText || 'Server error');
+            msg('Server error: ' + err, false);
+          }
+        })
+        .catch(err => { msg('Network error: ' + err.message, false); });
+        
       });
-      el.addEventListener('change', () => {
-        validateAll(true);
+
+      document.getElementById('verifyOtpBtn').addEventListener('click', () => {
+        const otp = document.getElementById('otpInput').value.trim();
+        if (!currentOtp) { msg('Please send OTP first', false); return; }
+        if (otp === currentOtp) {
+          msg('OTP verified');
+          document.getElementById('submitBookingBtn').disabled = false;
+          document.getElementById('verifyOtpBtn').disabled = true;
+          setFieldError('otpError', false);
+        } else {
+          setFieldError('otpError', true);
+          msg('OTP incorrect', false);
+        }
       });
-    });
+    
+    }
 
-    document.getElementById('sendOtpBtn').addEventListener('click', () => {
-      const mobile = document.getElementById('patientMobile').value.trim();
-      // Show field-specific message if mobile invalid
-      if (!isValidMobile(mobile)) {
-        setFieldError('mobileError', true);
-        msg('Please enter a valid value for Patient Mobile', false);
-        return;
-      }
-      setFieldError('mobileError', false);
-
-      currentOtp = String(Math.floor(100000 + Math.random() * 900000));
-      // In a real app send via SMS. Here we show it for testing.
-      msg('OTP sent (for demo): ' + currentOtp);
-      document.getElementById('verifyOtpBtn').disabled = false;
-    });
-
-    document.getElementById('verifyOtpBtn').addEventListener('click', () => {
-      const otp = document.getElementById('otpInput').value.trim();
-      if (!currentOtp) { msg('Please send OTP first', false); return; }
-      if (otp === currentOtp) {
-        msg('OTP verified');
-        document.getElementById('submitBookingBtn').disabled = false;
-        document.getElementById('verifyOtpBtn').disabled = true;
-        setFieldError('otpError', false);
-      } else {
-        setFieldError('otpError', true);
-        msg('OTP incorrect', false);
-      }
-    });
+    
 
     document.getElementById('submitBookingBtn').addEventListener('click', () => {
       // Validate all fields and show per-field messages
@@ -284,58 +420,118 @@
       // All good: proceed with original booking logic
       const patientName = document.getElementById('patientFirstName').value.trim() + ' ' + document.getElementById('patientLastName').value.trim();
       const patientMobile = document.getElementById('patientMobile').value.trim();
+      const sex = document.getElementById('patientSex').value;
       const visitDay = document.getElementById('visitDay').value;
+      const feesEl = document.getElementById('clinicFees');
+      const clinic_fees = feesEl ? feesEl.textContent.trim() : '';
 
-      // generate patient id
-      const ts = new Date().toISOString().replace(/[-:T.]/g,'').slice(0,14);
-      const rand = Math.floor(100 + Math.random() * 900);
-      const patientId = 'P' + ts + rand;
+      // when building payload include age:
+      const age = Number(document.getElementById('patientAge').value.trim()) || null;
+      const payload = {
+        patient_name: patientName,
+        patient_mobile: patientMobile,
+        visit_day: visitDay,
+        sex:sex,
+        age: age,
+        clinic_fees:clinic_fees,
+        clinic_id: document.getElementById('clinicId').dataset ? document.getElementById('clinicId').dataset.clinicId : document.getElementById('clinicId').textContent || '',
+        doctor_id: document.getElementById('doctorId').dataset ? document.getElementById('doctorId').dataset.doctorId : document.getElementById('doctorId').textContent || '',
+        created_at: new Date().toISOString()
+      };
 
-      // build booking row and CSV filename
-      const clinicId = document.getElementById('clinicId').textContent;
-      const clinicName = document.getElementById('clinicName').textContent.replace(/\s+/g,'_');
-      const doctorName = document.getElementById('doctorName').textContent.replace(/\s+/g,'_');
-      const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
-      const bookingFilename = `${clinicId}__${clinicName}__${doctorName}__${today}.csv`;
+      console.log(payload)
+      // POST JSON to server
+      fetch('/submit-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(async res => {
+        const data = await res.json().catch(()=>null);
+        if (res.ok && data && data.success) {
+          msg('Booking created:  — Booking successful.');
+          // reset demo state
+          currentOtp = null;
+          document.getElementById('submitBookingBtn').disabled = true;
+          document.getElementById('verifyOtpBtn').disabled = true;
+          document.getElementById('otpInput').value = '';
 
-      const headers = ["patient_id","patient_name","patient_mobile","visit_day","clinic_id","clinic_name","clinic_address","doctor_name","doctor_qualifications","created_at"];
-      const row = [
-        patientId,
-        patientName,
-        patientMobile,
-        visitDay,
-        document.getElementById('clinicId').textContent,
-        document.getElementById('clinicName').textContent,
-        document.getElementById('clinicAddress').textContent,
-        document.getElementById('doctorName').textContent,
-        document.getElementById('doctorQual').textContent,
-        new Date().toISOString()
-      ];
+          // Prepare data for modal
+          const modalData = {
+            qr_png_data_uri: data.qr_png_data_uri,
+            patient_name: payload.patient_name,
+            patient_mobile: payload.patient_mobile,
+            age: payload.age,
+            sex: payload.sex,
+            doctor_name: document.getElementById('doctorName').textContent.trim(),
+            doctor_qual: document.getElementById('doctorQual')?.textContent.trim() || '',
+            doctor_expert: document.getElementById('doctorExpertise')?.textContent.trim() || '',
+            clinic_name: document.getElementById('clinicName').textContent.trim(),
+            clinic_address: document.getElementById('clinicAddress').textContent.trim(),
+            clinic_contact: document.querySelector('#clinicCard span#clinicContact')?.textContent.trim() ||
+                          document.querySelector('#clinicCard')?.textContent.match(/\d{3,}/) || '',
+            doctor_photo: document.querySelector('#clinicCard img')?.src || '',
+            visit_day: payload.visit_day
+          };
+          openBookingModal(modalData);
 
-      // create CSV content and trigger download (simulates saving)
-      const csvContent = headers.join(',') + "\n" + row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',') + "\n";
-      const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = bookingFilename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+        
+        } else {
+          const err = data && data.error ? data.error : (res.statusText || 'Server error');
+          msg('Server error: ' + err, false);
+        }
+      })
+      .catch(err => { msg('Network error: ' + err.message, false); });
 
-      // Booking success message (field-specific cleared)
-      msg('Booking created: ' + patientId + ' — Booking successful.');
-
-      // reset demo state
-      currentOtp = null;
-      document.getElementById('submitBookingBtn').disabled = true;
-      document.getElementById('verifyOtpBtn').disabled = true;
-      document.getElementById('otpInput').value = '';
-      // Optionally clear inputs but preserve layout — do not change current behavior
     });
 
     // Pre-fill some demo values (already in HTML) — no-op
   </script>
+
+  <script>
+  function openBookingModal(data) {
+    document.getElementById('modalDoctorPhoto').src = data.doctor_photo || '';
+    document.getElementById('modalDoctorName').textContent = data.doctor_name || '';
+    document.getElementById('modalDoctorQual').textContent = data.doctor_qual || '';
+    document.getElementById('modalDoctorExpert').textContent = data.doctor_expert || '';
+    document.getElementById('modalClinicName').textContent = data.clinic_name || '';
+    document.getElementById('modalClinicAddress').textContent = data.clinic_address || '';
+    document.getElementById('modalClinicContact').textContent = data.clinic_contact || '';
+    document.getElementById('modalVisitDay').textContent = data.visit_day || '';
+    document.getElementById('modalQr').src = data.qr_png_data_uri || '';
+    document.getElementById('modalPatientName').textContent = data.patient_name || '';
+    document.getElementById('modalPatientMobile').textContent = data.patient_mobile || '';
+    document.getElementById('modalPatientAgeSex').textContent = (data.age!==null?data.age+' / ':'') + (data.sex||'');
+
+    const modal = document.getElementById('bookingSuccessModal');
+    modal.style.display = 'flex';
+
+    document.getElementById('modalCloseBtn').onclick = () => { modal.style.display = 'none'; };
+    document.getElementById('modalDownloadBtn').onclick = () => downloadBookingCard();
+  }
+
+
+  function downloadBookingCard() {
+    const card = document.getElementById('bookingCard');
+    // ensure white background for PNG
+    card.style.background = '#fff';
+    html2canvas(card, {scale:2, backgroundColor: '#ffffff'}).then(canvas => {
+      canvas.toBlob(blob => {
+        const a = document.createElement('a');
+        const filename = `booking_${Date.now()}.png`;
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        // restore visual background
+        card.style.background = '#f9f9f9';
+      }, 'image/png');
+    }).catch(err => {
+      alert('Download failed: ' + (err && err.message || err));
+    });
+  }
+  </script>
+
 </body>
 </html>

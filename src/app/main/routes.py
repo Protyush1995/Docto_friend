@@ -1,5 +1,6 @@
-import csv
+import csv,requests
 import os, json
+from twilio.rest import Client
 import random
 from datetime import datetime
 from io import BytesIO
@@ -14,11 +15,15 @@ from flask import (
     url_for,
 )
 from . import bp
-from ..db_manager import doctor_database_management,clinic_database_management
+from ..db_manager import doctor_database_management,clinic_database_management,patient_database_management
 from ..db_manager import db_operations
 
+FAST2SMS_API_KEY = "tlpDO2oPA4gw6KhTMinqjbm913ukVJeXUsIvYGa0yC8dfESNrZWZeUzNlEup9A2k65Jm7H0vTYxf8riX"
+# Your Account Sid and Auth Token from twilio.com / console
+account_sid = 'AC3396f07cc88a4487120ecf8cca1f40b1'
+auth_token = 'd79917f49a216ed9348cb132e24c664a'
 
-
+client = Client(account_sid, auth_token)
 
 @bp.route("/", methods=["GET"])
 def doctor_login_page():
@@ -182,6 +187,8 @@ def clinic_booking():
     
     doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
     clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=clinic_id)
+    print("Route LOG : Printing achievements to check if new line is being preserved !! ")
+    print(doctor_data["achievements"])
 
     if not doctor_data or not clinic_data : return jsonify({"WARNING": "Clinic Data or Doctor Data missing!!"}), 404
     
@@ -197,15 +204,47 @@ def clinic_booking():
 
 @bp.route("/send-otp", methods=["POST"])
 def send_otp():
-    mobile = request.form.get("mobile", "").strip()
+    data = request.get_json() or {}
+    mobile = data.get("patient_mobile")
+    print(f"ROUTE LOG : Received mobile number.......................{mobile}")
     if not mobile or not mobile.isdigit() or len(mobile) < 10:
         return jsonify({"error": "invalid_mobile"}), 400
+
     otp = str(random.randint(100000, 999999))
     session["booking_otp"] = otp
     session["booking_mobile"] = mobile
+
+    url = "https://www.fast2sms.com/dev/bulkV2"
+    full_number = "91" + mobile[-10:]  # ensure 10 digits + country code
+
+    payload = {
+        "route": "q",
+        "message": f"OTP from Doctopal for your doctor appointment booking is {otp}",
+        "numbers": full_number,
+        "sms_details": "1"
+    }
+
+    headers = {
+        "authorization": FAST2SMS_API_KEY,
+        "accept": "application/json",
+        "content-type": "application/json"
+    }
+
+    # send JSON body
+    response = requests.post(url, json=payload, headers=headers, timeout=10)
+
+    try:
+        returned_msg = response.json()
+    except ValueError:
+        return jsonify({"error": "bad_response", "raw": response.text}), 502
+
+    print(f"ROUTE LOG: fast2sms response {returned_msg}")
+
+    success = returned_msg.get("return", False)
+    status_code = 200 if success else returned_msg.get("status_code", 400)
+
     current_app.logger.info("Generated OTP for %s", mobile)
-    # For testing we return otp; replace with SMS provider in production
-    return jsonify({"otp": otp}), 200
+    return jsonify({"success": success, "otp": otp , "message": returned_msg}), status_code
 
 @bp.route("/verify-otp", methods=["POST"])
 def verify_otp():
@@ -220,85 +259,74 @@ def verify_otp():
 
 @bp.route("/submit-booking", methods=["POST"])
 def submit_booking():
-    if not session.get("otp_verified"):
-        return jsonify({"error": "otp_not_verified"}), 400
 
-    qr = request.form.get("qr", "").strip()
-    patient_name = request.form.get("patient_name", "").strip()
-    patient_mobile = session.get("booking_mobile", "").strip()
-    visit_day = request.form.get("doctor_visit_day", "").strip()
+    data = request.get_json() or {}
+    print("ROUTE LOG : Printing data received from submit-booking handle.......................................")
+    print(json.dumps(data))
+    #return jsonify(success=True, doctor_id=data["doctor_id"]), 201
+    try:
+        rec = patient_database_management.append_patient_registration_record(data)
+        print(rec)
+        # TODO: send verification email asynchronously
+        return jsonify(success=True, qr_png_data_uri=rec["patient_qr_data_uri"]), 201
+    except ValueError as ve:
+        return jsonify(success=False, error=str(ve)), 400
+    except Exception as e:
+        current_app.logger.exception("Failed to save registration")
+        return jsonify(success=False, error="internal_error"), 500
+    
+@bp.route("/patient-prescription-update", methods=["GET"])
+def patient_update_generate_prescription():
 
-    if not qr or not patient_name or not patient_mobile:
-        return jsonify({"error": "missing_fields"}), 400
+    patient_id = request.args.get("patient_id", "").strip()
+    clinic_id = request.args.get("clinic_id", "").strip()
+    doctor_id = request.args.get("doctor_id", "").strip()
 
-    csv_path = os.path.join(os.path.dirname(__file__), "..", "db_manager", "doctor_db_dataframe.csv")
-    if not os.path.exists(csv_path):
-        return jsonify({"error": "record_not_found"}), 404
+    if not clinic_id or not doctor_id or not patient_id: return jsonify({"error": "Arguments missing! Clinic ID or Doctor ID or Patient ID missing!!"}), 404
+    
+    """doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
+    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=clinic_id)
+    print("Route LOG : Printing achievements to check if new line is being preserved !! ")
+    print(doctor_data["achievements"])
 
-    record = None
-    with open(csv_path, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            if r.get("qr_filename") == qr:
-                record = r
-                break
+    if not doctor_data or not clinic_data : return jsonify({"WARNING": "Clinic Data or Doctor Data missing!!"}), 404
+    
+    if "image_data" in doctor_data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    else:
+        profile_pic_uri = None
 
-    if not record:
-        return jsonify({"error": "record_not_found"}), 404
+    clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
+    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="vo")"""
 
-    ts = datetime.utcnow().strftime("%Y%m%d")
+    return render_template("generate_prescription_update_patient.html") 
 
-    def _safe(s: str) -> str:
-        return "".join(c for c in (s or "") if c.isalnum() or c in " _-").strip().replace(" ", "_")
+@bp.route("/patient-prescription-update", methods=["POST"])
+def patient_doctor_clinic_booking():
 
-    clinic_id = record.get("clinic_id", "clinic")
-    clinic_name = _safe(record.get("clinic_name", ""))
-    doctor_name = _safe(record.get("doctor_name", ""))
-    booking_filename = f"{clinic_id}__{clinic_name}__{doctor_name}__{ts}.csv"
+    patient_id = request.args.get("patient_id", "").strip()
+    clinic_id = request.args.get("clinic_id", "").strip()
+    doctor_id = request.args.get("doctor_id", "").strip()
 
-    booking_dir = os.path.join(os.path.dirname(__file__), "..", "db_manager")
-    os.makedirs(booking_dir, exist_ok=True)
-    booking_path = os.path.join(booking_dir, booking_filename)
+    if not clinic_id or not doctor_id or not patient_id: return jsonify({"error": "Arguments missing! Clinic ID or Doctor ID or Patient ID missing!!"}), 404
+    
+    """doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
+    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=clinic_id)
+    print("Route LOG : Printing achievements to check if new line is being preserved !! ")
+    print(doctor_data["achievements"])
 
-    patient_id = f"P{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{random.randint(100,999)}"
+    if not doctor_data or not clinic_data : return jsonify({"WARNING": "Clinic Data or Doctor Data missing!!"}), 404
+    
+    if "image_data" in doctor_data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    else:
+        profile_pic_uri = None
 
-    headers = [
-        "patient_id",
-        "patient_name",
-        "patient_mobile",
-        "visit_day",
-        "clinic_id",
-        "clinic_name",
-        "clinic_address",
-        "doctor_name",
-        "doctor_qualifications",
-        "created_at",
-    ]
-    row = {
-        "patient_id": patient_id,
-        "patient_name": patient_name,
-        "patient_mobile": patient_mobile,
-        "visit_day": visit_day,
-        "clinic_id": record.get("clinic_id", ""),
-        "clinic_name": record.get("clinic_name", ""),
-        "clinic_address": record.get("clinic_address", ""),
-        "doctor_name": record.get("doctor_name", ""),
-        "doctor_qualifications": record.get("doctor_qualifications", ""),
-        "created_at": datetime.utcnow().isoformat(),
-    }
+    clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
+    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="vo")"""
 
-    write_header = not os.path.exists(booking_path)
-    with open(booking_path, "a", newline="", encoding="utf-8") as bf:
-        writer = csv.DictWriter(bf, fieldnames=headers)
-        if write_header:
-            writer.writeheader()
-        writer.writerow(row)
+    return render_template("generate_prescription_update_patient.html") 
 
-    session.pop("otp_verified", None)
-    session.pop("booking_mobile", None)
-
-    current_app.logger.info("Saved booking %s to %s", patient_id, booking_filename)
-    return jsonify({"patient_id": patient_id, "booking_file": booking_filename}), 200
 
 @bp.route('/doc_dashboard/<doctor_id>', methods=["GET"])
 def doc_dashboard(doctor_id):
