@@ -129,6 +129,7 @@ def append_patient_registration_record(data: Dict) -> Dict:
         "patient_mobile":data["patient_mobile"].strip(),
         "created_at": data["created_at"].strip(),
         "visit_day":data["visit_day"],
+        "visit_date":data["visit_date"],
         "doctor_consultation_fees":data["clinic_fees"],
         "patient_qr_bytes":qr_png_bytes,
         "patient_qr_data_uri":qr_png_data_uri,

@@ -5,8 +5,8 @@
   <title>Appointment Booking</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body { font-family: Arial, sans-serif; padding:1rem; max-width:900px; margin:auto; color:#0066cc;}
-    .card { border:1px solid #ddd; border-radius:8px; padding:1rem; box-shadow:0 2px 6px rgba(0, 0, 0, 0.545); margin-bottom:1rem; }
+    body { font-family: Arial, sans-serif; padding:1rem; max-width:900px; margin:auto; color:#4d20cab8; background-color:#68616117;}
+    .card { border:1px solid #ddd; border-radius:8px; padding:1rem; box-shadow:0 2px 6px rgba(0, 0, 0, 0.545); margin-bottom:1rem; background-color:#ffff;}
     .card h2 { margin:0 0 0.25rem 0; }
     .card p { margin:0.25rem 0; color:#333; }
     span { white-space: pre-wrap;}
@@ -20,21 +20,36 @@
     #message { margin-top:0.75rem; }
     .field-error { color:#b00020; font-size:0.9rem; margin-top:0.25rem; display:none; }
     .field-invalid { border-color:#b00020; }
+   
+    .card { display:flex; gap:1rem; align-items:flex-start; border:1px solid #ddd; border-radius:8px; padding:1rem; box-shadow:0 2px 6px rgba(0,0,0,0.12); }
+
+    .card-img { width:120px; height:120px; flex:0 0 120px; border-radius:8px; object-fit:cover; border:1px solid #ccc; }
+
+    .card-body { display:flex; gap:1rem; width:100%; min-width:0; }
+
+    .card-col { flex:1 1 0%; display:flex; flex-direction:column; gap:0.5rem; min-width:0; }
+    /* make left column slightly larger if desired */
+    .card-col.doctor { flex:1.2 1 0%; }
+    .card-col.clinic  { flex:0.8 1 0%; }
+
+    /* ensure headings and paragraphs wrap correctly */
+    .card-col h2, .card-col p { margin:0;}
+    .card-col.doctor p, .card-col.doctor h2,
+    .card-col.doctor p,
+    .card-col.doctor strong{
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+      padding: 0;
+      line-height: 1.25;
+    }
 
 
-    /* Add/replace these rules */
-  .card { display:flex; gap:1rem; align-items:center; border:1px solid #ddd; border-radius:8px; padding:1rem; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
-  .card-img { width:120px; height:120px; flex:0 0 120px; border-radius:8px; object-fit:cover; border:1px solid #ccc; }
-  .card-body { flex:1 1 auto; min-width:0; } /* min-width:0 prevents overflow in flex */
-  .card-body h2 { margin:0 0 .25rem 0; word-break:break-word; }
-  .card-body p { margin:.25rem 0; color:#333; word-break:break-word; }
+    @media (max-width:600px) {
+      .card { flex-direction:column; align-items:flex-start; }
+      .card-img { width:100%; height:auto; max-height:240px; flex:0 0 auto; }
+      .card-body { flex-direction:column; }
+    }
 
-  /* Responsive: stack vertically on small screens */
-  @media (max-width:600px) {
-    .card { flex-direction:column; align-items:flex-start; }
-    .card-img { width:100%; height:auto; flex:0 0 auto; max-height:240px; }
-    .card-body { width:100%; }
-  }
   </style>
 </head>
 <body>
@@ -44,20 +59,24 @@
 
 
 <div class="card" id="clinicCard" style="display:flex; gap:1rem; align-items:center;">
-  <img src="{{profile_pic_uri}}" alt="Doctor photo"
-       style="width:120px;height:120px;border-radius:8px;object-fit:cover;border:1px solid #ccc;">
   <div class="card-body">
-    <h2 id="doctorName" style="margin:0 0 0.25rem 0">Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h2>
-    <p><span id="doctorExpertise"><strong>{{doctor_data.expertise}}</strong></span></p>
-    <p><span id="doctorQual"><strong>{{doctor_data.qualifications}}</strong></span></p>
-      <p><span id="doctorFellow">{{doctor_data.practising_or_fellowship}}</span></p>
-    <p><span id="doctorAchievements"><strong>{{doctor_data.achievements}}</strong></span></p>
-    <p><strong>Clinic:</strong> <span id="clinicName">{{clinic_data.clinicname}}</span></p>
-    <p><strong>Address:</strong> <span id="clinicAddress">{{clinic_address}}</span></p>
-    <p><strong>Contact:</strong> <span id="clinicContact">{{clinic_data.primary_contact_number}} / {{clinic_data.secondary_contact_number}}</span></p>
-    <p><strong>Consultation Fees:</strong> ₹<span id="clinicFees">{{clinic_data.doctor_consultation_fees}}</span></p>
+      <div class="card-col doctor">
+        <h2 id="doctorName">Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h2>
+        <p><strong id="doctorExpertise">{{doctor_data.expertise}}</strong></p>
+        <p><strong id="doctorQual">{{doctor_data.qualifications}}</strong></p>
+        <p id="doctorFellow">{{doctor_data.practising_or_fellowship}}</p>
+        <p><strong id="doctorAchievements">{{doctor_data.achievements}}</strong></p>
+      </div>
+
+      <div class="card-col clinic">
+        <h2 id="clinicName">{{clinic_data.clinicname}}</h2>
+        <p><strong>Address:</strong> <span id="clinicAddress">{{clinic_address}}</span></p>
+        <p><strong>Contact:</strong> <span id="clinicContact">{{clinic_data.primary_contact_number}} / {{clinic_data.secondary_contact_number}}</span></p>
+        <p><strong>Consultation Fees:</strong> ₹<span id="clinicFees">{{clinic_data.doctor_consultation_fees}}</span></p>
+      </div>
+    </div>
+
   </div>
-</div>
 
   <!-- Booking form -->
   <form id="bookingForm" onsubmit="return false;">
@@ -80,18 +99,20 @@
           return d;
         }
 
-        const now = nextOrSameWeekday(2); // now is Tuesday (today if Tuesday, otherwise next Tuesday)
+        const now = nextOrSameWeekday(0); // now is Tuesday (today if Tuesday, otherwise next Tuesday)
         // get Sunday of the week that includes this Tuesday
         const day = now.getDay(); // will be 2
         const sunday = new Date(now);
         sunday.setDate(now.getDate() - day);
 
-        const schedule = [
-        {name:'Saturday', time:'(01:30pm - 04:00pm)'},
-        {name:'Tuesday', time:'(01:30pm - 04:00pm)'},
-        {name:'Wednesday', time:'(02:30pm - 04:00pm)'},
-        {name:'Thursday', time:'(01:30pm - 04:00pm)'}
-        ];
+        const schedule = {{ visit_schedule | safe }};
+        console.log(schedule);
+        //[
+        //{name:'Saturday', time:'(01:30pm - 04:00pm)'},
+        //{name:'Tuesday', time:'(01:30pm - 04:00pm)'},
+        //{name:'Wednesday', time:'(02:30pm - 04:00pm)'},
+        //{name:'Thursday', time:'(01:30pm - 04:00pm)'}
+        //];
 
         const select = document.getElementById('visitDay');
         const label = document.getElementById('visitDayLabel');
@@ -112,7 +133,8 @@
 
         const datePrefix = fmt(dayDate);
         const option = document.createElement('option');
-        option.value = `${datePrefix}_${s.name}`;
+        option.value = `${s.name}- ${s.time}`;
+        option.dataset.date = datePrefix;
         option.textContent = `${datePrefix}_${s.name} - ${s.time}`;
 
         // Disable option if the date is strictly before today (past)
@@ -187,14 +209,14 @@
 
     <div class="row" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
         <div style="flex:1">
-            <button type="button" id="sendOtpBtn" style="width:100%;">Send OTP</button>
+            <button class="btn" type="button" id="sendOtpBtn" style="width:100%; background-color:#4d20cab8; color:#fff; box-shadow:0 2px 6px rgba(0, 0, 0, 0.545);">Send OTP</button>
         </div>
         <div style="flex:1">
-            <button type="button" id="verifyOtpBtn" disabled style="width:100%;">Verify OTP</button>
+            <button class="btn" type="button" id="verifyOtpBtn" disabled style="width:100%; background-color:#4d20cab8; color:#fff; box-shadow:0 2px 6px rgba(0, 0, 0, 0.545);">Verify OTP</button>
         </div>
     </div>
 
-    <button type="button" id="submitBookingBtn" disabled style="margin-top:1rem;">Submit Booking</button>
+    <button type="button" id="submitBookingBtn" disabled style="margin-top:1rem; background-color:#4d20cab8; color:#fff; box-shadow:0 2px 6px rgba(0, 0, 0, 0.545);">Submit Booking</button>
 
     <div id="message"></div>
   </form>
@@ -202,36 +224,36 @@
   <!-- Modal -->
   <div id="bookingSuccessModal" class="modal" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); z-index:9999;">
     <div style="background:#fff; border-radius:8px; width:360px; max-width:90%; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.2);">
-      <h3 id="modalTitle" style="margin:0 0 8px 0;color:#6c019e;">Booking Confirmed</h3>
+      <h3 id="modalTitle" style="margin:0 0 8px 0;color:#4d20cab8;">Booking Token</h3>
       <div id="bookingCard" style="background:#f9f9f9; padding:12px; border-radius:6px; text-align:left; width:100%;">
         <div style="display:flex; gap:12px; align-items:center;">
-          <img id="modalDoctorPhoto" src="{{profile_pic_uri}}" alt="doctor" style="width:72px;height:72px;border-radius:6px;object-fit:cover;border:1px solid #ddd;">
-          <div style="flex:1;">
-            <div style="font-weight:700; font-size:16px; color:#6c019e;" id="modalDoctorName">Dr Name</div>
-            <div id="modalDoctorQual" style="font-size:13px;color:#444;"></div>
-            <div id="modalDoctorExpert" style="font-size:13px;color:#444;"></div>
-            <div id="modalClinicName" style="font-weight:700; font-size:13px;color:#6c019e; margin-top:6px;"></div>
-            <div id="modalClinicAddress" style="font-size:12px;color:#555;"></div>
-            <div id="modalClinicContact" style="font-size:12px;color:#555;"></div>
-            <div id="modalVisitDay" style="font-weight:700; font-size:13px;color:#6c019e; margin-top:4px;"></div>
-          </div>
-        </div>
-        <hr style="margin:8px 0;">
-        <div style="display:flex; gap:12px; align-items:center;">
-          <h3>Booking token</h3>
           <img id="modalQr" src="" alt="QR" style="width:120px;height:120px;border:1px solid #eee;background:#fff;padding:4px;">
-          <div style="flex:1;font-size:14px;color:#6c019e;">
+          <div style="flex:1;font-size:14px;color:#4d20cab8;">
             <div><strong>Patient:</strong> <span style="color:#555;" id="modalPatientName"></span></div>
             <div><strong>Mobile:</strong> <span style="color:#555;" id="modalPatientMobile"></span></div>
             <div><strong>Age / Sex:</strong> <span style="color:#555;" id="modalPatientAgeSex"></span></div>
+            <div id="modalVisitDay" style="font-weight:700; font-size:13px;color:#4d20cab8; margin-top:4px;"></div>
+         
           </div>
+        </div>
+        
+        <hr style="margin:8px 0;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:16px; color:#4d20cab8;" id="modalDoctorName">Dr Name</div>
+            <div id="modalDoctorQual" style="font-size:13px;color:#444;"></div>
+            <div id="modalDoctorExpert" style="font-size:13px;color:#444;"></div>
+            <div id="modalClinicName" style="font-weight:700; font-size:13px;color:#4d20cab8; margin-top:6px;"></div>
+            <div id="modalClinicAddress" style="font-size:12px;color:#555;"></div>
+            <div id="modalClinicContact" style="font-size:12px;color:#555;"></div>
+             </div>
         </div>
       </div>
 
 
       <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
         <button id="modalCloseBtn" type="button" style="padding:8px 12px;">Close</button>
-        <button id="modalDownloadBtn" type="button" style="padding:8px 12px;">Download Card (PNG)</button>
+        <button id="modalDownloadBtn" type="button" style="padding:8px 12px; background-color: #4d20cab8; color: #fff;">Download booking token</button>
       </div>
     </div>
   </div>
@@ -421,7 +443,10 @@
       const patientName = document.getElementById('patientFirstName').value.trim() + ' ' + document.getElementById('patientLastName').value.trim();
       const patientMobile = document.getElementById('patientMobile').value.trim();
       const sex = document.getElementById('patientSex').value;
-      const visitDay = document.getElementById('visitDay').value;
+      const sel = document.getElementById('visitDay');
+      const visitDay = sel.value;
+      const opt = sel.options[sel.selectedIndex];
+      const visitDate = opt.dataset.date;
       const feesEl = document.getElementById('clinicFees');
       const clinic_fees = feesEl ? feesEl.textContent.trim() : '';
 
@@ -431,6 +456,7 @@
         patient_name: patientName,
         patient_mobile: patientMobile,
         visit_day: visitDay,
+        visit_date: visitDate,
         sex:sex,
         age: age,
         clinic_fees:clinic_fees,
@@ -439,6 +465,7 @@
         created_at: new Date().toISOString()
       };
 
+      console.log("Printing payload for patient.....................")
       console.log(payload)
       // POST JSON to server
       fetch('/submit-booking', {
@@ -471,7 +498,8 @@
             clinic_contact: document.querySelector('#clinicCard span#clinicContact')?.textContent.trim() ||
                           document.querySelector('#clinicCard')?.textContent.match(/\d{3,}/) || '',
             doctor_photo: document.querySelector('#clinicCard img')?.src || '',
-            visit_day: payload.visit_day
+            visit_day: payload.visit_day,
+            visit_date: payload.visit_date
           };
           openBookingModal(modalData);
 
@@ -490,14 +518,14 @@
 
   <script>
   function openBookingModal(data) {
-    document.getElementById('modalDoctorPhoto').src = data.doctor_photo || '';
+    //document.getElementById('modalDoctorPhoto').src = data.doctor_photo || '';
     document.getElementById('modalDoctorName').textContent = data.doctor_name || '';
     document.getElementById('modalDoctorQual').textContent = data.doctor_qual || '';
     document.getElementById('modalDoctorExpert').textContent = data.doctor_expert || '';
     document.getElementById('modalClinicName').textContent = data.clinic_name || '';
     document.getElementById('modalClinicAddress').textContent = data.clinic_address || '';
     document.getElementById('modalClinicContact').textContent = data.clinic_contact || '';
-    document.getElementById('modalVisitDay').textContent = data.visit_day || '';
+    document.getElementById('modalVisitDay').textContent = data.visit_date +" : "+data.visit_day || '';
     document.getElementById('modalQr').src = data.qr_png_data_uri || '';
     document.getElementById('modalPatientName').textContent = data.patient_name || '';
     document.getElementById('modalPatientMobile').textContent = data.patient_mobile || '';
