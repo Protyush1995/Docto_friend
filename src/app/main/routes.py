@@ -202,7 +202,7 @@ def clinic_booking():
 
     return render_template("clinic_booking.html",doctor_data=doctor_data,clinic_data=clinic_data,profile_pic_uri=profile_pic_uri,clinic_address=clinic_address,visit_schedule=visit_schedule) 
 
-@bp.route("/send-otp", methods=["POST"])
+@bp.route("/send-otp", methods=["POST"]) #OTP verification added
 def send_otp():
     data = request.get_json() or {}
     mobile = data.get("patient_mobile")
