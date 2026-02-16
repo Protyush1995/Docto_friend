@@ -193,8 +193,6 @@ def clinic_booking():
     
     doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
     clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=clinic_id)
-    print("Route LOG : Printing achievements to check if new line is being preserved !! ")
-    print(doctor_data["achievements"])
 
     if not doctor_data or not clinic_data : return jsonify({"WARNING": "Clinic Data or Doctor Data missing!!"}), 404
     
@@ -204,7 +202,9 @@ def clinic_booking():
         profile_pic_uri = None
 
     clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
-    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="vo")
+    #visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="kv")
+    visit_schedule = dict_to_ordered_list(visits=clinic_data["visit_schedule"])
+    print(f"Route LOG : Printing visit schedule : {visit_schedule}.............................................................")
 
     return render_template("clinic_booking.html",doctor_data=doctor_data,clinic_data=clinic_data,profile_pic_uri=profile_pic_uri,clinic_address=clinic_address,visit_schedule=visit_schedule) 
 
@@ -440,6 +440,7 @@ def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
         clinic_address = clinic_address,
         visit_schedule = visit_schedule
     )
+
 #helper functions
 def dict_to_string(d: dict, fmt: str = "vo") -> str:
     """
@@ -460,3 +461,53 @@ def dict_to_string(d: dict, fmt: str = "vo") -> str:
 
 def remove_bytes_from_dict(d: dict) -> dict:
     return {k: v for k, v in d.items() if not isinstance(v, bytes)}
+
+# convert functions for visit schedule
+WEEK_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+
+def dict_to_ordered_list(visits: dict, order=WEEK_ORDER):
+    """
+    visits: e.g. {'mon': ['08:00-14:00'], 'thu': ['08:00-14:00']}
+    returns list like:
+    [{'name':'Monday','time':'(08:00-14:00)'}, ...] including only days present, in `order`.
+    """
+    # normalize keys to full weekday names
+    key_map = {
+        "mon":"Monday","monday":"Monday",
+        "tue":"Tuesday","tues":"Tuesday","tuesday":"Tuesday",
+        "wed":"Wednesday","wednesday":"Wednesday",
+        "thu":"Thursday","thurs":"Thursday","thursday":"Thursday",
+        "fri":"Friday","friday":"Friday",
+        "sat":"Saturday","saturday":"Saturday",
+        "sun":"Sunday","sunday":"Sunday"
+    }
+    out = []
+    for day in order:
+        # find any visit entry that maps to this full name
+        for k,v in visits.items():
+            if key_map.get(k.strip().lower()) == day:
+                times = v or []
+                if not times:
+                    continue
+                time_str = ", ".join(times)
+                out.append({"name": day, "time": f"({time_str})"})
+                break
+    return out
+
+def ordered_list_to_dict(schedule_list: list):
+    """
+    schedule_list: [{'name':'Saturday','time':'(01:30pm - 04:00pm)'}, ...]
+    returns dict like: {'saturday': ['01:30pm - 04:00pm'], ...} (lowercase keys)
+    """
+    out = {}
+    for item in schedule_list:
+        name = item.get("name","").strip()
+        time_field = item.get("time","").strip()
+        # strip surrounding parentheses if present
+        if time_field.startswith("(") and time_field.endswith(")"):
+            time_field = time_field[1:-1].strip()
+        # split by comma if multiple times
+        times = [t.strip() for t in time_field.split(",") if t.strip()]
+        if times:
+            out[name.lower()] = times
+    return out
