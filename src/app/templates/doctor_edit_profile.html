@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Edit Doctor Profile</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --primary: #4d20cab8;
+      --bg: #f6f8ff;
+      --card-bg: #ffffff;
+      --muted: #6b7280;
+      --accent: #0b63ff;
+      --border-radius: 12px;
+      --card-shadow: 0 10px 30px rgba(0,64,255,0.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 400px at 10% 10%, rgba(0,64,255,0.06), transparent 10%),
+                  linear-gradient(180deg, var(--bg), #ffffff 60%);
+      color:#0b1226;
+      padding:24px;
+    }
+       .logo { 
+      width:100px;                 /* slightly larger */
+      height:100px;
+      border-radius:0;            /* no box around it */
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-size: contain;   /* show entire sticker without cropping */
+      background-position: center;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px;                /* optional breathing space */
+      box-shadow: none;
+      border: none;
+      font-size:20px;             /* can be removed if not showing text */
+      line-height:0;
+    }
+
+    /* if you want it perfectly sharp on high-density screens */
+    .logo img {
+      display:block;
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      image-rendering: -webkit-optimize-contrast; /* improves clarity for some PNGs */
+    }
+    .container{ max-width:900px; margin:0 auto; }
+    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .brand{ display:flex; gap:12px; align-items:center; }
+    .logo{ width:56px; height:56px; border-radius:10px; background:linear-gradient(135deg,var(--primary),#0066ff); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; box-shadow:var(--card-shadow); }
+    h1{ margin:0; font-size:20px; color:var(--primary); }
+    .sub{ color:var(--muted); font-size:13px; }
+
+    .card{
+      background:var(--card-bg);
+      border-radius:var(--border-radius);
+      padding:20px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.08);
+      border:1px solid rgba(0,64,255,0.05);
+    }
+
+    form{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; align-items:start; }
+    .full{ grid-column: 1 / -1; }
+    label{ display:block; font-size:13px; color:var(--muted); margin-bottom:6px; font-weight:600; }
+    input[type="text"], input[type="email"], input[type="tel"], textarea, select{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(6,42,138,0.08); background:#fff; font-size:14px;
+    }
+    textarea{ min-height:110px; resize:vertical; }
+    .row{ display:flex; gap:8px; }
+    .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+    .btn{ padding:10px 14px; border-radius:10px; border:none; cursor:pointer; background:linear-gradient(180deg,var(--primary),#0033cc); color:#fff; font-weight:600; }
+    .btn.ghost{ background:transparent; color:var(--primary); border:1px solid rgba(0,64,255,0.12); }
+    .hint{ font-size:12px; color:var(--muted); margin-top:6px; }
+
+    @media (max-width:760px){
+      form{ grid-template-columns: 1fr; }
+      .actions{ justify-content:stretch; flex-direction:column-reverse; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo"><img src="{{ url_for('static', filename='image/doctopal_logo.png') }}" alt="Logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
+        <div>
+          <h1>Edit Profile for <strong>Dr {{ doctor_data.lastname }}</strong></h1>
+          <div class="sub">Complete your doctor profile details</div>
+        </div>
+      </div>
+      <div>
+        <a href="/doc_dashboard/{{ doctor_data.doctor_id }}" class="btn btn-small btn-ghost" style="text-decoration:none; display:inline-block; padding:8px 10px;" >Back</a>
+      </div>
+    </header>
+
+    {% macro val_if(v) -%}
+            {%- if v is not none and (v|string).strip() != '' -%} {{ v }} {%- endif -%}
+    {%- endmacro %}
+
+    <main class="card">
+      <form id="editProfileForm" action="/doctor/update" method="POST" novalidate>
+        <input type="hidden" name="doctor_id" id="doctor_id" value="{{ doctor_data.doctor_id }}">
+
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="avatar">
+            <img id="avatarImg" src="{{ profile_pic_uri }}" alt="Profile Pic" style="width:96px;height:96px;border-radius:12px;object-fit:cover;">
+          </div>
+          <div>
+            <label for="photoFile">Upload profile image (JPG/PNG, ≤2MB)</label>
+            <input id="photoFile" type="file" accept="image/png,image/jpeg">
+            <div class="hint" id="photoHint">No file chosen</div>
+          </div>
+        </div>
+
+        <!--<div>
+          <label for="photo">Profile image URL</label>
+          <input id="photo" name="photo_url" type="text" placeholder="/static/image/doc_placeholder.png" value="">
+        </div>-->
+
+        <div>
+          <label for="fees">Member Since:</label>
+          <label>{{doctor_data.created_at}}</label>
+        </div>
+
+        <div class="full">
+          <label for="firstname">First name</label>
+          <input id="firstname" name="firstname" type="text" placeholder="First name" value={{ val_if(doctor_data.firstname) }}>
+        </div>
+
+        <div>
+          <label for="lastname">Last name</label>
+          <input id="lastname" name="lastname" type="text" placeholder="Last name" value={{ val_if(doctor_data.lastname) }}>
+        </div>
+
+        <div>
+          <label for="qual">Qualifications</label>
+          <input id="qual" name="qualifications" type="text" placeholder="e.g. MBBS, MD" value={{ val_if(doctor_data.qualifications) }}>
+        </div>
+
+        <div>
+          <label for="license">License</label>
+          <label>{{doctor_data.license}}</label>
+        </div>
+
+        <div class="full">
+          <label for="address">Permanent address</label>
+          <textarea id="address" name="permanent_address" placeholder="Full permanent/mailing address" >{{ val_if(doctor_data.permanent_address) }}</textarea>
+        </div>
+
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" value={{ val_if(doctor_data.email) }}>
+        </div>
+
+        <div>
+          <label for="phone">Primary contact number</label>
+          <input id="phone" name="primary_contact_number" type="tel" placeholder="+1 555 555 5555" value={{ val_if(doctor_data.primary_contact_number) }}>
+        </div>
+
+        <div>
+          <label for="altphone">Alternate contact number</label>
+          <input id="altphone" name="secondary_contact_number" type="tel" placeholder="+1 555 555 5555" value={{ val_if(doctor_data.secondary_contact_number) }}>
+        </div>
+
+        <div>
+          <label for="specialty">Specialty</label>
+          <input id="specialty" name="expertise" type="text" placeholder="e.g. Cardiology" value={{ val_if(doctor_data.expertise) }}>
+        </div>
+
+        <div class="full">
+          <label for="achievements">Special Achievements</label>
+          <textarea id="achievements" name="achievements" placeholder="Special achievements" >{{ val_if(doctor_data.achievements) }}</textarea>
+        </div>
+
+        <div>
+          <label for="bio">Practising AND/OR Fellowship</label>
+          <textarea id="practise" name="practising_or_fellowship" placeholder="Practising at AND/OR Fellowship" >{{ val_if(doctor_data.practising_or_fellowship)}}</textarea>
+        </div>
+
+        <div>
+          <label for="years">Years of experience</label>
+          <input id="years" name="years_of_experience" type="text" placeholder="e.g. 10" value={{ val_if(doctor_data.years_of_experience)}}>
+        </div>
+
+        <div>
+          <label for="fees">Nominal visiting fees</label>
+          <input id="fees" name="default_fees" type="text" placeholder="e.g. 500" value={{ val_if(doctor_data.default_fees)}}>
+        </div>
+
+
+        <div class="full actions">
+          <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn">Save profile</button>
+        </div>
+      </form>
+    </main>
+
+    <footer style="margin-top:18px; text-align:center; color:var(--muted); font-size:13px;">
+      © 2025 Doctor Dashboard — demo
+    </footer>
+  </div>
+
+  <!--<script>
+        (function(){
+        const form = document.getElementById('editProfileForm');
+        const cancel = document.getElementById('cancelBtn');
+        cancel.addEventListener('click', () => { window.history.back(); });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(form);
+            const payload = {};
+            for (const [k,v] of fd.entries())
+            {
+                if (!v) continue;
+                // convert numeric-looking fields to numbers
+                if (/^\d+$/.test(v)) payload[k] = Number(v);
+                else payload[k] = v.trim();
+            }
+
+            // basic email validation
+            if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email))
+            {
+                alert('Please enter a valid email address.');
+                form.email.focus();
+                return;
+            }
+
+            try{
+            const resp = await fetch('/doctor-edit-profile/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            
+            const j = await resp.json();
+            if (resp.ok && j.success){
+                
+                const doctorId = j.user_id || j.doctor_id || (j.user && j.user.doctor_id);
+                if (doctorId) {
+                    console.log('Profile updated succeeded !!');
+                    window.location.href = j.redirect || `/doc_dashboard/${encodeURIComponent(doctorId)}`;
+                } 
+                else {
+                    console.log("doctor_id missing in response !!");
+                    alert("WARNING : Update succeeded but redirect failed. Contact admin!!");
+                }
+                
+            } 
+            else {
+                alert(j.error || j.message || 'Update failed!! Contact admin!!');
+            }
+            } 
+            catch(err){
+                console.error(err);
+                alert('Network error. Try again.');
+            }
+        });
+        })();
+</script>-->
+<script>
+(function(){
+  const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+  const form = document.getElementById('editProfileForm');
+  const cancel = document.getElementById('cancelBtn');
+  const fileInput = document.getElementById('photoFile');
+  const avatarImg = document.getElementById('avatarImg');
+  const photoHint = document.getElementById('photoHint');
+
+  // globals used by submit handler
+  window.base64Image = null;
+  window.imageMime = null;
+  window.imageFilename = null;
+
+  cancel.addEventListener('click', () => { window.history.back(); });
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) {
+      photoHint.textContent = 'No file chosen';
+      window.base64Image = null;
+      return;
+    }
+    if (!['image/png','image/jpeg'].includes(file.type)) {
+      alert('Only JPG and PNG images are allowed.');
+      fileInput.value = '';
+      photoHint.textContent = 'Invalid file type';
+      window.base64Image = null;
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      alert('File too large. Max 2 MB.');
+      fileInput.value = '';
+      photoHint.textContent = 'File too large';
+      window.base64Image = null;
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      avatarImg.src = ev.target.result; // show preview
+      photoHint.textContent = file.name + ' (' + Math.round(file.size/1024) + ' KB)';
+      const parts = ev.target.result.split(',');
+      window.base64Image = parts[1] || null;
+      window.imageMime = file.type;
+      window.imageFilename = file.name;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // existing submit logic preserved, but attach image if present
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const payload = {};
+    for (const [k, v] of fd.entries()) {
+      if (!v) continue;
+
+      const el = form.elements[k];
+      // treat textarea values as raw strings (preserve newlines)
+      if (el && el.tagName === 'TEXTAREA') {
+        payload[k] = String(v); // keep \n characters intact
+        continue;
+      }
+
+      // convert numeric-only to Number
+      if (/^\d+$/.test(v)) {
+        payload[k] = Number(v);
+      } else {
+        payload[k] = String(v).trim();
+      }
+    }
+
+    if (window.base64Image) {
+      payload.image_data = window.base64Image;
+      payload.image_mime = window.imageMime;
+      payload.image_filename = window.imageFilename;
+    }
+
+    if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
+      alert('Please enter a valid email address.');
+      form.email.focus();
+      return;
+    }
+
+    try {
+      const resp = await fetch('/doctor-edit-profile/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const j = await resp.json();
+      if (resp.ok && j.success) {
+        const doctorId = j.user_id || j.doctor_id || (j.user && j.user.doctor_id);
+        if (doctorId) {
+          window.location.href = j.redirect || `/doc_dashboard/${encodeURIComponent(doctorId)}`;
+        } else {
+          alert("WARNING : Update succeeded but redirect failed. Contact admin!!");
+        }
+      } else {
+        alert(j.error || j.message || 'Update failed!! Contact admin!!');
+      }
+    } catch(err) {
+      console.error(err);
+      alert('Network error. Try again.');
+    }
+  });
+})();
+</script>
+
+
+</body>
+</html>

@@ -1,23 +1,78 @@
-import csv
-import os
+import csv,requests
+import os, json
 import random
 from datetime import datetime
-
+from io import BytesIO
+from pathlib import Path
 from flask import (
     render_template,
     request,
     current_app,
     jsonify,
     session,
+    redirect, 
     url_for,
 )
 from . import bp
-from ..db_manager import doctor_db_manager, doctor_database_management
+from ..db_manager import doctor_database_management,clinic_database_management,patient_database_management
+from ..db_manager import db_operations
+from dotenv import dotenv_values
+
+# Loading API key for SMS OTP verification
+base = Path(__file__).parent
+secret_env = (base / ".env.secrets").resolve()
+if secret_env.is_file():
+    val = dotenv_values(secret_env)
+    #load_dotenv(env_path)
+    print(f"ROUTE LOG : Loading secret environment variables from: {secret_env}")
+else:
+    raise RuntimeError(f".env file not found: {secret_env}")
+
+FAST2SMS_API_KEY = val.get("FAST2SMS_API_KEY")
 
 
 @bp.route("/", methods=["GET"])
 def doctor_login_page():
     return render_template("doctor_login.html")
+
+@bp.route("/doctor-login", methods=["POST"])
+def api_doctor_login():
+    
+    data = request.get_json() or {}
+    if len(data) == 0 : return jsonify(success=False, error="Empty request!! Contact ADMINISTRATOR!!"), 400
+    
+    #extracting login data
+    identifier = (data.get("identifier") or "").strip()
+    password = data.get("password") or ""
+    remember = bool(data.get("remember"))
+
+    # sanity check
+    if not identifier or not password:
+        return jsonify(success=False, error="missing_credentials"), 400
+
+    try:
+        res = doctor_database_management.authenticate_identifier(identifier, password)
+        if not res.get("success"):
+            # distinguish not found vs invalid credentials
+            err = res.get("error", "invalid_credentials")
+            return jsonify(success=False, error=err), 401
+
+        user = res["user"]
+        
+        # Assigning session doctor_id
+        session.clear()
+        session["doctor_id"] = user["doctor_id"]
+        
+        # set a flag for "remember" if requested (requires configuring permanent_session_lifetime)
+        if remember:
+            session.permanent = True
+
+        current_app.logger.info("Doctor %s logged in", session.get("doctor_id"))
+        return jsonify(success=True, user_id=user["doctor_id"], redirect=url_for('main.doc_dashboard', doctor_id=user["doctor_id"])), 200
+
+    except Exception:
+        current_app.logger.exception("Login error")
+        return jsonify(success=False, error="internal_error"), 500
 
 @bp.route("/doctor-register", methods=["GET"])
 def doctor_registration_form():
@@ -36,80 +91,166 @@ def register_route():
         current_app.logger.exception("Failed to save registration")
         return jsonify(success=False, error="internal_error"), 500
 
+@bp.route("/doctor-edit-profile/<doctor_id>/edit", methods=["GET"])
+def doctor_edit_profile_form(doctor_id):
+    # load from DB using your existing DB helper
+    data = doctor_database_management.get_doctor_by_id(doctor_id)
+    if not data:
+        abort(404)
+
+    if "image_data" in data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(data["image_data"],data['image_mime'])
+    else:
+        profile_pic_uri = "Profile Picture Placeholder"
+
+    return render_template("doctor_edit_profile.html", doctor_data=data, profile_pic_uri=profile_pic_uri)
+
+@bp.route("/doctor-edit-profile/", methods=["POST"])
+def doctor_update_profile():
+    data = request.get_json() or {}
+    print(f"ROUTE LOG : Printing from doctor_update_profile from routes-------------------------------{json.dumps(data)}")
+    try:
+        response = doctor_database_management.update_doctor_profile(data)
+        print(f"ROUTE LOG : Printing response from update profile from routes-------------------------------{json.dumps(response)}")
+        # TODO: send verification email asynchronously
+        if response["success"] :
+            return jsonify(success=True,user_id=response.get("doctor_id"),message="Profile update successfull"), 201
+        else: return jsonify(success=False,user_id=response.get("doctor_id"),message="Problem updating profile"), 201
+    except ValueError as ve:
+        return jsonify(success=False, error=str(ve)), 400
+    except Exception as e:
+        current_app.logger.exception("Failed to update doctor profile !! Contact Admin!!")
+        return jsonify(success=False, error="internal_error"), 500
+
 @bp.route("/doctor-forgot-password", methods=["GET"])
 def doctor_forgot_password_page():
     return render_template("doctor_forgot_password.html")
 
-@bp.route("/doctor-seed", methods=["GET"])
-def doctor_seed_form():
-    return render_template("doctor_db_seed.html")
+@bp.route("/doctor-clinic-seeding", methods=["GET", "POST"])
+def doctor_clinic_seed_form():
+    if 'doctor_id' not in session:
+        return redirect(url_for('main.doctor_login_page'))
 
+    if request.method == "POST":
+        doctor_id = session.get("doctor_id")
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({"error":"invalid json"}), 400
 
-@bp.route("/doctor-seed", methods=["POST"])
-def doctor_seed_submit():
-    fields = {
-        "doctor_id": request.form.get("doctor_id", "").strip(),
-        "doctor_first_name": request.form.get("doctor_first_name", "").strip(),
-        "doctor_last_name": request.form.get("doctor_last_name", "").strip(),
-        "doctor_qualifications": request.form.get("doctor_qualifications", "").strip(),
-        "clinic_id": request.form.get("clinic_id", "").strip(),
-        "clinic_name": request.form.get("clinic_name", "").strip(),
-        "clinic_fees": request.form.get("clinic_fees", "").strip(),
-        "clinic_address": request.form.get("clinic_address", "").strip(),
-        "clinic_contact": request.form.get("clinic_contact", "").strip(),
-        "doctor_visit_days": request.form.get("doctor_visit_days", "").strip(),
-    }
+        clinic_name = data.get("clinicName")
+        clinic_contact = data.get("clinicContact")
+        clinic_contact_alternative = data.get("clinicContactAlt")
+        clinic_fees = data.get("clinicFees")
+        clinic_email = data.get("clinicemail")
 
-    try:
-        qr_filename = doctor_db_manager.append_doctor_record(fields)
-        # Store form data in session
-        session['last_submitted_data'] = fields
-        
-        current_app.logger.info("Saved QR: %s", qr_filename)
-        message = f"Saved. CSV updated; QR image: {qr_filename}"
-        dashboard_url = url_for('main.doc_seed_dashboard')  # Update with the correct blueprint name
-        return render_template("doctor_db_seed.html", success_message=message, qr_filename=qr_filename, dashboard_url=dashboard_url)
-        
-    except Exception as e:
-        current_app.logger.exception("Failed to save doctor record")
-        return render_template("doctor_db_seed.html", error_message=str(e)), 500
+        address = {
+            "house_no": data.get("houseNo"),
+            "street": data.get("street"),
+            "post_office": data.get("postOffice"),
+            "police_station": data.get("policeStation"),
+            "city": data.get("city"),
+            "pin_code": data.get("pinCode"),
+            "state": data.get("state"),
+            "country": data.get("country")
+        }
 
+        # schedule comes as object under "schedule"
+        schedule = data.get("schedule")
+
+        clinic_data = {
+            "clinic_name": clinic_name,
+            "clinic_contact": clinic_contact,
+            "clinic_contact_alternative":clinic_contact_alternative,
+            "clinic_email":clinic_email,
+            "clinic_fees": clinic_fees,
+            "clinic_address": address,
+            "visit_schedule": schedule,
+            "doctor_id":doctor_id,
+        }
+
+        # Save to DB
+        response = clinic_database_management.append_clinic_registration_record(clinic_data)
+        print("Inserted clinic:", response)
+        return jsonify(success=True,doctor_id=doctor_id,message="Clinic has been inserted successfully!!",redirect=True), 201
+
+    username=session.get("doctor_id")
+    #print("Printing username from add clinic................!!!!!!!!!!!")
+    #print(username)
+    doctor_data=doctor_database_management.get_doctor_by_id(doctor_id=username)
+    return render_template(
+        "doctor_add_clinic.html",
+        username=username,
+        doctor_data=doctor_data
+    )
 
 @bp.route("/clinic-booking", methods=["GET"])
 def clinic_booking():
-    qr = request.args.get("qr", "").strip()
-    if not qr:
-        return render_template("clinic_booking.html", error_message="Missing qr parameter"), 400
 
-    csv_path = os.path.join(os.path.dirname(__file__), "..", "db_manager", "doctor_db_dataframe.csv")
-    record = None
-    if os.path.exists(csv_path):
-        with open(csv_path, newline="", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for r in reader:
-                if r.get("qr_filename") == qr:
-                    record = r
-                    break
+    clinic_id = request.args.get("clinic_id", "").strip()
+    doctor_id = request.args.get("doctor_id", "").strip()
 
-    if not record:
-        return render_template("clinic_booking.html", error_message="Record not found"), 404
+    if not clinic_id or not doctor_id : return jsonify({"error": "Arguments missing! Clinic ID or Doctor ID missing!!"}), 404
+    
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
+    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=clinic_id)
+    print("Route LOG : Printing achievements to check if new line is being preserved !! ")
+    print(doctor_data["achievements"])
 
-    days = [d.strip() for d in (record.get("doctor_visit_days") or "").split(",") if d.strip()]
-    return render_template("clinic_booking.html", record=record, visit_days=days)
+    if not doctor_data or not clinic_data : return jsonify({"WARNING": "Clinic Data or Doctor Data missing!!"}), 404
+    
+    if "image_data" in doctor_data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    else:
+        profile_pic_uri = None
 
+    clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
+    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="vo")
 
-@bp.route("/send-otp", methods=["POST"])
+    return render_template("clinic_booking.html",doctor_data=doctor_data,clinic_data=clinic_data,profile_pic_uri=profile_pic_uri,clinic_address=clinic_address,visit_schedule=visit_schedule) 
+
+@bp.route("/send-otp", methods=["POST"]) #OTP verification added
 def send_otp():
-    mobile = request.form.get("mobile", "").strip()
+    data = request.get_json() or {}
+    mobile = data.get("patient_mobile")
+    print(f"ROUTE LOG : Received mobile number.......................{mobile}")
     if not mobile or not mobile.isdigit() or len(mobile) < 10:
         return jsonify({"error": "invalid_mobile"}), 400
+
     otp = str(random.randint(100000, 999999))
     session["booking_otp"] = otp
     session["booking_mobile"] = mobile
-    current_app.logger.info("Generated OTP for %s", mobile)
-    # For testing we return otp; replace with SMS provider in production
-    return jsonify({"otp": otp}), 200
 
+    url = "https://www.fast2sms.com/dev/bulkV2"
+    full_number = "91" + mobile[-10:]  # ensure 10 digits + country code
+
+    payload = {
+        "route": "q",
+        "message": f"OTP from Doctopal for your doctor appointment booking is {otp}",
+        "numbers": full_number,
+        "sms_details": "1"
+    }
+
+    headers = {
+        "authorization": FAST2SMS_API_KEY,
+        "accept": "application/json",
+        "content-type": "application/json"
+    }
+
+    # send JSON body
+    response = requests.post(url, json=payload, headers=headers, timeout=10)
+
+    try:
+        returned_msg = response.json()
+    except ValueError:
+        return jsonify({"error": "bad_response", "raw": response.text}), 502
+
+    print(f"ROUTE LOG: fast2sms response {returned_msg}")
+
+    success = returned_msg.get("return", False)
+    status_code = 200 if success else returned_msg.get("status_code", 400)
+
+    current_app.logger.info("Generated OTP for %s", mobile)
+    return jsonify({"success": success, "otp": otp , "message": returned_msg}), status_code
 
 @bp.route("/verify-otp", methods=["POST"])
 def verify_otp():
@@ -122,90 +263,200 @@ def verify_otp():
         return jsonify({"verified": True}), 200
     return jsonify({"verified": False}), 400
 
-
 @bp.route("/submit-booking", methods=["POST"])
 def submit_booking():
-    if not session.get("otp_verified"):
-        return jsonify({"error": "otp_not_verified"}), 400
 
-    qr = request.form.get("qr", "").strip()
-    patient_name = request.form.get("patient_name", "").strip()
-    patient_mobile = session.get("booking_mobile", "").strip()
-    visit_day = request.form.get("doctor_visit_day", "").strip()
+    data = request.get_json() or {}
+    print("ROUTE LOG : Printing data received from submit-booking handle.......................................")
+    print(json.dumps(data))
+    #return jsonify(success=True, doctor_id=data["doctor_id"]), 201
+    try:
+        rec = patient_database_management.append_patient_registration_record(data)
+        print(rec)
+        # TODO: send verification email asynchronously
+        return jsonify(success=True, qr_png_data_uri=rec["patient_qr_data_uri"]), 201
+    except ValueError as ve:
+        return jsonify(success=False, error=str(ve)), 400
+    except Exception as e:
+        current_app.logger.exception("Failed to save patient booking")
+        return jsonify(success=False, error="internal_error"), 500
+    
+@bp.route("/patient-prescription-update", methods=["GET"])
+def patient_update_generate_prescription():
 
-    if not qr or not patient_name or not patient_mobile:
-        return jsonify({"error": "missing_fields"}), 400
+    patient_id = request.args.get("patient_id", "").strip()
+    clinic_id = request.args.get("clinic_id", "").strip()
+    doctor_id = request.args.get("doctor_id", "").strip()
 
-    csv_path = os.path.join(os.path.dirname(__file__), "..", "db_manager", "doctor_db_dataframe.csv")
-    if not os.path.exists(csv_path):
-        return jsonify({"error": "record_not_found"}), 404
+    if not clinic_id or not doctor_id or not patient_id: return jsonify({"error": "Arguments missing! Clinic ID or Doctor ID or Patient ID missing!!"}), 404
+    
+    """doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
+    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=clinic_id)
+    print("Route LOG : Printing achievements to check if new line is being preserved !! ")
+    print(doctor_data["achievements"])
 
-    record = None
-    with open(csv_path, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            if r.get("qr_filename") == qr:
-                record = r
-                break
+    if not doctor_data or not clinic_data : return jsonify({"WARNING": "Clinic Data or Doctor Data missing!!"}), 404
+    
+    if "image_data" in doctor_data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    else:
+        profile_pic_uri = None
 
-    if not record:
-        return jsonify({"error": "record_not_found"}), 404
+    clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
+    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="vo")"""
 
-    ts = datetime.utcnow().strftime("%Y%m%d")
+    return render_template("generate_prescription_update_patient.html") 
 
-    def _safe(s: str) -> str:
-        return "".join(c for c in (s or "") if c.isalnum() or c in " _-").strip().replace(" ", "_")
+@bp.route("/patient-prescription-update", methods=["POST"])
+def patient_doctor_clinic_booking():
 
-    clinic_id = record.get("clinic_id", "clinic")
-    clinic_name = _safe(record.get("clinic_name", ""))
-    doctor_name = _safe(record.get("doctor_name", ""))
-    booking_filename = f"{clinic_id}__{clinic_name}__{doctor_name}__{ts}.csv"
+    patient_id = request.args.get("patient_id", "").strip()
+    clinic_id = request.args.get("clinic_id", "").strip()
+    doctor_id = request.args.get("doctor_id", "").strip()
 
-    booking_dir = os.path.join(os.path.dirname(__file__), "..", "db_manager")
-    os.makedirs(booking_dir, exist_ok=True)
-    booking_path = os.path.join(booking_dir, booking_filename)
+    if not clinic_id or not doctor_id or not patient_id: return jsonify({"error": "Arguments missing! Clinic ID or Doctor ID or Patient ID missing!!"}), 404
+    
+    """doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
+    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=clinic_id)
+    print("Route LOG : Printing achievements to check if new line is being preserved !! ")
+    print(doctor_data["achievements"])
 
-    patient_id = f"P{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{random.randint(100,999)}"
+    if not doctor_data or not clinic_data : return jsonify({"WARNING": "Clinic Data or Doctor Data missing!!"}), 404
+    
+    if "image_data" in doctor_data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    else:
+        profile_pic_uri = None
 
-    headers = [
-        "patient_id",
-        "patient_name",
-        "patient_mobile",
-        "visit_day",
-        "clinic_id",
-        "clinic_name",
-        "clinic_address",
-        "doctor_name",
-        "doctor_qualifications",
-        "created_at",
-    ]
-    row = {
-        "patient_id": patient_id,
-        "patient_name": patient_name,
-        "patient_mobile": patient_mobile,
-        "visit_day": visit_day,
-        "clinic_id": record.get("clinic_id", ""),
-        "clinic_name": record.get("clinic_name", ""),
-        "clinic_address": record.get("clinic_address", ""),
-        "doctor_name": record.get("doctor_name", ""),
-        "doctor_qualifications": record.get("doctor_qualifications", ""),
-        "created_at": datetime.utcnow().isoformat(),
-    }
+    clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
+    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="vo")"""
 
-    write_header = not os.path.exists(booking_path)
-    with open(booking_path, "a", newline="", encoding="utf-8") as bf:
-        writer = csv.DictWriter(bf, fieldnames=headers)
-        if write_header:
-            writer.writeheader()
-        writer.writerow(row)
+    return render_template("generate_prescription_update_patient.html") 
 
-    session.pop("otp_verified", None)
-    session.pop("booking_mobile", None)
 
-    current_app.logger.info("Saved booking %s to %s", patient_id, booking_filename)
-    return jsonify({"patient_id": patient_id, "booking_file": booking_filename}), 200
+@bp.route('/doc_dashboard/<doctor_id>', methods=["GET"])
+def doc_dashboard(doctor_id):
+    if not doctor_id:
+        return redirect(url_for('main.doctor_login_page'))
+    
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
+    clinics_list = clinic_database_management.get_clinic_by_doctor_id(doctor_id)
+    print(f"ROUTE LOG : Printing clinic list TYPE from doctor dashboard route::list type = {type(clinics_list)}")
 
-@bp.route("/doc-seed-dashboard")
-def doc_seed_dashboard():
-    doctor_data = session.get('last_submitted_data', {})
-    return render_template("doctor_dashboard.html", doctor_data=doctor_data)
+    if isinstance(clinics_list, dict):
+        clinics_list = [clinics_list]
+
+    #Converting schedules for ease of display
+    for clinic in clinics_list:
+        clinic["clinic_address"] = dict_to_string(d=clinic["clinic_address"],fmt="vo")
+        clinic["visit_schedule"] = dict_to_string(d=clinic["visit_schedule"],fmt="kv")
+
+    
+    filtered_list = [remove_bytes_from_dict(x) for x in clinics_list ]
+    print(f"ROUTE LOG : Printing clinic list from doctor dashboard::list type = {type(filtered_list)} ::: {filtered_list}")
+    doctor_data['clinics'] = filtered_list
+
+    if "image_data" in doctor_data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    else:
+        profile_pic_uri = None
+
+    print(f"ROUTE LOG : Generated profile pic uri = {profile_pic_uri}")
+    
+    
+    return render_template(
+        'doctor_dashboard.html',
+        user_id=doctor_id,
+        profile_pic_uri=profile_pic_uri,
+        doctor_data=doctor_data,
+        clinics = filtered_list
+    )
+
+@bp.route('/logout', methods=['GET', 'POST'])
+def logout():
+    session.clear()  # Clear the session
+    return redirect(url_for('main.doctor_login_page'))  # Redirect to login page
+
+@bp.route('/doc_clinic_update/<doctor_id>/<clinic_id>', methods=["GET"])
+def doc_clinic_update(doctor_id:str,clinic_id:str):
+    if not doctor_id or not clinic_id:
+        return redirect(url_for('main.doctor_login_page'))
+    
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
+    clinic = clinic_database_management.get_clinic_by_clinic_id(clinic_id)
+
+    # Serializing visit schedult to be rendered at client side............
+    vs = clinic.get('visit_schedule') or {}
+    schedule_array = []
+    for day, ranges in vs.items():
+        for r in ranges:
+            if '-' in r:
+                start, end = r.split('-', 1)
+                schedule_array.append({"day": day, "start": start, "end": end})
+    visit_schedule_serialized = schedule_array  # pass this to template
+    print(f"ROUTE LOG : Printing serialized visit schedule for client side rendering :::::: {visit_schedule_serialized}")
+
+    return render_template(
+        'doctor_clinic_update.html',
+        user_id = doctor_id,
+        doctor_data = doctor_data,
+        clinic = clinic,
+        visit_schedule_serialized = visit_schedule_serialized
+    )
+
+
+@bp.route('/doc_clinic_update/<doctor_id>/<clinic_id>', methods=["POST"])
+def doc_clinic_update_post(doctor_id:str,clinic_id:str):
+
+    print(f"ROUTE LOG : Enterinng clinic data update post method !!")
+    data = request.get_json() or {}
+    print(f"ROUTE LOG : Printing data received servers side at UPDATE CLINIC for doc = {doctor_id} , clinic = {clinic_id} -------------------------------{json.dumps(data)}")
+    try:
+        response = clinic_database_management.update_clinic_profile(data)
+        print(f"ROUTE LOG : Printing response from update profile from routes-------------------------------{json.dumps(response)}")
+        # TODO: send verification email asynchronously
+        if response["success"] :
+            return jsonify(success=True,user_id=doctor_id,message="Clinic update successfull"), 201
+        else: return jsonify(success=False,user_id=doctor_id,message="Problem updating Clinic profile"), 201
+    except ValueError as ve:
+        return jsonify(success=False, error=str(ve)), 400
+    except Exception as e:
+        current_app.logger.exception("Failed to update Clinic profile !! Contact Admin!!")
+        return jsonify(success=False, error="internal_error"), 500
+    
+
+@bp.route('/clinic_dashboard/<doctor_id>/<clinic_id>', methods=["GET"])
+def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
+    
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
+    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id)
+    clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
+    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="kv")
+
+    return render_template(
+        'clinic_dashboard.html',
+        doctor_data = doctor_data,
+        clinic_data = clinic_data,
+        clinic_address = clinic_address,
+        visit_schedule = visit_schedule
+    )
+#helper functions
+def dict_to_string(d: dict, fmt: str = "vo") -> str:
+    """
+    Convert dict to string.
+    fmt="kv" -> "KEY1 , Val1 . KEY2 , Val2" (key value pair, in insertion order)
+    fmt="vo" -> "Val1,Val2,Val3"  (values only, in insertion order)
+    """
+    if not isinstance(d, dict):
+        raise TypeError("d must be a dict")
+    if fmt == "kv":
+        parts = [f"{k} : {v}" for k, v in d.items()]
+        return " . ".join(parts)
+    elif fmt == "vo":
+        vals = [str(v) for v in d.values()]
+        return ", ".join(vals)
+    else:
+        raise ValueError("fmt must be 'kv' or 'vo'")
+
+def remove_bytes_from_dict(d: dict) -> dict:
+    return {k: v for k, v in d.items() if not isinstance(v, bytes)}

@@ -1,36 +1,16 @@
-import csv
+import json
 import os
 import re
 from datetime import datetime
 from typing import Dict, Optional
-
-# Base app directory (one level up from db_manager)
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# CSV stored inside db_manager folder
-CSV_PATH = os.path.join(BASE_DIR, "doctor_credentials_dataframe_database.csv")
+from .db_operations import DatabaseOperations
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 LICENSE_RE = re.compile(r"^[A-Z0-9\-]{5,20}$", re.I)
 PASS_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
 
-# CSV headers for registration records
-HEADERS = [
-    "doctor_id",        # generated unique id
-    "firstname",
-    "lastname",
-    "email",
-    "license",
-    "password_hash",    # store hashed password (for demo we store placeholder)
-    "created_at",
-    "verified",         # false until email verification
-]
+db = DatabaseOperations()
 
-def ensure_csv():
-    os.makedirs(BASE_DIR, exist_ok=True)
-    if not os.path.exists(CSV_PATH):
-        with open(CSV_PATH, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=HEADERS)
-            writer.writeheader()
 
 def validate_registration(data: Dict) -> Optional[str]:
     firstname = (data.get("firstname") or "").strip()
@@ -39,6 +19,7 @@ def validate_registration(data: Dict) -> Optional[str]:
     license_no = (data.get("license") or "").strip()
     password = data.get("password") or ""
 
+    #Field validity check
     if not firstname:
         return "First name is required"
     if not lastname:
@@ -49,21 +30,21 @@ def validate_registration(data: Dict) -> Optional[str]:
         return "Invalid license number (5-20 alphanumeric/dash chars)"
     if not PASS_RE.match(password):
         return "Password must be at least 8 chars and include letters and numbers"
-    # check uniqueness
-    ensure_csv()
-    with open(CSV_PATH, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            if r.get("email","").lower() == email.lower():
-                return "Email already registered"
-            if r.get("license","").lower() == license_no.lower():
-                return "License number already registered"
+    
+    # uniqueness checks against MongoDB for email and license_no
+    if db.find_by_id(id_val=email,id_field="email"):
+        return "Email already registered"
+    if db.find_by_id(id_val=license_no,id_field="license"):
+        return "License number already registered"
+    
     return None
 
 def _generate_doctor_id() -> str:
-    ts = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-    rand = f"{os.urandom(2).hex()}"
-    return f"D{ts}{rand}"
+    # numeric timestamp (UTC) + cryptographically random 8-digit number
+    ts = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[:-3]  # up to milliseconds, digits only
+    rand_int = int.from_bytes(os.urandom(4), "big") % 10_000_000  # 0..9_999_999
+    rand = f"{rand_int:07d}"  # fixed width 7 digits to reduce collision risk
+    return f"DOC_ID_{ts}{rand}"
 
 def _hash_password(password: str) -> str:
     # Placeholder: replace with bcrypt or passlib in production
@@ -76,12 +57,12 @@ def append_registration_record(data: Dict) -> Dict:
     Returns the saved record dict (without plaintext password).
     Raises ValueError on validation errors or Exception on IO errors.
     """
-    print("NEW DATAFRAME REGISTRATION PAGE")
+    print("DOCTOR DB MANAGEMENT LOG : Preparing NEW user record for database entry!!")
     err = validate_registration(data)
     if err:
         raise ValueError(err)
 
-    ensure_csv()
+
     doctor_id = _generate_doctor_id()
     password_hash = _hash_password(data["password"])
 
@@ -91,33 +72,72 @@ def append_registration_record(data: Dict) -> Dict:
         "lastname": data["lastname"].strip(),
         "email": data["email"].strip().lower(),
         "license": data["license"].strip(),
+        "permanent_address":"",
+        "primary_contact_number":data["mobile"].strip(),
+        "secondary_contact_number":0,
         "password_hash": password_hash,
-        "created_at": datetime.utcnow().isoformat(),
-        "verified": "false",
+        "created_at": datetime.utcnow().date().isoformat(),
+        "qualifications":"",
+        "expertise":"",
+        "practising_or_fellowship":"",
+        "achievements":"",
+        "years_of_experience":0,
+        "default_fees":500,
     }
 
-    with open(CSV_PATH, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=HEADERS)
-        writer.writerow(record)
+    #inserting data to MongoDb database
+    db.insert_record(user_document=record)
 
     return record
 
-def find_by_email(email: str) -> Optional[Dict]:
-    ensure_csv()
-    email = (email or "").strip().lower()
-    with open(CSV_PATH, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            if r.get("email","").lower() == email:
-                return r
-    return None
+def update_doctor_profile(data: Dict) -> Dict:
 
-def find_by_license(license_no: str) -> Optional[Dict]:
-    ensure_csv()
-    license_no = (license_no or "").strip().lower()
-    with open(CSV_PATH, newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for r in reader:
-            if r.get("license","").lower() == license_no:
-                return r
-    return None
+    #updating profile data of MongoDb database
+    success = db.update_record (primary_key_name="doctor_id",primary_key_val=data["doctor_id"],updates=data)
+    response = {"success":success["acknowledged"],"doctor_id":data["doctor_id"]}
+    print("DOCTOR DB MANAGEMENT LOG : Message returned by Mongo for profile update...........")
+    print(json.dumps(success))
+    print("DOCTOR DB MANAGEMENT LOG : Response constructed for profile update...........")
+    print(json.dumps(response))
+    print("DOCTOR DB MANAGEMENT LOG : Returning constructed response...........")
+    return response
+
+def get_doctor_by_id(doctor_id:str) -> Dict:
+    doctor_data = db.find_by_id(id_val=doctor_id,id_field="doctor_id")
+    return doctor_data
+
+def verify_password(plain: str, stored_hash: str) -> bool:
+    if not plain or not stored_hash:
+        return False
+    return _hash_password(plain) == stored_hash
+
+def authenticate_identifier(identifier: str, password: str) -> Dict:
+    """
+    identifier: email or license string
+    password: plaintext password provided by user
+
+    Returns a dict: { "success": bool, "error": str (if any), "user": sanitized_record (if success) }
+    """
+    ident = (identifier or "").strip()
+    if not ident or not password:
+        return {"success": False, "error": "MISSING CREDENNTIALS!!!"}
+
+    # determine lookup
+    if EMAIL_RE.match(ident):
+        rec = db.find_by_id(id_val=ident,id_field="email")
+    else:
+        rec = db.find_by_id(id_val=ident,id_field="license")
+
+    if not rec:
+        return {"success": False, "error": "Error !! NO USER FOUND!!"}
+
+    #Checking with hashed password
+    stored_hash = rec.get("password_hash","")
+    if stored_hash == "" :  return {"success": False, "error": "Error !! CONTACT ADMNISTRATOR !! Password Absent!!"}
+    if verify_password(password, stored_hash):
+        # sanitize: do not return plaintext password or hash
+        user = {k: v for k, v in rec.items() if k not in ("password", "password_hash","_id")}
+        return {"success": True, "user": user}
+    
+    return {"success": False, "error": "invalid_credentials"}
+
