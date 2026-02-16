@@ -272,7 +272,7 @@ def submit_booking():
     except ValueError as ve:
         return jsonify(success=False, error=str(ve)), 400
     except Exception as e:
-        current_app.logger.exception("Failed to save registration")
+        current_app.logger.exception("Failed to save patient booking")
         return jsonify(success=False, error="internal_error"), 500
     
 @bp.route("/patient-prescription-update", methods=["GET"])
