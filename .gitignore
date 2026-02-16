@@ -10,3 +10,6 @@ __pycache__/
 
 # Ignore all CSV files
 *.csv
+
+# api secret variable
+.env.secrets

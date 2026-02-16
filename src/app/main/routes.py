@@ -1,10 +1,9 @@
 import csv,requests
 import os, json
-from twilio.rest import Client
 import random
 from datetime import datetime
 from io import BytesIO
-
+from pathlib import Path
 from flask import (
     render_template,
     request,
@@ -17,13 +16,20 @@ from flask import (
 from . import bp
 from ..db_manager import doctor_database_management,clinic_database_management,patient_database_management
 from ..db_manager import db_operations
+from dotenv import dotenv_values
 
-FAST2SMS_API_KEY = "tlpDO2oPA4gw6KhTMinqjbm913ukVJeXUsIvYGa0yC8dfESNrZWZeUzNlEup9A2k65Jm7H0vTYxf8riX"
-# Your Account Sid and Auth Token from twilio.com / console
-account_sid = 'AC3396f07cc88a4487120ecf8cca1f40b1'
-auth_token = 'd79917f49a216ed9348cb132e24c664a'
+#FAST2SMS_API_KEY = "tlpDO2oPA4gw6KhTMinqjbm913ukVJeXUsIvYGa0yC8dfESNrZWZeUzNlEup9A2k65Jm7H0vTYxf8riX"
+base = Path(__file__).parent
+secret_env = (base / ".env.secrets").resolve()
+if secret_env.is_file():
+    val = dotenv_values(secret_env)
+    #load_dotenv(env_path)
+    print(f"ROUTE LOG : Loading secret environment variables from: {secret_env}")
+else:
+    raise RuntimeError(f".env file not found: {secret_env}")
 
-client = Client(account_sid, auth_token)
+FAST2SMS_API_KEY = val.get("FAST2SMS_API_KEY")
+
 
 @bp.route("/", methods=["GET"])
 def doctor_login_page():
