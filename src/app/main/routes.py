@@ -18,7 +18,7 @@ from ..db_manager import doctor_database_management,clinic_database_management,p
 from ..db_manager import db_operations
 from dotenv import dotenv_values
 
-#FAST2SMS_API_KEY = "tlpDO2oPA4gw6KhTMinqjbm913ukVJeXUsIvYGa0yC8dfESNrZWZeUzNlEup9A2k65Jm7H0vTYxf8riX"
+# Loading API key for SMS OTP verification
 base = Path(__file__).parent
 secret_env = (base / ".env.secrets").resolve()
 if secret_env.is_file():
