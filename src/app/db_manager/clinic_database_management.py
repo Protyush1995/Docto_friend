@@ -21,7 +21,7 @@ clinic_env = (base / ".env.clinics").resolve()
 clinic_db = DatabaseOperations(env_file=str(clinic_env))
 
 #TODO change host later as necessary
-def _generate_clinic_qr(clinic_id: str, doctor_id: str, host: str = "http://192.168.1.4:5000") -> bytes:
+def _generate_clinic_qr(clinic_id: str, doctor_id: str, host: str = "http://192.168.1.8:5000") -> bytes:
     """
     Returns PNG bytes for a QR encoding a URL pointing to /clinic-booking
     with query params clinic_id and doctor_id.
