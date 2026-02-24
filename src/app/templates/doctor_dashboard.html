@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Doctor Dashboard</title>
+  <title>Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
   <style>
@@ -208,57 +208,57 @@
     .clinic-meta p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
 
     /* make clinic-info vertically scrollable without visible scrollbars */
-.clinic-info {
-  margin-top: 10px;
-  display: flex;
-  gap: 8px;
-  flex-direction: column;    /* stack chips vertically for top-to-bottom scrolling */
-  flex-wrap: nowrap;
-  max-height: 120px;        /* adjust to desired visible area */
-  overflow-y: auto;         /* allow vertical scrolling */
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch; /* smooth touch scrolling on iOS */
-  padding-right: 8px;       /* prevent last item from touching hidden scrollbar area */
-  position: relative;
-}
+    .clinic-info {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      flex-direction: column;    /* stack chips vertically for top-to-bottom scrolling */
+      flex-wrap: nowrap;
+      max-height: 120px;        /* adjust to desired visible area */
+      overflow-y: auto;         /* allow vertical scrolling */
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch; /* smooth touch scrolling on iOS */
+      padding-right: 8px;       /* prevent last item from touching hidden scrollbar area */
+      position: relative;
+    }
 
-/* hide scrollbars — cross-browser */
-.clinic-info::-webkit-scrollbar {      /* Chrome, Edge, Safari */
-  width: 0;
-  height: 0;
-}
-.clinic-info {
-  scrollbar-width: none;   /* Firefox */
-  -ms-overflow-style: none;/* IE 10+ */
-}
+    /* hide scrollbars — cross-browser */
+    .clinic-info::-webkit-scrollbar {      /* Chrome, Edge, Safari */
+      width: 0;
+      height: 0;
+    }
+    .clinic-info {
+      scrollbar-width: none;   /* Firefox */
+      -ms-overflow-style: none;/* IE 10+ */
+    }
 
-/* optional: subtle top/bottom fade so overflow feels natural and seamless */
-.clinic-info::before,
-.clinic-info::after {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 18px;
-  z-index: 1;
-}
-.clinic-info::before {
-  top: 0;
-  background: linear-gradient(to bottom, var(--card-bg), rgba(255,255,255,0));
-  /* for dark mode, this will naturally use --card-bg from .dark */
-}
-.clinic-info::after {
-  bottom: 0;
-  background: linear-gradient(to top, var(--card-bg), rgba(255,255,255,0));
-}
+    /* optional: subtle top/bottom fade so overflow feels natural and seamless */
+    .clinic-info::before,
+    .clinic-info::after {
+      content: "";
+      pointer-events: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 18px;
+      z-index: 1;
+    }
+    .clinic-info::before {
+      top: 0;
+      background: linear-gradient(to bottom, var(--card-bg), rgba(255,255,255,0));
+      /* for dark mode, this will naturally use --card-bg from .dark */
+    }
+    .clinic-info::after {
+      bottom: 0;
+      background: linear-gradient(to top, var(--card-bg), rgba(255,255,255,0));
+    }
 
-/* ensure chips keep their look when stacked */
-.chip {
-  white-space: normal;
-  word-break: break-word;
-  margin: 0; /* spacing handled by gap */
-}
+    /* ensure chips keep their look when stacked */
+    .chip {
+      white-space: normal;
+      word-break: break-word;
+      margin: 0; /* spacing handled by gap */
+    }
 
     .chip {
       background:linear-gradient(180deg, #eef4ff, #ffffff);
@@ -358,7 +358,7 @@
     }
 
     /* use --card-bg for all card surfaces */
-    .profile-card, .stat, .clinic-card, .card, .chip {
+    .profile-card, .right-panel, .clinic-card, .card, .chip {
       background: var(--card-bg);
       border-radius: var(--border-radius);
       box-shadow: var(--card-shadow);
@@ -388,12 +388,124 @@
 
 
   </style>
+  <style>
+    /* Flip card (add near other styles) */
+    .flip-card { width:100%; max-width:420px; height:200px; perspective:1000px; margin-bottom:12px; }
+    .flip-card .flipper { position:relative; width:100%; height:100%; transition:transform .6s; transform-style:preserve-3d; }
+    .flip-card .front, .flip-card .back {
+      position:absolute; inset:0; backface-visibility:hidden; border-radius:12px; overflow:hidden;
+      display:flex; align-items:center; gap:12px; padding:12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06); background:var(--card-bg); border:1px solid rgba(3, 3, 3, 0.086);
+    }
+    .flip-card .front { 
+      z-index:2; 
+      background-image: url("{{ url_for('static', filename='image/doctor_card_front.png') }}");
+      position: relative;
+      width: 100%;
+      padding-top: 55%; /* controls aspect ratio (40% of width) */
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+
+    }
+
+    .flip-card .back { transform:rotateY(180deg); display:flex; flex-direction:column; justify-content:center; gap:6px; 
+      background-image: url("{{ url_for('static', filename='image/doctor_card_back.png') }}");
+      position: absolute;
+      width: 100%;
+      padding-top: 55%; /* controls aspect ratio (40% of width) */
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+
+    /* Flip triggers: hover, focus, and a .flipped helper (for JS/touch) */
+    .flip-card:hover .flipper,
+    .flip-card:focus-within .flipper,
+    .flip-card.flipped .flipper {
+      transform: rotateY(180deg);
+    }
+
+    /* Front content layout */
+    /* ensure image respects container size */
+    .clinic-thumb {
+      width: 100px;            /* fixed thumbnail width */
+      height: 100px;           /* fixed thumbnail height */
+      flex: 0 0 100px;        /* reserve space in flex layout */
+      object-fit: contain;    /* or 'cover' to fill and crop */
+      display: block;
+      border-radius: 8px;
+    }
+
+    /* if the image element had inline width/height or srcset, force max dimensions */
+    .flip-card .front img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+    }
+
+    /* adjust when card height is different */
+    @media (max-width:760px){
+      .clinic-thumb { width:88px; height:88px; flex-basis:88px; }
+    }
+
+    .front-info { display:flex; flex-direction:column; gap:6px; overflow:hidden; }
+    .front-info h3 { margin:0; font-size:16px; color:var(--primary); }
+    .front-info p { margin:0; color:var(--muted); font-size:13px; }
+
+    /* Back content */
+    .back h3 { margin:0; color:var(--primary); }
+    .back p, .back a { margin:0; color:var(--muted); font-size:13px; text-decoration:none; }
+
+    /* Make sure it fits narrow left-panel on mobile */
+    @media (max-width:760px){
+      .flip-card { max-width:100%; height:180px; }
+    }
+
+    /* Keep flip-card appearance unchanged in dark mode */
+    .dark .flip-card,
+    .dark .flip-card .flipper,
+    .dark .flip-card .front,
+    .dark .flip-card .back {
+      
+      color: #0b1226;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+
+    .dark .flip-card .front,
+    .dark .flip-card .back {
+      /* preserve the image: don't set background shorthand that omits image */
+       /* optional fallback under image */
+      background-image: inherit; /* keep existing image URL */
+      background-size: cover;
+      background-position: center;
+    }
+
+    .dark .flip-card .front {
+      background-image: url("{{ url_for('static', filename='image/doctor_card_front.png') }}");
+    }
+    .dark .flip-card .back {
+      background-image: url("{{ url_for('static', filename='image/doctor_card_back.png') }}");
+    }
+
+    /* If you use variable-based colors inside .flip-card, override them explicitly */
+    .dark .flip-card h3 { color: #4d20cab8; }
+    .dark .flip-card p,
+    .dark .flip-card a { color: #6b7280; }
+
+    /* Ensure images are unaffected */
+    .dark .flip-card img { filter: none; }
+
+
+  </style>
+
 </head>
 <body>
   <div class="container">
     <header>
       <div class="brand">
-        <div class="logo"  aria-hidden="true"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpg') }}" alt="Logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
+        <div class="logo"  aria-hidden="true"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpeg') }}" alt="Logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
         <div>
           <h1>Doctor Dashboard</h1>
           <div class="sub">Overview of your profile and clinics</div>
@@ -439,7 +551,7 @@
 
       <div class="stats stats-equal" style="display:flex; gap:12px; align-items:stretch; flex-wrap:wrap;">
         <div class="left-panel" style="flex:1; min-width:220px; display:flex; flex-direction:column;">
-          <!-- Profile completion pie chart (inside stacked column) -->
+          <!-- Profile completion pie chart (inside stacked column) 
           <div class="stat" id="profileCompletionInline" style="padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px; margin:0; flex:1;">
             <svg id="profilePie" width="120" height="120" viewBox="0 0 42 42" style="transform:rotate(-90deg);">
               <circle cx="21" cy="21" r="15.91549431" fill="transparent" stroke="#E6EEF9" stroke-width="6"></circle>
@@ -449,12 +561,23 @@
               <div id="profilePercent" style="font-weight:700; color:var(--primary); font-size:16px;">0%</div>
               <div style="font-size:13px; color:var(--muted);">Profile completed</div>
             </div>
+          </div>-->
+          <div class="flip-card" tabindex="0" aria-label="Clinic card — Sunrise Clinic">
+            <div class="flipper">
+              <div class="front">
+                
+              </div>
+              <div class="back">
+                
+              </div>
+            </div>
           </div>
+
         </div>
 
         <div class="right-panel" style="flex:0 0 220px; display:flex; flex-direction:column; gap:12px;">
           <div class="stat" style="padding:12px;">
-            <h3 id="totalClinics" style="margin:0 0 6px 0; font-size:20px;">{{ clinics | length }}</h3>
+            <h3 id="totalClinics" style="margin:0 0 6px 0; font-size:20px;">{{clinic_length}}</h3>
             <p style="margin:0; font-size:13px; color:var(--muted);">Registered Clinics</p>
           </div>
 
@@ -543,8 +666,8 @@
 
   <script>
     // Demo: attach dynamic counts if needed (keeps dummy values)
-    document.getElementById('totalClinics').textContent = 3;
-    document.getElementById('upcomingAppointments').textContent = 12;
+    document.getElementById('totalClinics').textContent = {{ clinic_length | tojson }};;
+    document.getElementById('upcomingAppointments').textContent = 78;
     document.getElementById('patientsToday').textContent = 4;
   </script>
 

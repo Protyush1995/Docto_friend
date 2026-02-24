@@ -369,7 +369,8 @@ def doc_dashboard(doctor_id):
         user_id=doctor_id,
         profile_pic_uri=profile_pic_uri,
         doctor_data=doctor_data,
-        clinics = filtered_list
+        clinics = filtered_list,
+        clinic_length = len(filtered_list)
     )
 
 @bp.route('/logout', methods=['GET', 'POST'])
