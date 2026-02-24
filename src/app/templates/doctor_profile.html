@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Doctor Profile</title>
+<style>
+:root{
+  --primary: #4d20cab8;
+  --bg: #f6f8ff;
+  --card-bg: #ffffff;
+  --muted: #6b7280;
+  --accent: #0b63ff;
+  --card-shadow: 0 10px 30px rgba(0,64,255,0.08);
+  --input-shadow: 0 6px 18px rgba(0,64,255,0.06);
+  --border-radius: 12px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  background: radial-gradient(1200px 400px at 10% 10%, rgba(0,64,255,0.06), transparent 10%),
+              linear-gradient(180deg, var(--bg), #ffffff 60%);
+  color:#0b1226;
+  padding:24px;
+}
+.container{ max-width:1100px; margin:0 auto; }
+
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:20px;
+}
+.brand{ display:flex; align-items:center; gap:12px; }
+.logo{ width:80px; height:80px; display:inline-flex; align-items:center; justify-content:center; }
+.logo img{ width:100%; height:100%; object-fit:contain; display:block; }
+
+h1{ margin:0; font-size:20px; color:var(--primary); }
+.sub { color:var(--muted); font-size:13px; margin-top:4px; }
+
+/* Top summary */
+.top { display:flex; gap:16px; align-items:stretch; margin-bottom:18px; }
+.profile-card{
+  flex: 0 0 40%;
+  max-width: 40%;
+  background:var(--card-bg);
+  border-radius:var(--border-radius);
+  padding:18px;
+  box-shadow:var(--card-shadow);
+  border:3px solid rgba(0,64,255,0.06);
+}
+.profile-row{display:flex; gap:12px; align-items:center}
+.avatar{
+  width:84px; height:84px; border-radius:10px; overflow:hidden;
+  border:2px solid rgba(0,64,255,0.12);
+  display:flex; align-items:center; justify-content:center; background:#fff;
+}
+.avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+.profile-meta h2{ margin:0; font-size:18px; color:var(--primary); }
+.profile-meta h3{ margin:0; font-size:12px; color:var(--primary); }
+.profile-meta p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
+
+.action-row{ margin-top:12px; display:flex; gap:8px; }
+.btn {
+  padding:8px 12px; border-radius:8px; border:none; cursor:pointer;
+  background:linear-gradient(180deg,var(--primary),#0033cc); color:#fff; font-weight:600;
+  box-shadow: none; font-size:13px;
+}
+.ghost {
+  background:transparent; color:var(--primary); border:2px solid rgba(0,64,255,0.12); box-shadow:none;
+}
+
+/* stats */
+.stats {
+  flex: 0 0 60%;
+  max-width: 60%;
+  display:flex;
+  gap:12px;
+  align-items:stretch;
+}
+.stat {
+  flex:1;
+  background:var(--card-bg);
+  border-radius:var(--border-radius);
+  padding:16px;
+  box-shadow:var(--card-shadow);
+  border:3px solid rgba(0,64,255,0.05);
+  display:flex; flex-direction:column; justify-content:center; align-items:flex-start;
+}
+.stat h3{ margin:0; font-size:28px; color:var(--primary); }
+.stat p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
+
+/* Clinics list */
+.section { margin-top:20px; }
+.section h2{ margin:0 0 12px 0; color:var(--primary); font-size:16px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  justify-items: stretch;
+  align-items: start;
+}
+
+/* clickable card */
+.clinic-card {
+  width: 520px;
+  height: 220px;
+  background: var(--card-bg);
+  padding: 14px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  border: 3px solid rgba(123, 0, 255, 0.12);
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.clinic-card:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(0,64,255,0.06); }
+
+.clinic-card .content{ flex: 1 1 auto; min-width: 0; padding-right: 12px; overflow: hidden; display:flex; flex-direction:column; }
+.clinic-image{ flex: 0 0 auto; height: 100%; display:flex; align-items:center; overflow:hidden; }
+.clinic-image img{ height: 100%; width: auto; max-width: 160px; display: block; object-fit: contain; }
+
+.clinic-head{ display:flex; gap:12px; align-items:center; }
+.clinic-avatar{ width:56px; height:56px; border-radius:8px; overflow:hidden; background:#f2f8ff;
+  border:1px solid rgba(0,64,255,0.06); display:flex; align-items:center; justify-content:center;
+  color:var(--primary); font-weight:700;
+}
+.clinic-meta h3 { margin:0; font-size:15px; color:#062a8a; display:flex; align-items:center; gap:8px; }
+.clinic-meta p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
+
+.clinic-info {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-direction: column;
+  max-height: 120px;
+  overflow-y: auto;
+  padding-right: 8px;
+  position: relative;
+}
+.clinic-info::-webkit-scrollbar{ width:0; height:0; }
+.clinic-info{ scrollbar-width:none; -ms-overflow-style:none; }
+.chip {
+  background:linear-gradient(180deg, #eef4ff, #ffffff);
+  color:var(--primary);
+  padding:6px 8px; border-radius:8px; font-size:12px; border:1px solid rgba(225, 0, 255, 0.12);
+}
+
+/* footer */
+footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px; }
+
+/* responsive */
+@media (max-width: 1100px){
+  .grid { grid-template-columns: 1fr; justify-items: center; }
+  .clinic-card { width: 90%; max-width: 520px; }
+}
+@media (max-width:760px){
+  .top{ flex-direction:column; }
+  .profile-card{ flex:1 1 auto; max-width:100%; width:100%; }
+  .stats{ flex:1 1 auto; max-width:100%; width:100%; flex-direction:row; }
+  .stat{ padding:12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="brand">
+      <div class="logo"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpeg') }}" alt="Logo"></div>
+      <div>
+        <h1>Dr. Priya Sharma</h1>
+        <div class="sub">MBBS, MD — Internal Medicine · 12 years experience · Karol Bagh, Delhi</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn">Book Appointment</button>
+      <button class="ghost">Share Profile</button>
+    </div>
+  </header>
+
+  <section class="top" aria-label="Top summary">
+    <aside class="profile-card" aria-labelledby="profile-title">
+      <div class="profile-row">
+        <div class="avatar" aria-hidden="true">
+          <img src="https://via.placeholder.com/300x300?text=Dr" alt="Dr. Priya Sharma">
+        </div>
+        <div class="profile-meta">
+          <h2 id="profile-title">Dr. Priya Sharma</h2>
+          <h3>Consultant — Internal Medicine</h3>
+          <p>Special interest: diabetes, hypertension, preventive care. Languages: English, Hindi.</p>
+          <div class="action-row">
+            <button class="btn">Call</button>
+            <button class="ghost">Message</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <strong>About</strong>
+        <p style="margin:6px 0 0 0; color:var(--muted); font-size:13px;">
+          Practicing evidence-based medicine with an emphasis on patient education and long-term care.
+        </p>
+      </div>
+    </aside>
+
+    <div class="stats" role="region" aria-label="Doctor statistics">
+      <div class="stat">
+        <h3>4.9</h3>
+        <p>Average rating (2,340 reviews)</p>
+      </div>
+      <div class="stat">
+        <h3>12 yrs</h3>
+        <p>Experience</p>
+      </div>
+      <div class="stat">
+        <h3>45+</h3>
+        <p>Clinics visited</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="clinics-title">
+    <h2 id="clinics-title">Clinics & Hospitals</h2>
+
+    <div class="grid" role="list">
+      <!-- Clinic card 1 -->
+      <a class="clinic-card" href="#" role="listitem" aria-label="City Care Clinic — click for details">
+        <div class="clinic-image" aria-hidden="true">
+          <img src="https://via.placeholder.com/160x160?text=Clinic" alt="">
+        </div>
+        <div class="content">
+          <div class="clinic-head">
+            <div class="clinic-avatar">CC</div>
+            <div class="clinic-meta">
+              <h3>City Care Clinic</h3>
+              <p>3rd Floor, B-21, Connaught Place · Mon, Wed, Fri (10:00–14:00)</p>
+            </div>
+          </div>
+          <div class="clinic-info" aria-hidden="false">
+            <div class="chip">Walk-in consultation</div>
+            <div class="chip">Tele-consult available</div>
+            <div class="chip">Support staff: English/Hindi</div>
+            <div class="chip">Nearby parking</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Clinic card 2 -->
+      <a class="clinic-card" href="#" role="listitem" aria-label="Green Valley Hospital — click for details">
+        <div class="clinic-image" aria-hidden="true">
+          <img src="https://via.placeholder.com/160x160?text=Hospital" alt="">
+        </div>
+        <div class="content">
+          <div class="clinic-head">
+            <div class="clinic-avatar">GV</div>
+            <div class="clinic-meta">
+              <h3>Green Valley Hospital</h3>
+              <p>Wing A, OPD Block · Tue, Thu (16:00–19:00)</p>
+            </div>
+          </div>
+          <div class="clinic-info">
+            <div class="chip">Inpatient rounds</div>
+            <div class="chip">Emergency coverage</div>
+            <div class="chip">Multi-disciplinary team</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Clinic card 3 -->
+      <a class="clinic-card" href="#" role="listitem" aria-label="Wellness Point Clinic — click for details">
+        <div class="clinic-image" aria-hidden="true">
+          <img src="https://via.placeholder.com/160x160?text=Wellness" alt="">
+        </div>
+        <div class="content">
+          <div class="clinic-head">
+            <div class="clinic-avatar">WP</div>
+            <div class="clinic-meta">
+              <h3>Wellness Point Clinic</h3>
+              <p>Sector 14 · Sat (09:00–13:00)</p>
+            </div>
+          </div>
+          <div class="clinic-info">
+            <div class="chip">Preventive health checks</div>
+            <div class="chip">Dietary counseling</div>
+            <div class="chip">ECG & Lab on-site</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Clinic card 4 -->
+      <a class="clinic-card" href="#" role="listitem" aria-label="Sunrise Diagnostic Center — click for details">
+        <div class="clinic-image" aria-hidden="true">
+          <img src="https://via.placeholder.com/160x160?text=Diagnostic" alt="">
+        </div>
+        <div class="content">
+          <div class="clinic-head">
+            <div class="clinic-avatar">SD</div>
+            <div class="clinic-meta">
+              <h3>Sunrise Diagnostic Center</h3>
+              <p>Ground Floor · By appointment only · Tue (11:00–14:00)</p>
+            </div>
+          </div>
+          <div class="clinic-info">
+            <div class="chip">Advanced labs</div>
+            <div class="chip">On-site imaging</div>
+            <div class="chip">Appointment required</div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 Dr. Priya Sharma — Profile snapshot · Last updated: Feb 24, 2026
+  </footer>
+</div>
+</body>
+</html>
