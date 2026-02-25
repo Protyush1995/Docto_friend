@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Profile Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</title>
+<title>Profile for Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</title>
 <style>
 :root{
   --primary: #4d20cab8;
@@ -42,15 +42,16 @@ h1{ margin:0; font-size:20px; color:var(--primary); }
 
 /* Top summary */
 .top { display:flex; gap:16px; align-items:stretch; margin-bottom:18px; }
-.profile-card{
-  flex: 0 0 40%;
-  max-width: 40%;
-  background:var(--card-bg);
-  border-radius:var(--border-radius);
-  padding:18px;
-  box-shadow:var(--card-shadow);
-  border:3px solid rgba(0,64,255,0.06);
+.profile-card {
+  flex: 0 0 60%;                /* Increase to 60% of the container */
+  max-width: 60%;               /* Ensure it reflects the new width */
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 18px;
+  box-shadow: var(--card-shadow);
+  border: 3px solid rgba(0, 64, 255, 0.06);
 }
+
 .profile-row{display:flex; gap:12px; align-items:center}
 .avatar{
   width:84px; height:84px; border-radius:10px; overflow:hidden;
@@ -73,40 +74,55 @@ h1{ margin:0; font-size:20px; color:var(--primary); }
   background:transparent; color:var(--primary); border:2px solid rgba(0,64,255,0.12); box-shadow:none;
 }
 
-/* stats */
 .stats {
-  display: flex;
-  gap: 12px;
-  align-items: stretch;
-  justify-content: flex-start;
-  flex: 1 1 auto;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+  display: flex;                  /* Use flexbox for layout */
+  flex-direction: column;        /* Stack stats in a column */
+  align-items: flex-start;       /* Align items to the start of the container */
+  gap: 12px;                     /* Space between each stat row */
+  width: 100%;                   /* Full width of the container */
+  max-width: 100%;               /* Ensure it doesn't exceed the container */
 }
 
 .stat {
-  flex: 1 1 0;
-  min-width: 0;
+  width: 100%;                  /* Ensure stats take full width */
   background: var(--card-bg);
   border-radius: var(--border-radius);
   padding: 16px;
   box-shadow: var(--card-shadow);
-  border: 3px solid rgba(0,64,255,0.05);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
+  border: 3px solid rgba(0, 64, 255, 0.05);
+  display: flex;                /* Flexbox for stat contents */
+  justify-content: space-between; /* Align title and value */
+  align-items: center;          /* Center vertically */
 }
 
 
-.stat h3{ margin:0; font-size:28px; color:var(--primary); }
-.stat p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
+.stat h3 {
+  margin: 0; 
+  font-size: 28px; 
+  color: var(--primary); 
+}
+
+.stat p {
+  margin: 6px 0 0 0; 
+  color: var(--muted); 
+  font-size: 13px; 
+}
+
+
+@media (max-width: 760px) {
+  .stats {
+    flex-direction: row; /* Keep horizontal layout */
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 8px; /* Space adjustments */
+  }
+}
+
+
 
 @media (max-width:760px){
   .top{ flex-direction:column; }
   .profile-card{ flex:1 1 auto; max-width:100%; width:100%; }
-  .stats{ flex-direction: row; flex-wrap: nowrap; max-width:100%; width:100%; gap:8px; }
+  /*.stats{ flex-direction: row; flex-wrap: nowrap; max-width:100%; width:100%; gap:8px; }*/
   .stat{ padding:12px; }
 }
 
@@ -198,9 +214,10 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
       </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn">Book Appointment</button>
-      <button class="ghost">Share Profile</button>
+        <a href="#clinics-section" class="btn">Book Appointment</a>
+        <button class="ghost">Share Profile</button>
     </div>
+
   </header>
 
   <section class="top" aria-label="Top summary">
@@ -243,6 +260,7 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
         <p>Clinics visited</p>
       </div>
     </div>
+
   </section>
 
     {% macro initials(name) -%}
@@ -258,28 +276,26 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
       {%- endif -%}
     {%- endmacro %}
 
-  <section class="section" aria-labelledby="clinics-title">
+  <section class="section" id="clinics-section" aria-labelledby="clinics-title">
+
     <h2 id="clinics-title">Visiting Clinics :-</h2>
 
     <div class="grid" role="list">
       
       {% for clinic in clinics %}
-          <div class="clinic-card">
+          <div class="clinic-card" >
+            <a href="/clinic-booking?clinic_id={{clinic.clinic_id}}&doctor_id={{doctor_data.doctor_id}}" class="clinic-card" target="_blank" rel="noopener noreferrer">
+
             <div class="content">
                 <div class="clinic-head">
                     <div class="clinic-avatar">
-                        <a href="/clinic_dashboard/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ initials(clinic.clinicname) }}</a>
+                        {{ initials(clinic.clinicname) }}
                     </div>
 
                     <div class="clinic-meta">
-                        <h3><a class="ghost" href="/clinic_dashboard/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ clinic.clinicname }}</a>
-                           <a class="ghost" href="/doc_clinic_update/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" class="edit-icon" aria-label="Edit clinic" title="Edit Clinic Details">
-                              <!-- simple pencil SVG -->
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"/>
-                                <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
-                              </svg>
-                            </a>
+                        <h3>
+                            {{ clinic.clinicname }}
+    
                         </h3>
                         <p>Registered since: {{ clinic.created_at }}</p>
                     </div>
@@ -287,17 +303,17 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
 
                 <div class="clinic-info">
                     <div class="chip"><strong>Address:</strong> {{ clinic.clinic_address }}</div>
-                    <div class="chip"><strong>Fees:</strong> {{ clinic.doctor_consultation_fees }}</div>
                     <div class="chip"><strong>Contact:</strong> {{ clinic.primary_contact_number }} / {{clinic.secondary_contact_number}}</div>
                     <div class="chip"><strong>Visit Days:</strong> {{ clinic.visit_schedule }}</div>
                 </div>
 
             </div>
+            </a>
             <div class="clinic-image">
-              <a href="{{ clinic.clinic_qr_data_uri }}" download="clinic_{{ clinic.clinicname }}.png" class="qr-download" aria-label="Download QR">
+              <div class="qr-download">
                 <img src="{{ clinic.clinic_qr_data_uri }}" alt="Clinic QR">
-                <span class="qr-hint">Download QR</span>
-              </a>
+                  <a class="btn" href="/clinic-booking?clinic_id={{clinic.clinic_id}}&doctor_id={{doctor_data.doctor_id}}" target="_blank" rel="noopener noreferrer">Book Appointment</a>
+              </div>
             </div>
 
           </div>
