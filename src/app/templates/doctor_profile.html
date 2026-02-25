@@ -42,15 +42,16 @@ h1{ margin:0; font-size:20px; color:var(--primary); }
 
 /* Top summary */
 .top { display:flex; gap:16px; align-items:stretch; margin-bottom:18px; }
-.profile-card{
-  flex: 0 0 40%;
-  max-width: 40%;
-  background:var(--card-bg);
-  border-radius:var(--border-radius);
-  padding:18px;
-  box-shadow:var(--card-shadow);
-  border:3px solid rgba(0,64,255,0.06);
+.profile-card {
+  flex: 0 0 60%;                /* Increase to 60% of the container */
+  max-width: 60%;               /* Ensure it reflects the new width */
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 18px;
+  box-shadow: var(--card-shadow);
+  border: 3px solid rgba(0, 64, 255, 0.06);
 }
+
 .profile-row{display:flex; gap:12px; align-items:center}
 .avatar{
   width:84px; height:84px; border-radius:10px; overflow:hidden;
@@ -73,40 +74,55 @@ h1{ margin:0; font-size:20px; color:var(--primary); }
   background:transparent; color:var(--primary); border:2px solid rgba(0,64,255,0.12); box-shadow:none;
 }
 
-/* stats */
 .stats {
-  display: flex;
-  gap: 12px;
-  align-items: stretch;
-  justify-content: flex-start;
-  flex: 1 1 auto;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+  display: flex;                  /* Use flexbox for layout */
+  flex-direction: column;        /* Stack stats in a column */
+  align-items: flex-start;       /* Align items to the start of the container */
+  gap: 12px;                     /* Space between each stat row */
+  width: 100%;                   /* Full width of the container */
+  max-width: 100%;               /* Ensure it doesn't exceed the container */
 }
 
 .stat {
-  flex: 1 1 0;
-  min-width: 0;
+  width: 100%;                  /* Ensure stats take full width */
   background: var(--card-bg);
   border-radius: var(--border-radius);
   padding: 16px;
   box-shadow: var(--card-shadow);
-  border: 3px solid rgba(0,64,255,0.05);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
+  border: 3px solid rgba(0, 64, 255, 0.05);
+  display: flex;                /* Flexbox for stat contents */
+  justify-content: space-between; /* Align title and value */
+  align-items: center;          /* Center vertically */
 }
 
 
-.stat h3{ margin:0; font-size:28px; color:var(--primary); }
-.stat p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
+.stat h3 {
+  margin: 0; 
+  font-size: 28px; 
+  color: var(--primary); 
+}
+
+.stat p {
+  margin: 6px 0 0 0; 
+  color: var(--muted); 
+  font-size: 13px; 
+}
+
+
+@media (max-width: 760px) {
+  .stats {
+    flex-direction: row; /* Keep horizontal layout */
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 8px; /* Space adjustments */
+  }
+}
+
+
 
 @media (max-width:760px){
   .top{ flex-direction:column; }
   .profile-card{ flex:1 1 auto; max-width:100%; width:100%; }
-  .stats{ flex-direction: row; flex-wrap: nowrap; max-width:100%; width:100%; gap:8px; }
+  /*.stats{ flex-direction: row; flex-wrap: nowrap; max-width:100%; width:100%; gap:8px; }*/
   .stat{ padding:12px; }
 }
 
@@ -243,6 +259,7 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
         <p>Clinics visited</p>
       </div>
     </div>
+
   </section>
 
     {% macro initials(name) -%}
