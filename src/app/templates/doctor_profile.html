@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Doctor Profile</title>
+<title>Profile Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</title>
 <style>
 :root{
   --primary: #4d20cab8;
@@ -75,23 +75,41 @@ h1{ margin:0; font-size:20px; color:var(--primary); }
 
 /* stats */
 .stats {
-  flex: 0 0 60%;
-  max-width: 60%;
-  display:flex;
-  gap:12px;
-  align-items:stretch;
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  justify-content: flex-start;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
+
 .stat {
-  flex:1;
-  background:var(--card-bg);
-  border-radius:var(--border-radius);
-  padding:16px;
-  box-shadow:var(--card-shadow);
-  border:3px solid rgba(0,64,255,0.05);
-  display:flex; flex-direction:column; justify-content:center; align-items:flex-start;
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  box-shadow: var(--card-shadow);
+  border: 3px solid rgba(0,64,255,0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
 }
+
+
 .stat h3{ margin:0; font-size:28px; color:var(--primary); }
 .stat p{ margin:6px 0 0 0; color:var(--muted); font-size:13px; }
+
+@media (max-width:760px){
+  .top{ flex-direction:column; }
+  .profile-card{ flex:1 1 auto; max-width:100%; width:100%; }
+  .stats{ flex-direction: row; flex-wrap: nowrap; max-width:100%; width:100%; gap:8px; }
+  .stat{ padding:12px; }
+}
+
 
 /* Clinics list */
 .section { margin-top:20px; }
@@ -175,8 +193,8 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
     <div class="brand">
       <div class="logo"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpeg') }}" alt="Logo"></div>
       <div>
-        <h1>Dr. Priya Sharma</h1>
-        <div class="sub">MBBS, MD — Internal Medicine · 12 years experience · Karol Bagh, Delhi</div>
+        <h1>Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h1>
+        <div class="sub">{{doctor_data.qualifications}} — {{doctor_data.expertise}} · Karol Bagh, Delhi</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
@@ -189,12 +207,14 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
     <aside class="profile-card" aria-labelledby="profile-title">
       <div class="profile-row">
         <div class="avatar" aria-hidden="true">
-          <img src="https://via.placeholder.com/300x300?text=Dr" alt="Dr. Priya Sharma">
+          <img src="{{profile_pic_uri}}" alt="{{ url_for('static', filename='image/doc_placeholder.png') }}">
         </div>
         <div class="profile-meta">
-          <h2 id="profile-title">Dr. Priya Sharma</h2>
-          <h3>Consultant — Internal Medicine</h3>
-          <p>Special interest: diabetes, hypertension, preventive care. Languages: English, Hindi.</p>
+          <h2 id="profile-title">Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h2>
+          <p><strong id="doctorExpertise">{{doctor_data.expertise}}</strong></p>
+          <p><strong id="doctorQual">{{doctor_data.qualifications}}</strong></p>
+          <p id="doctorFellow">{{doctor_data.practising_or_fellowship}}</p>
+          <p><strong id="doctorAchievements">{{doctor_data.achievements}}</strong></p>
           <div class="action-row">
             <button class="btn">Call</button>
             <button class="ghost">Message</button>
@@ -215,109 +235,79 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
         <p>Average rating (2,340 reviews)</p>
       </div>
       <div class="stat">
-        <h3>12 yrs</h3>
+        <h3>{{doctor_data.years_of_experience}} yrs</h3>
         <p>Experience</p>
       </div>
       <div class="stat">
-        <h3>45+</h3>
+        <h3>{{clinic_length}}+</h3>
         <p>Clinics visited</p>
       </div>
     </div>
   </section>
 
+    {% macro initials(name) -%}
+      {%- if not name -%}
+        {{ "" }}
+      {%- else -%}
+        {%- set parts = name.strip().split() -%}
+        {%- if parts|length == 1 -%}
+          {{ parts[0][:2].upper() }}
+        {%- else -%}
+          {{ (parts[0][0] + parts[1][0]).upper() }}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endmacro %}
+
   <section class="section" aria-labelledby="clinics-title">
-    <h2 id="clinics-title">Clinics & Hospitals</h2>
+    <h2 id="clinics-title">Visiting Clinics :-</h2>
 
     <div class="grid" role="list">
-      <!-- Clinic card 1 -->
-      <a class="clinic-card" href="#" role="listitem" aria-label="City Care Clinic — click for details">
-        <div class="clinic-image" aria-hidden="true">
-          <img src="https://via.placeholder.com/160x160?text=Clinic" alt="">
-        </div>
-        <div class="content">
-          <div class="clinic-head">
-            <div class="clinic-avatar">CC</div>
-            <div class="clinic-meta">
-              <h3>City Care Clinic</h3>
-              <p>3rd Floor, B-21, Connaught Place · Mon, Wed, Fri (10:00–14:00)</p>
-            </div>
-          </div>
-          <div class="clinic-info" aria-hidden="false">
-            <div class="chip">Walk-in consultation</div>
-            <div class="chip">Tele-consult available</div>
-            <div class="chip">Support staff: English/Hindi</div>
-            <div class="chip">Nearby parking</div>
-          </div>
-        </div>
-      </a>
+      
+      {% for clinic in clinics %}
+          <div class="clinic-card">
+            <div class="content">
+                <div class="clinic-head">
+                    <div class="clinic-avatar">
+                        <a href="/clinic_dashboard/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ initials(clinic.clinicname) }}</a>
+                    </div>
 
-      <!-- Clinic card 2 -->
-      <a class="clinic-card" href="#" role="listitem" aria-label="Green Valley Hospital — click for details">
-        <div class="clinic-image" aria-hidden="true">
-          <img src="https://via.placeholder.com/160x160?text=Hospital" alt="">
-        </div>
-        <div class="content">
-          <div class="clinic-head">
-            <div class="clinic-avatar">GV</div>
-            <div class="clinic-meta">
-              <h3>Green Valley Hospital</h3>
-              <p>Wing A, OPD Block · Tue, Thu (16:00–19:00)</p>
-            </div>
-          </div>
-          <div class="clinic-info">
-            <div class="chip">Inpatient rounds</div>
-            <div class="chip">Emergency coverage</div>
-            <div class="chip">Multi-disciplinary team</div>
-          </div>
-        </div>
-      </a>
+                    <div class="clinic-meta">
+                        <h3><a class="ghost" href="/clinic_dashboard/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ clinic.clinicname }}</a>
+                           <a class="ghost" href="/doc_clinic_update/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" class="edit-icon" aria-label="Edit clinic" title="Edit Clinic Details">
+                              <!-- simple pencil SVG -->
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"/>
+                                <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
+                              </svg>
+                            </a>
+                        </h3>
+                        <p>Registered since: {{ clinic.created_at }}</p>
+                    </div>
+                </div>
 
-      <!-- Clinic card 3 -->
-      <a class="clinic-card" href="#" role="listitem" aria-label="Wellness Point Clinic — click for details">
-        <div class="clinic-image" aria-hidden="true">
-          <img src="https://via.placeholder.com/160x160?text=Wellness" alt="">
-        </div>
-        <div class="content">
-          <div class="clinic-head">
-            <div class="clinic-avatar">WP</div>
-            <div class="clinic-meta">
-              <h3>Wellness Point Clinic</h3>
-              <p>Sector 14 · Sat (09:00–13:00)</p>
-            </div>
-          </div>
-          <div class="clinic-info">
-            <div class="chip">Preventive health checks</div>
-            <div class="chip">Dietary counseling</div>
-            <div class="chip">ECG & Lab on-site</div>
-          </div>
-        </div>
-      </a>
+                <div class="clinic-info">
+                    <div class="chip"><strong>Address:</strong> {{ clinic.clinic_address }}</div>
+                    <div class="chip"><strong>Fees:</strong> {{ clinic.doctor_consultation_fees }}</div>
+                    <div class="chip"><strong>Contact:</strong> {{ clinic.primary_contact_number }} / {{clinic.secondary_contact_number}}</div>
+                    <div class="chip"><strong>Visit Days:</strong> {{ clinic.visit_schedule }}</div>
+                </div>
 
-      <!-- Clinic card 4 -->
-      <a class="clinic-card" href="#" role="listitem" aria-label="Sunrise Diagnostic Center — click for details">
-        <div class="clinic-image" aria-hidden="true">
-          <img src="https://via.placeholder.com/160x160?text=Diagnostic" alt="">
-        </div>
-        <div class="content">
-          <div class="clinic-head">
-            <div class="clinic-avatar">SD</div>
-            <div class="clinic-meta">
-              <h3>Sunrise Diagnostic Center</h3>
-              <p>Ground Floor · By appointment only · Tue (11:00–14:00)</p>
             </div>
+            <div class="clinic-image">
+              <a href="{{ clinic.clinic_qr_data_uri }}" download="clinic_{{ clinic.clinicname }}.png" class="qr-download" aria-label="Download QR">
+                <img src="{{ clinic.clinic_qr_data_uri }}" alt="Clinic QR">
+                <span class="qr-hint">Download QR</span>
+              </a>
+            </div>
+
           </div>
-          <div class="clinic-info">
-            <div class="chip">Advanced labs</div>
-            <div class="chip">On-site imaging</div>
-            <div class="chip">Appointment required</div>
-          </div>
-        </div>
-      </a>
+          {% endfor %}
+
     </div>
   </section>
 
   <footer>
-    © 2026 Dr. Priya Sharma — Profile snapshot · Last updated: Feb 24, 2026
+    © 2026 Dr. {{doctor_data.firstname}} {{doctor_data.lastname}} — Profile · Member since: {{doctor_data.created_at}}
   </footer>
 </div>
 </body>

@@ -512,7 +512,7 @@
         </div>
       </div>
       <div>
-        <button class="btn ghost">Settings</button>
+        <a class="btn" href="/doctor-profile?doctor_id={{doctor_data.doctor_id}}">Doctor Profile</a>
         <form action="{{ url_for('main.logout') }}" method="POST">
             <button type="submit" class="btn">Logout</button>
         </form>

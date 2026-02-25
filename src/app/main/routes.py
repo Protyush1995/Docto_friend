@@ -333,6 +333,48 @@ def patient_doctor_clinic_booking():
 
     return render_template("generate_prescription_update_patient.html") 
 
+@bp.route("/doctor-profile", methods=["GET"])
+def doctor_profile():
+    """
+    Doctor profile route to be viewed by patient
+    """
+    doctor_id = request.args.get("doctor_id", "").strip()
+    if not doctor_id:
+        return redirect(url_for('main.doctor_login_page'))
+    
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
+    clinics_list = clinic_database_management.get_clinic_by_doctor_id(doctor_id)
+    print(f"ROUTE LOG : Printing clinic list TYPE from doctor dashboard route::list type = {type(clinics_list)}")
+
+    if isinstance(clinics_list, dict):
+        clinics_list = [clinics_list]
+
+    #Converting schedules for ease of display
+    for clinic in clinics_list:
+        clinic["clinic_address"] = dict_to_string(d=clinic["clinic_address"],fmt="vo")
+        clinic["visit_schedule"] = dict_to_string(d=clinic["visit_schedule"],fmt="kv")
+
+    
+    filtered_list = [remove_bytes_from_dict(x) for x in clinics_list ]
+    print(f"ROUTE LOG : Printing clinic list from doctor dashboard::list type = {type(filtered_list)} ::: {filtered_list}")
+    doctor_data['clinics'] = filtered_list
+
+    if "image_data" in doctor_data:
+        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    else:
+        profile_pic_uri = None
+
+    print(f"ROUTE LOG : Generated profile pic uri = {profile_pic_uri}")
+    
+    
+    return render_template(
+        'doctor_profile.html',
+        user_id=doctor_id,
+        profile_pic_uri=profile_pic_uri,
+        doctor_data=doctor_data,
+        clinics = filtered_list,
+        clinic_length = len(filtered_list)
+    )
 
 @bp.route('/doc_dashboard/<doctor_id>', methods=["GET"])
 def doc_dashboard(doctor_id):
@@ -442,7 +484,10 @@ def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
         visit_schedule = visit_schedule
     )
 
-#helper functions
+
+
+#-------------------------------- >  Helper functions  < ---------------------------------------------------
+
 def dict_to_string(d: dict, fmt: str = "vo") -> str:
     """
     Convert dict to string.
