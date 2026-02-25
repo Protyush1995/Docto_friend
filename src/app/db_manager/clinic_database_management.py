@@ -37,13 +37,13 @@ def _generate_clinic_qr(clinic_id: str, doctor_id: str, host: str = "http://192.
     img.save(buf, format="PNG")
 
     # Get the current file's directory.
-    current_directory = os.path.dirname(os.path.abspath(__file__))
+    #current_directory = os.path.dirname(os.path.abspath(__file__))
     
     # Define the file path (you can specify a filename as needed).
-    file_path = os.path.join(current_directory, f"clinic_qr_{clinic_id}_{doctor_id}.png")
+    #file_path = os.path.join(current_directory, f"clinic_qr_{clinic_id}_{doctor_id}.png")
     
     # Save the image to the specified file path.
-    img.save(file_path)
+    #img.save(file_path)
 
     return buf.getvalue()
 
