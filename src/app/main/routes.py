@@ -360,7 +360,7 @@ def doctor_profile():
     doctor_data['clinics'] = filtered_list
 
     if "image_data" in doctor_data:
-        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+        profile_pic_uri = doctor_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
     else:
         profile_pic_uri = None
 
@@ -395,7 +395,7 @@ def doc_dashboard(doctor_id):
 
     
     filtered_list = [remove_bytes_from_dict(x) for x in clinics_list ]
-    print(f"ROUTE LOG : Printing clinic list from doctor dashboard::list type = {type(filtered_list)} ::: {filtered_list}")
+    print(f"ROUTE LOG : Clinic list found for doctor dashboard::list type = {type(filtered_list)} ::: length = {len(filtered_list)}")
     doctor_data['clinics'] = filtered_list
 
     if "image_data" in doctor_data:
@@ -403,6 +403,10 @@ def doc_dashboard(doctor_id):
     else:
         profile_pic_uri = None
 
+    if "doctor_qr_uri" in doctor_data:
+        profile_pic_uri = doctor_data['doctor_qr_uri']
+    else:
+        profile_pic_uri = None
     print(f"ROUTE LOG : Generated profile pic uri = {profile_pic_uri}")
     
     

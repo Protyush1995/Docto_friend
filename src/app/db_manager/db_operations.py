@@ -138,8 +138,7 @@ class DatabaseOperations:
                     del d["_id"]
                     print(f"DB Operations LOG : Record after making JSON serializable : type = {type(d)}")
                     #print(json.dumps(d))
-                    #TODO remove this block after solving issue 25
-                    if "clinic_qr" in d: d["clinic_qr"] = str(d["clinic_qr"])
+                    
 
             if isinstance(cursor, list) and len(cursor) == 1:
                 # singular: exactly one element

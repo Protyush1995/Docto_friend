@@ -1,8 +1,15 @@
 import json
 import os
 import re
+from io import BytesIO
+from PIL import Image
+from pathlib import Path
+import base64
+import qrcode
+from base64 import b64encode
+from bson.binary import Binary
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 from .db_operations import DatabaseOperations
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -10,6 +17,70 @@ LICENSE_RE = re.compile(r"^[A-Z0-9\-]{5,20}$", re.I)
 PASS_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
 
 db = DatabaseOperations()
+
+#TODO change host later as necessary
+def _generate_doctor_qr(doctor_id: str, host: str = "http://192.168.29.115:5000") -> bytes:
+    """
+    Returns PNG bytes for a QR encoding a URL pointing to /clinic-booking
+    with query params clinic_id and doctor_id.
+    """
+    # Build a compact URL/payload. Use absolute URL if you want (domain optional).
+    # Example: /doctor-profile?doctor_id=DOC123
+    payload = f"{host}/doctor-profile?doctor_id={doctor_id}"
+    qr = qrcode.QRCode(version=1, box_size=10, border=2, error_correction=qrcode.constants.ERROR_CORRECT_M)
+    qr.add_data(payload)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+
+    return buf.getvalue()
+
+# Helper: bytes -> PIL.Image
+def bytes_to_pil_image(png_bytes: bytes) -> Image.Image:
+    return Image.open(BytesIO(png_bytes))
+
+# Helper: bytes -> base64 data URI for embedding in HTML
+def bytes_to_data_uri(png_bytes: bytes) -> str:
+    b64 = base64.b64encode(png_bytes).decode("ascii")
+    return f"data:image/png;base64,{b64}"
+
+def base64_string_to_data_uri(b64_input: Union[str, bytes], mime: Optional[str] = None) -> str:
+    """
+    Convert a stringified base64 (or bytes) to a data URI.
+    - b64_input: base64 string (may already be a data URI) or raw bytes.
+    - mime: optional MIME type like 'image/png' or 'image/jpeg'. If omitted and b64_input is a data URI,
+            the function preserves its MIME; otherwise defaults to 'application/octet-stream'.
+    Returns a data URI string: "data:{mime};base64,{b64}"
+    """
+    # If bytes were passed, treat as raw bytes -> encode to base64
+    if isinstance(b64_input, (bytes, bytearray)):
+        b64 = base64.b64encode(b64_input).decode('ascii')
+        mime = mime or 'application/octet-stream'
+        return f"data:{mime};base64,{b64}"
+
+    s = b64_input.strip()
+    # If already a data URI, normalize and return
+    if s.startswith('data:') and ';base64,' in s:
+        return s
+
+    # If it looks like a data URI but missing "data:" prefix (rare), try to split
+    if ';base64,' in s and not s.startswith('data:'):
+        # assume it already contains mime before ;base64,
+        return f"data:{s}"
+
+    # Otherwise s is expected to be raw base64 (no prefix). Validate/clean whitespace.
+    # Remove any whitespace/newlines that may have been introduced.
+    cleaned = ''.join(s.split())
+    # Optionally validate by attempting a decode (will raise if invalid)
+    try:
+        _ = base64.b64decode(cleaned, validate=True)
+    except Exception:
+        # If invalid base64, raise a clear error
+        raise ValueError('Input is not valid base64 or data URI')
+
+    mime = mime or 'application/octet-stream'
+    return f"data:{mime};base64,{cleaned}"
 
 
 def validate_registration(data: Dict) -> Optional[str]:
@@ -64,6 +135,8 @@ def append_registration_record(data: Dict) -> Dict:
 
 
     doctor_id = _generate_doctor_id()
+    qr_png_bytes = _generate_doctor_qr(doctor_id=doctor_id)
+    qr_png_data_uri = bytes_to_data_uri(png_bytes=qr_png_bytes)
     password_hash = _hash_password(data["password"])
 
     record = {
@@ -83,6 +156,7 @@ def append_registration_record(data: Dict) -> Dict:
         "achievements":"",
         "years_of_experience":0,
         "default_fees":500,
+        "doctor_qr_uri":qr_png_data_uri
     }
 
     #inserting data to MongoDb database
