@@ -586,7 +586,7 @@
         </div>
       </div>
       <div>
-        <a class="btn" href="/doctor-profile?doctor_id={{doctor_data.doctor_id}}">Doctor Profile</a>
+        <button class="btn ghost" >Doctor Profile<>
         <form action="{{ url_for('main.logout') }}" method="POST">
             <button type="submit" class="btn">Logout</button>
         </form>
@@ -654,8 +654,6 @@
                 <h3 class="doc-name">{{ doctor_data.firstname }} {{ doctor_data.lastname }}</h3>
                 <p class="doc-expertise"><strong>{{ doctor_data.expertise }}</strong></p>
                 <p class="doc-qual"><strong>{{ doctor_data.qualifications }}</strong></p>
-                <p class="doc-qual">{{doctor_data.practising_or_fellowship}}</p>
-                <p class="doc-qual">{{doctor_data.achievements}}</p>
               </div>
               <!-- QR + label container -->
               <div class="qr-with-label">

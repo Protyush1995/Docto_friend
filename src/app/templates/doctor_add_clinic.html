@@ -166,7 +166,8 @@
 <!-- UPDATED HEADER --> 
 <header> 
   <div class="brand"> 
-    <div class="logo">DD</div> 
+    <div class="logo"  aria-hidden="true"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpeg') }}" alt="Logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
+        
     <div> <h1>Adding Clinic for <strong>Dr {{doctor_data.firstname}} {{doctor_data.lastname}}</strong></h1> 
       <div class="sub">Fill out the form to register a new clinic</div>
      </div> 

@@ -6,24 +6,32 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     /* top-left fixed logo */
-    .logo-caduceus {
-      position: fixed;
-      top: 12px !important;
-      left: 12px !important;
-      width: 100px;
-      height: 100px;
-      background: transparent;
-      box-shadow: none;
-
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:20px;
     }
-    .logo-caduceus svg { width:100%; height:100%; display:block; }
-    .logo-caduceus img {
-      width: 100%;
-      height: 100%;
-      max-width: 100px;
-      max-height: 100px;
-      object-fit: contain;
-      display: block;
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{
+      width:100px;                 /* slightly larger */
+      height:100px;
+      border-radius:0;            /* no box around it */
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-size: contain;   /* show entire sticker without cropping */
+      background-position: center;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px;                /* optional breathing space */
+      box-shadow: none;
+      border: none;
+      font-size:20px;             /* can be removed if not showing text */
+      line-height:0;
     }
 
 
@@ -75,12 +83,17 @@
   </style>
 </head>
 <body>
-
-<a class="logo-caduceus" aria-label="Home">
-  <img alt="File:Caduceus.svg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Caduceus.svg/330px-Caduceus.svg.png?20220907011628" decoding="async" srcset="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Caduceus.svg/500px-Caduceus.svg.png?20220907011628 1.5x, https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Caduceus.svg/960px-Caduceus.svg.png?20220907011628 2x" >
-</a>
-
-<h1>Book Appointment for Dr {{doctor_data.firstname}} {{doctor_data.lastname}} at {{clinic_data.clinicname}}</h1>
+<header>
+      <div class="brand">
+        <div class="logo"  aria-hidden="true"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpeg') }}" alt="Logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
+        <div>
+          <h1>Book Appointment for Dr {{doctor_data.firstname}} {{doctor_data.lastname}}</h1>
+          <div class="sub"><strong>{{clinic_data.clinicname}}</strong> :- {{clinic_address}}</div>
+        </div>
+      </div>
+      
+    </header>
+  
 <span id="clinicId" data-clinic-id="{{ clinic_data.clinic_id }}" hidden></span>
 <span id="doctorId" data-doctor-id="{{ doctor_data.doctor_id }}" hidden></span>
 
