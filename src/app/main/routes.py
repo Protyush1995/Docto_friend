@@ -98,10 +98,10 @@ def doctor_edit_profile_form(doctor_id):
     if not data:
         abort(404)
 
-    if "image_data" in data:
-        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(data["image_data"],data['image_mime'])
+    if "profile_pic_uri" in data:
+            profile_pic_uri = data["profile_pic_uri"]
     else:
-        profile_pic_uri = "Profile Picture Placeholder"
+        profile_pic_uri = None
 
     return render_template("doctor_edit_profile.html", doctor_data=data, profile_pic_uri=profile_pic_uri)
 
@@ -196,8 +196,8 @@ def clinic_booking():
 
     if not doctor_data or not clinic_data : return jsonify({"WARNING": "Clinic Data or Doctor Data missing!!"}), 404
     
-    if "image_data" in doctor_data:
-        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    if "profile_pic_uri" in doctor_data:
+            profile_pic_uri = doctor_data["profile_pic_uri"]
     else:
         profile_pic_uri = None
 
@@ -290,21 +290,6 @@ def patient_update_generate_prescription():
 
     if not clinic_id or not doctor_id or not patient_id: return jsonify({"error": "Arguments missing! Clinic ID or Doctor ID or Patient ID missing!!"}), 404
     
-    """doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
-    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=clinic_id)
-    print("Route LOG : Printing achievements to check if new line is being preserved !! ")
-    print(doctor_data["achievements"])
-
-    if not doctor_data or not clinic_data : return jsonify({"WARNING": "Clinic Data or Doctor Data missing!!"}), 404
-    
-    if "image_data" in doctor_data:
-        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
-    else:
-        profile_pic_uri = None
-
-    clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
-    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="vo")"""
-
     return render_template("generate_prescription_update_patient.html") 
 
 @bp.route("/patient-prescription-update", methods=["POST"])
@@ -315,21 +300,6 @@ def patient_doctor_clinic_booking():
     doctor_id = request.args.get("doctor_id", "").strip()
 
     if not clinic_id or not doctor_id or not patient_id: return jsonify({"error": "Arguments missing! Clinic ID or Doctor ID or Patient ID missing!!"}), 404
-    
-    """doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
-    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=clinic_id)
-    print("Route LOG : Printing achievements to check if new line is being preserved !! ")
-    print(doctor_data["achievements"])
-
-    if not doctor_data or not clinic_data : return jsonify({"WARNING": "Clinic Data or Doctor Data missing!!"}), 404
-    
-    if "image_data" in doctor_data:
-        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
-    else:
-        profile_pic_uri = None
-
-    clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
-    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="vo")"""
 
     return render_template("generate_prescription_update_patient.html") 
 
@@ -359,12 +329,10 @@ def doctor_profile():
     print(f"ROUTE LOG : Printing clinic list from doctor dashboard::list type = {type(filtered_list)} ::: {filtered_list}")
     doctor_data['clinics'] = filtered_list
 
-    if "image_data" in doctor_data:
-        profile_pic_uri = doctor_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    if "profile_pic_uri" in doctor_data:
+        profile_pic_uri = doctor_data["profile_pic_uri"]
     else:
         profile_pic_uri = None
-
-    print(f"ROUTE LOG : Generated profile pic uri = {profile_pic_uri}")
     
     
     return render_template(
@@ -383,7 +351,7 @@ def doc_dashboard(doctor_id):
     
     doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
     clinics_list = clinic_database_management.get_clinic_by_doctor_id(doctor_id)
-    print(f"ROUTE LOG : Printing clinic list TYPE from doctor dashboard route::list type = {type(clinics_list)}")
+    print(f"ROUTE LOG : Printing doctor_id from doctor dashboard route::list type = {doctor_id}")
 
     if isinstance(clinics_list, dict):
         clinics_list = [clinics_list]
@@ -398,13 +366,10 @@ def doc_dashboard(doctor_id):
     print(f"ROUTE LOG : Clinic list found for doctor dashboard::list type = {type(filtered_list)} ::: length = {len(filtered_list)}")
     doctor_data['clinics'] = filtered_list
 
-    if "image_data" in doctor_data:
-        profile_pic_uri = clinic_database_management.base64_string_to_data_uri(doctor_data["image_data"],doctor_data['image_mime'])
+    if "profile_pic_uri" in doctor_data:
+        profile_pic_uri = doctor_data["profile_pic_uri"]
     else:
         profile_pic_uri = None
-
-
-    print(f"ROUTE LOG : Generated profile pic uri = {profile_pic_uri}")
     
     
     return render_template(

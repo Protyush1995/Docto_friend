@@ -24,10 +24,8 @@ clinic_db = DatabaseOperations(env_file=str(clinic_env))
 def _generate_clinic_qr(clinic_id: str, doctor_id: str, host: str = "http://192.168.29.115:5000") -> bytes:
     """
     Returns PNG bytes for a QR encoding a URL pointing to /clinic-booking
-    with query params clinic_id and doctor_id.
+    with query params clinic_id and doctor_id. Example: /clinic-booking?clinic_id=CLINIC_ID_...&doctor_id=DOC123
     """
-    # Build a compact URL/payload. Use absolute URL if you want (domain optional).
-    # Example: /clinic-booking?clinic_id=CLINIC_ID_...&doctor_id=DOC123
     payload = f"{host}/clinic-booking?clinic_id={clinic_id}&doctor_id={doctor_id}"
     qr = qrcode.QRCode(version=1, box_size=10, border=2, error_correction=qrcode.constants.ERROR_CORRECT_M)
     qr.add_data(payload)
@@ -35,16 +33,6 @@ def _generate_clinic_qr(clinic_id: str, doctor_id: str, host: str = "http://192.
     img = qr.make_image(fill_color="black", back_color="white")
     buf = io.BytesIO()
     img.save(buf, format="PNG")
-
-    # Get the current file's directory.
-    #current_directory = os.path.dirname(os.path.abspath(__file__))
-    
-    # Define the file path (you can specify a filename as needed).
-    #file_path = os.path.join(current_directory, f"clinic_qr_{clinic_id}_{doctor_id}.png")
-    
-    # Save the image to the specified file path.
-    #img.save(file_path)
-
     return buf.getvalue()
 
 # Helper: bytes -> PIL.Image
@@ -127,13 +115,11 @@ def append_clinic_registration_record(data: Dict) -> Dict:
         "services_offered":"",
         "visit_schedule":data["visit_schedule"],
         "doctor_consultation_fees":data["clinic_fees"],
-        "clinic_qr_bytes":qr_png_bytes,
         "clinic_qr_data_uri":qr_png_data_uri,
     }
 
     #inserting data to MongoDb database
     response = clinic_db.insert_record(user_document=record)
-
     return response
 
 def update_clinic_profile(data: Dict) -> Dict:

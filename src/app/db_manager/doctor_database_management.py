@@ -167,6 +167,10 @@ def append_registration_record(data: Dict) -> Dict:
 def update_doctor_profile(data: Dict) -> Dict:
 
     #updating profile data of MongoDb database
+    print(data)
+    if "image_data" in data :
+        profile_pic_uri = base64_string_to_data_uri(data["image_data"],data['image_mime'])
+        data["profile_pic_uri"] = profile_pic_uri
     success = db.update_record (primary_key_name="doctor_id",primary_key_val=data["doctor_id"],updates=data)
     response = {"success":success["acknowledged"],"doctor_id":data["doctor_id"]}
     print("DOCTOR DB MANAGEMENT LOG : Message returned by Mongo for profile update...........")

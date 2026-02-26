@@ -172,6 +172,8 @@
         const doctorId = json.user_id || json.doctor_id || (json.user && json.user.doctor_id);
         if (doctorId) {
           window.location.href = json.redirect || `/doc_dashboard/${encodeURIComponent(doctorId)}`;
+          console.log("Doctor Id from doc login");
+          console.log(doctorId);
         } else {
           console.error("doctor_id missing in response !!", json);
           alert("Login succeeded but redirect failed. Contact admin.");
