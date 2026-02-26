@@ -155,7 +155,7 @@ def append_registration_record(data: Dict) -> Dict:
         "practising_or_fellowship":"",
         "achievements":"",
         "years_of_experience":0,
-        "default_fees":500,
+        "default_fees":500, 
         "doctor_qr_uri":qr_png_data_uri
     }
 
