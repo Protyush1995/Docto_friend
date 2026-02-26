@@ -403,10 +403,7 @@ def doc_dashboard(doctor_id):
     else:
         profile_pic_uri = None
 
-    if "doctor_qr_uri" in doctor_data:
-        profile_pic_uri = doctor_data['doctor_qr_uri']
-    else:
-        profile_pic_uri = None
+
     print(f"ROUTE LOG : Generated profile pic uri = {profile_pic_uri}")
     
     

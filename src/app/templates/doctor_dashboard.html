@@ -389,42 +389,155 @@
 
   </style>
   <style>
-    /* Flip card (add near other styles) */
-    .flip-card { width:100%; max-width:420px; height:200px; perspective:1000px; margin-bottom:12px; }
-    .flip-card .flipper { position:relative; width:100%; height:100%; transition:transform .6s; transform-style:preserve-3d; }
-    .flip-card .front, .flip-card .back {
-      position:absolute; inset:0; backface-visibility:hidden; border-radius:12px; overflow:hidden;
-      display:flex; align-items:center; gap:12px; padding:12px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06); background:var(--card-bg); border:1px solid rgba(3, 3, 3, 0.086);
-    }
-    .flip-card .front { 
-      z-index:2; 
-      background-image: url("{{ url_for('static', filename='image/doctor_card_front.png') }}");
+   /* Static card (no flip) */
+    /* Static card showing full background image */
+    .flip-card {
       position: relative;
       width: 100%;
-      padding-top: 55%; /* controls aspect ratio (40% of width) */
-      background-position: center;
-      background-repeat: no-repeat;
-      background-size: cover;
-
+      max-width: 420px;
+      height: 200px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      background: var(--card-bg);
     }
 
-    .flip-card .back { transform:rotateY(180deg); display:flex; flex-direction:column; justify-content:center; gap:6px; 
-      background-image: url("{{ url_for('static', filename='image/doctor_card_back.png') }}");
-      position: absolute;
+    /* Keep the single image element */
+    .flip-card .card-bg {
       width: 100%;
-      padding-top: 55%; /* controls aspect ratio (40% of width) */
-      background-position: center;
-      background-repeat: no-repeat;
-      background-size: cover;
+      height: 100%;
+      object-fit: contain; /* show full image */
+      display: block;
+      pointer-events: none; /* allow overlay interactions */
     }
 
-    /* Flip triggers: hover, focus, and a .flipped helper (for JS/touch) */
-    .flip-card:hover .flipper,
-    .flip-card:focus-within .flipper,
-    .flip-card.flipped .flipper {
-      transform: rotateY(180deg);
+    /* Overlay that sits on top of the image */
+    .flip-card .card-overlay {
+      position: absolute;
+      inset: 0;
+      display: block;
+      pointer-events: auto;
     }
+
+    /* Create left 20% transparent/visible column and right 80% overlay area via internal layout */
+    .flip-card .card-overlay::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 20%;
+      /* optional subtle overlay on left to preserve image look */
+      background: transparent;
+      pointer-events: none;
+    }
+
+    /* CSS: aspect-ratio fallback plus JS-safe solution */
+    .aspect-ratio {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      /* Prefer native aspect-ratio when available */
+      aspect-ratio: 21 / 10; /* choose ratio close to your card art (change as needed) */
+      background: var(--card-bg);
+    }
+
+    /* Keep image covering container but allow full image when using contain */
+    .flip-card .card-bg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* change to 'contain' if you must show whole image with letterboxing */
+      display: block;
+    }
+
+    /* overlay rules remain same, adjusted to use inset coordinates */
+    .flip-card .card-overlay { position: absolute; inset: 0; pointer-events: auto; }
+    .flip-card .card-overlay::before { left:0; top:0; bottom:0; width:20%; background: transparent; content:""; position:absolute; pointer-events:none; }
+    .flip-card .overlay-center { position:absolute; left:20%; top:50%; transform:translateY(-50%); width:80%; padding:0 12px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:#0b1226; }
+    .flip-card .qr { position:absolute; right:8px; bottom:8px; width:56px; height:56px; border-radius:8px; overflow:hidden; background:#fff; border:1px solid rgba(0,0,0,0.06); }
+    .flip-card .qr img { width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* place QR at bottom-right, label to its left */
+   /* wrapper positioned; contains label + qr side-by-side */
+    .flip-card .qr-with-label {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+      z-index: 3;
+    }
+
+    /* ensure .qr is static inside wrapper (remove absolute from any prior .qr rule) */
+    .flip-card .qr {
+      position: relative; /* NOT absolute */
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid rgba(0, 0, 0, 0.669);
+      flex: 0 0 auto;
+    }
+
+    /* label stays inline */
+    .flip-card .qr-label {
+      background: rgba(231, 177, 71, 0.993);
+      color: #030303;
+      font-size: 14px;
+      padding: 6px 8px;
+      border-radius: 5px;
+      box-shadow: none;
+      white-space: nowrap;
+    }
+
+    /* responsive tweak */
+    @media (max-width:760px){
+      .flip-card .qr-with-label { right:6px; bottom:6px; gap:6px; }
+      .flip-card .qr { width:48px; height:48px; }
+      .flip-card .qr-label { font-size:11px; padding:5px 6px; }
+    }
+
+
+    /* Responsive tweaks */
+    @media (max-width:760px){
+      .aspect-ratio { aspect-ratio: 11 / 5; height: auto; }
+      .overlay-center { left:22%; width:78%; padding:0 8px; }
+      .qr { width:48px; height:48px; right:6px; bottom:6px; }
+    }
+
+    .overlay-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;            /* small consistent gap between items */
+      padding: 0 12px;
+      box-sizing: border-box;
+    }
+
+    .overlay-center .doc-name,
+    .overlay-center .doc-expertise,
+    .overlay-center .doc-qual {
+      margin: 0;           /* remove default margins */
+      line-height: 1.15;   /* tighter line height */
+    }
+
+    /* Optional: slightly smaller font for the p elements */
+    .overlay-center .doc-expertise,
+    .overlay-center .doc-qual {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+
+
 
     /* Front content layout */
     /* ensure image respects container size */
@@ -437,56 +550,17 @@
       border-radius: 8px;
     }
 
-    /* if the image element had inline width/height or srcset, force max dimensions */
-    .flip-card .front img {
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: auto;
-    }
-
     /* adjust when card height is different */
     @media (max-width:760px){
       .clinic-thumb { width:88px; height:88px; flex-basis:88px; }
     }
 
-    .front-info { display:flex; flex-direction:column; gap:6px; overflow:hidden; }
-    .front-info h3 { margin:0; font-size:16px; color:var(--primary); }
-    .front-info p { margin:0; color:var(--muted); font-size:13px; }
-
-    /* Back content */
-    .back h3 { margin:0; color:var(--primary); }
-    .back p, .back a { margin:0; color:var(--muted); font-size:13px; text-decoration:none; }
-
-    /* Make sure it fits narrow left-panel on mobile */
-    @media (max-width:760px){
-      .flip-card { max-width:100%; height:180px; }
-    }
-
+    
     /* Keep flip-card appearance unchanged in dark mode */
-    .dark .flip-card,
-    .dark .flip-card .flipper,
-    .dark .flip-card .front,
-    .dark .flip-card .back {
+    .dark .flip-card{
       
       color: #0b1226;
       box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-    }
-
-    .dark .flip-card .front,
-    .dark .flip-card .back {
-      /* preserve the image: don't set background shorthand that omits image */
-       /* optional fallback under image */
-      background-image: inherit; /* keep existing image URL */
-      background-size: cover;
-      background-position: center;
-    }
-
-    .dark .flip-card .front {
-      background-image: url("{{ url_for('static', filename='image/doctor_card_front.png') }}");
-    }
-    .dark .flip-card .back {
-      background-image: url("{{ url_for('static', filename='image/doctor_card_back.png') }}");
     }
 
     /* If you use variable-based colors inside .flip-card, override them explicitly */
@@ -526,8 +600,18 @@
       <aside class="profile-card card">
           <div class="profile-row">
               <div class="avatar">
-                  <img src="{{ profile_pic_uri }}" alt="Doctor">
-              </div>
+                  <img id="avatar" src="{{ profile_pic_uri }}" alt="Profile">
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                      const img = document.getElementById('avatar');
+                      const fallback = "{{ url_for('static', filename='image/doc_placeholder.png') }}";
+                      img.addEventListener('error', function handleError() {
+                        img.removeEventListener('error', handleError);
+                        img.src = fallback;
+                      });
+                    });
+                    </script>
+                  </div>
 
               <div class="profile-meta">
                   <h3><strong>ID :</strong> {{user_id}}</h3>
@@ -562,16 +646,39 @@
               <div style="font-size:13px; color:var(--muted);">Profile completed</div>
             </div>
           </div>-->
-          <div class="flip-card" tabindex="0" aria-label="Clinic card — Sunrise Clinic">
-            <div class="flipper">
-              <div class="front">
-                
+          <!-- HTML -->
+          <div class="flip-card aspect-ratio">
+            <img src="{{ url_for('static', filename='image/doctor_card_front.png') }}" alt="" class="card-bg">
+            <div class="card-overlay">
+              <div class="overlay-center">
+                <h3 class="doc-name">{{ doctor_data.firstname }} {{ doctor_data.lastname }}</h3>
+                <p class="doc-expertise"><strong>{{ doctor_data.expertise }}</strong></p>
+                <p class="doc-qual"><strong>{{ doctor_data.qualifications }}</strong></p>
+                <p class="doc-qual">{{doctor_data.practising_or_fellowship}}</p>
+                <p class="doc-qual">{{doctor_data.achievements}}</p>
               </div>
-              <div class="back">
-                
+              <!-- QR + label container -->
+              <div class="qr-with-label">
+                <span class="qr-label">Book Appointment : </span>
+                <div class="qr"><img src="{{ doctor_data.doctor_qr_uri }}" alt="QR"></div>
               </div>
             </div>
           </div>
+          <script>
+              document.addEventListener('DOMContentLoaded', () => {
+                const card = document.querySelector('.aspect-ratio');
+                const img = card.querySelector('.card-bg');
+                const setHeightFromImage = () => {
+                  if (!img.naturalWidth) return;
+                  const w = card.clientWidth;
+                  const h = Math.round(w * (img.naturalHeight / img.naturalWidth));
+                  card.style.height = h + 'px';
+                };
+                if (img.complete) setHeightFromImage();
+                else img.addEventListener('load', setHeightFromImage);
+                window.addEventListener('resize', setHeightFromImage);
+              });
+          </script>
 
         </div>
 
