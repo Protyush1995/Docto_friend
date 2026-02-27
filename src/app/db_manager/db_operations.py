@@ -146,11 +146,25 @@ class DatabaseOperations:
 
         return cursor
     
+    def find_by_two_fields(self, field1: str, val1: str, field2: str, val2: str) -> Optional[Dict]:
+        """
+        Search the collection for documents matching both field1==val1 and field2==val2.
+        Returns a single document dict if exactly one match, a list of dicts if multiple matches,
+        or None if no matches or invalid inputs.
+        """
+        if not all([field1, val1, field2, val2]):
+            return None
 
-    
+        query = {field1: val1.strip(), field2: val2.strip()}
+        cursor = self.collection.find(query)
+        docs = list(cursor)
+        if not docs:
+            return []
 
+        for d in docs:
+            d.pop("_id", None)
 
-    
-    
+        return docs
+
 
 

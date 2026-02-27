@@ -272,7 +272,9 @@ def submit_booking():
     #return jsonify(success=True, doctor_id=data["doctor_id"]), 201
     try:
         rec = patient_database_management.append_patient_registration_record(data)
+        print("ROUTE LOG : Printing response received from append_patient_registration_record in submit-booking handle.......................................")
         print(rec)
+        return
         # TODO: send verification email asynchronously
         return jsonify(success=True, qr_png_data_uri=rec["patient_qr_data_uri"]), 201
     except ValueError as ve:

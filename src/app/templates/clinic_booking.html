@@ -529,13 +529,13 @@
         patient_name: patientName,
         patient_mobile: patientMobile,
         visit_day: visitDay,
-        visit_date: visitDate,
+        visit_date: visitDateParsed,
         sex:sex,
         age: age,
         clinic_fees:clinic_fees,
         clinic_id: document.getElementById('clinicId').dataset ? document.getElementById('clinicId').dataset.clinicId : document.getElementById('clinicId').textContent || '',
         doctor_id: document.getElementById('doctorId').dataset ? document.getElementById('doctorId').dataset.doctorId : document.getElementById('doctorId').textContent || '',
-        created_at: now.toISOString(),
+        created_at: now,
         appointment_week: appointment_week,
         appointment_year: appointment_year,
         checked_in: false
@@ -545,7 +545,7 @@
       console.log("Printing payload for patient.....................")
       console.log(payload)
 
-      return
+      
       // POST JSON to server
       fetch('/submit-booking', {
         method: 'POST',
@@ -578,7 +578,7 @@
                           document.querySelector('#clinicCard')?.textContent.match(/\d{3,}/) || '',
             doctor_photo: document.querySelector('#clinicCard img')?.src || '',
             visit_day: payload.visit_day,
-            visit_date: payload.visit_date
+            visit_date: visitDate
           };
           openBookingModal(modalData);
 
