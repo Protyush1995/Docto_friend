@@ -38,10 +38,10 @@ def _generate_patient_id_and_token() -> (str,str):
         # check token uniqueness in DB
         print(f"PATIENT DB LOG :: Checking token in patient collection:: attempt {_} ")
         if not _token_exists(rand_str):
-            print(f"PATIENT DB LOG :: Patient Id {f"PATIENT_ID_{ts}{rand_str}"} and token number {rand_str} is now being alloted to patient")
+            print(f"PATIENT DB LOG :: Patient Id: {f"PATIENT_ID_{ts}{rand_str}"} , uTAN: {rand_str} is now being alloted to patient")
             return f"PATIENT_ID_{ts}{rand_str}" , rand_str
         
-    raise RuntimeError(f"Could not generate unique token after {MAX_ID_ATTEMPTS} attempts")
+    raise RuntimeError(f"Could not generate uTAN after {MAX_ID_ATTEMPTS} attempts")
 
 def append_patient_registration_record(data: Dict) -> Dict:
     """
@@ -49,11 +49,6 @@ def append_patient_registration_record(data: Dict) -> Dict:
     Returns the saved record dict (without plaintext password).
     Raises ValueError on validation errors or Exception on IO errors.
     """
-    print("Preparing NEW clinic record for database entry!!")
-    #err = validate_registration(data)
-    #if err:
-    #    raise ValueError(err)
-
 
     patient_id ,patient_token = _generate_patient_id_and_token()
     serial_number = get_patient_serial_number(doctor_id=data["doctor_id"].strip(),visit_date=data["visit_date"])
@@ -72,7 +67,7 @@ def append_patient_registration_record(data: Dict) -> Dict:
         "visit_day":data["visit_day"],
         "visit_date":data["visit_date"],
         "doctor_consultation_fees":data["clinic_fees"],
-        "token_number":patient_token,
+        "uTAN":patient_token,
         "serial_number":serial_number,
         "appointment_week":data["appointment_week"],
         "appointment_year":data["appointment_year"],
@@ -103,7 +98,7 @@ def get_patient_by_doctor_id(doctor_id:str) -> Dict:
     return patient_data
 
 def get_patient_by_token_number(token_number:int) -> Dict:
-    patient_data = patient_db.find_by_id(id_val=token_number,id_field="token_number")
+    patient_data = patient_db.find_by_id(id_val=token_number,id_field="uTAN")
     return patient_data
 
 def get_patient_serial_number(doctor_id:str,visit_date:str) -> Dict:

@@ -264,18 +264,26 @@
   <!-- Modal -->
   <div id="bookingSuccessModal" class="modal" style="display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); z-index:9999;">
     <div style="background:#fff; border-radius:8px; width:360px; max-width:90%; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.2);">
-      <h3 id="modalTitle" style="margin:0 0 8px 0;color:#4d20cab8;">Booking Token</h3>
+      <h3 id="modalTitle" style="margin:0 0 8px 0;color:#4d20cab8;">Booking Successful !! Token sent to registered mobile number ! </h3>
       <div id="bookingCard" style="background:#f9f9f9; padding:12px; border-radius:6px; text-align:left; width:100%;">
-        <div style="display:flex; gap:12px; align-items:center;">
-          <img id="modalQr" src="" alt="QR" style="width:120px;height:120px;border:1px solid #eee;background:#fff;padding:4px;">
-          <div style="flex:1;font-size:14px;color:#4d20cab8;">
+        
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          
+          <div style="flex:1; font-size:14px; color:#4d20cab8;">
+            <div><strong>Serial No:</strong> <span style="color:#555;" id="modalSerial"></span></div>
+            <div><strong>uTAN:</strong> <span style="color:#555;" id="modaluTAN"></span></div>
+            <div id="modalVisitDay" style="font-weight:700; font-size:13px; color:#4d20cab8; margin-top:4px;"></div>
+          </div>
+
+          <div style="flex:1; font-size:14px; color:#4d20cab8;">
             <div><strong>Patient:</strong> <span style="color:#555;" id="modalPatientName"></span></div>
             <div><strong>Mobile:</strong> <span style="color:#555;" id="modalPatientMobile"></span></div>
             <div><strong>Age / Sex:</strong> <span style="color:#555;" id="modalPatientAgeSex"></span></div>
-            <div id="modalVisitDay" style="font-weight:700; font-size:13px;color:#4d20cab8; margin-top:4px;"></div>
-         
+            
           </div>
+
         </div>
+
         
         <hr style="margin:8px 0;">
         <div style="display:flex; gap:12px; align-items:center;">
@@ -545,7 +553,6 @@
       console.log("Printing payload for patient.....................")
       console.log(payload)
 
-      
       // POST JSON to server
       fetch('/submit-booking', {
         method: 'POST',
@@ -555,7 +562,7 @@
       .then(async res => {
         const data = await res.json().catch(()=>null);
         if (res.ok && data && data.success) {
-          msg('Booking created:  — Booking successful.');
+          msg('Booking created:  — Booking successful!!');
           // reset demo state
           currentOtp = null;
           document.getElementById('submitBookingBtn').disabled = true;
@@ -564,7 +571,8 @@
 
           // Prepare data for modal
           const modalData = {
-            qr_png_data_uri: data.qr_png_data_uri,
+            serial_number: data.serial_number,
+            uTAN: data.uTAN,
             patient_name: payload.patient_name,
             patient_mobile: payload.patient_mobile,
             age: payload.age,
@@ -605,7 +613,8 @@
     document.getElementById('modalClinicAddress').textContent = data.clinic_address || '';
     document.getElementById('modalClinicContact').textContent = data.clinic_contact || '';
     document.getElementById('modalVisitDay').textContent = data.visit_date +" : "+data.visit_day || '';
-    document.getElementById('modalQr').src = data.qr_png_data_uri || '';
+    document.getElementById('modalSerial').textContent = data.serial_number || '';
+    document.getElementById('modaluTAN').textContent = data.uTAN || '';
     document.getElementById('modalPatientName').textContent = data.patient_name || '';
     document.getElementById('modalPatientMobile').textContent = data.patient_mobile || '';
     document.getElementById('modalPatientAgeSex').textContent = (data.age!==null?data.age+' / ':'') + (data.sex||'');
