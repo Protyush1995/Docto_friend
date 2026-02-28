@@ -155,6 +155,8 @@ class DatabaseOperations:
         if not all([field1, val1, field2, val2]):
             return None
 
+        print(f"DB Operations LOG : Entering find_by_two_fields function with {field1} = {val1} , {field2} = {val2}: Database Name = {self.db_name} : Collection Name {self.collection_name}")
+        
         query = {field1: val1.strip(), field2: val2.strip()}
         cursor = self.collection.find(query)
         docs = list(cursor)

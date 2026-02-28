@@ -709,12 +709,17 @@
 
           <div class="stat" style="padding:12px;">
             <h3 id="upcomingAppointments" style="margin:0 0 6px 0; font-size:20px;">12</h3>
-            <p style="margin:0; font-size:13px; color:var(--muted);">Upcoming Appointments</p>
+            <p style="margin:0; font-size:13px; color:var(--muted);">Appointments Next Week</p>
+          </div>
+
+          <div class="stat" style="padding:12px;">
+            <h3 id="patientsThisWeek" style="margin:0 0 6px 0; font-size:20px;">4</h3>
+            <p style="margin:0; font-size:13px; color:var(--muted);">Appointments This Week</p>
           </div>
 
           <div class="stat" style="padding:12px;">
             <h3 id="patientsToday" style="margin:0 0 6px 0; font-size:20px;">4</h3>
-            <p style="margin:0; font-size:13px; color:var(--muted);">Patients Today</p>
+            <p style="margin:0; font-size:13px; color:var(--muted);">Appointments Today</p>
           </div>
         </div>
       </div>
@@ -793,8 +798,9 @@
   <script>
     // Demo: attach dynamic counts if needed (keeps dummy values)
     document.getElementById('totalClinics').textContent = {{ clinic_length | tojson }};;
-    document.getElementById('upcomingAppointments').textContent = 78;
-    document.getElementById('patientsToday').textContent = 4;
+    document.getElementById('upcomingAppointments').textContent = {{ appointments_upcoming_week | tojson}};
+    document.getElementById('patientsToday').textContent = {{ appointments_today | tojson}};
+    document.getElementById('patientsThisWeek').textContent = {{ appointments_current_week | tojson}};
   </script>
 
   <script>

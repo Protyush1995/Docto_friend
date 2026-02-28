@@ -17,6 +17,43 @@ from . import bp
 from ..db_manager import doctor_database_management,clinic_database_management,patient_database_management
 from ..db_manager import db_operations
 from dotenv import dotenv_values
+from datetime import datetime, date, time, timedelta, timezone
+import zoneinfo
+
+def get_iso_week(dt):
+    """
+    Compute ISO year/week using the date components in IST.
+    Accepts date or datetime; uses IST-local date (year/month/day) to construct
+    an IST-midnight datetime and then follows ISO week rules.
+    Returns {'year': int, 'week': int}.
+    """
+    # If datetime, convert to IST then take date; if date, use directly
+    if isinstance(dt, datetime):
+        dt_ist = dt.astimezone(IST)
+        d = dt_ist.date()
+    else:
+        d = dt  # assume date
+
+    # Construct IST-midnight for that local date
+    d_ist_mid = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=IST)
+
+    # ISO weekday: Mon=1 .. Sun=7
+    day_num = d_ist_mid.isoweekday()
+
+    # Move to Thursday of this week (IST)
+    d_thu_ist = d_ist_mid + timedelta(days=(4 - day_num))
+
+    # Jan 1 of that ISO-year at IST midnight
+    year_start_ist = datetime(d_thu_ist.year, 1, 1, 0, 0, 0, tzinfo=IST)
+
+    days_diff = (d_thu_ist - year_start_ist).days
+    week_no = (days_diff + 1 + 6) // 7
+
+    return {'year': d_thu_ist.year, 'week': week_no}
+
+
+IST = zoneinfo.ZoneInfo("Asia/Kolkata")
+DATE_TODAY = datetime.now(IST).date()
 
 # Loading API key for SMS OTP verification
 base = Path(__file__).parent
@@ -29,6 +66,12 @@ else:
     raise RuntimeError(f".env file not found: {secret_env}")
 
 FAST2SMS_API_KEY = val.get("FAST2SMS_API_KEY")
+
+week_year = get_iso_week(DATE_TODAY)
+CURRENT_WEEK = week_year["week"]
+CURRENT_YEAR = week_year["year"]
+UPCOMING_WEEK = CURRENT_WEEK+1
+print(f"ROUTE LOG:: Current week = {CURRENT_WEEK}, Upcoming week = {UPCOMING_WEEK}, Today = {DATE_TODAY}------------------------------------------------------------------------------------------------------------")
 
 
 @bp.route("/", methods=["GET"])
@@ -272,8 +315,6 @@ def submit_booking():
     #return jsonify(success=True, doctor_id=data["doctor_id"]), 201
     try:
         rec = patient_database_management.append_patient_registration_record(data)
-        print("ROUTE LOG : Printing response received from append_patient_registration_record in submit-booking handle.......................................")
-        print(rec)
         #return
         # TODO: send verification email asynchronously
         return jsonify(success=True, serial_number=rec["serial_number"],uTAN=rec["uTAN"],visit_day=rec["visit_day"],visit_date=rec["visit_date"]), 201
@@ -373,14 +414,20 @@ def doc_dashboard(doctor_id):
     else:
         profile_pic_uri = None
     
-    
+    appointments_upcoming_week = patient_database_management.get_patient_count_for_week(doctor_id=doctor_id,week=str(UPCOMING_WEEK))
+    appointments_today = patient_database_management.get_patient_count_for_visit_date(doctor_id=doctor_id,date=str(DATE_TODAY))
+    appointments_current_week = patient_database_management.get_patient_count_for_week(doctor_id=doctor_id,week=str(CURRENT_WEEK))
+
     return render_template(
         'doctor_dashboard.html',
         user_id=doctor_id,
         profile_pic_uri=profile_pic_uri,
         doctor_data=doctor_data,
         clinics = filtered_list,
-        clinic_length = len(filtered_list)
+        clinic_length = len(filtered_list),
+        appointments_upcoming_week = appointments_upcoming_week,
+        appointments_today = appointments_today,
+        appointments_current_week = appointments_current_week
     )
 
 @bp.route('/logout', methods=['GET', 'POST'])
@@ -451,7 +498,6 @@ def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
         clinic_address = clinic_address,
         visit_schedule = visit_schedule
     )
-
 
 
 #-------------------------------- >  Helper functions  < ---------------------------------------------------

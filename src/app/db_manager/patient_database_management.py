@@ -104,17 +104,18 @@ def append_patient_registration_record(data: Dict) -> Dict:
     """
 
     patient_id ,patient_token = _generate_patient_id_and_token()
-    serial_number = get_patient_serial_number(doctor_id=data["doctor_id"].strip(),visit_date=data["visit_date"])
     parsed_visit_date = parse_iso_z(data["visit_date"])
     IST_visit_date = str(parsed_visit_date.date())
     print(f"PATIENT DB LOG :: IST visit date is {IST_visit_date}..........")
     year_week_dict = get_iso_week(parsed_visit_date)
+    serial_number = get_patient_serial_number(doctor_id=data["doctor_id"].strip(),visit_date=IST_visit_date)
+    
     record = {
         "patient_id":patient_id,
         "clinic_id": data["clinic_id"].strip(),
         "doctor_id": data["doctor_id"].strip(),
         "patient_name": data["patient_name"].strip(),
-        "age": data["age"],
+        "age": str(data["age"]),
         "sex": data["sex"].strip(),
         "occupation":"",
         "patient_address":"",
@@ -125,8 +126,8 @@ def append_patient_registration_record(data: Dict) -> Dict:
         "doctor_consultation_fees":data["clinic_fees"],
         "uTAN":patient_token,
         "serial_number":serial_number,
-        "appointment_week":year_week_dict["week"],
-        "appointment_year":year_week_dict["year"],
+        "appointment_week":str(year_week_dict["week"]),
+        "appointment_year":str(year_week_dict["year"]),
         "checked_in":data["checked_in"]
     }
 
@@ -136,7 +137,6 @@ def append_patient_registration_record(data: Dict) -> Dict:
     record_copy["_id"] = inserted_id
 
     return record_copy
-
 
 def update_patient_profile(data: Dict) -> Dict:
     #updating profile data of MongoDb database
@@ -157,7 +157,7 @@ def get_patient_by_token_number(token_number:int) -> Dict:
     patient_data = patient_db.find_by_id(id_val=token_number,id_field="uTAN")
     return patient_data
 
-def get_patient_serial_number(doctor_id:str,visit_date:str) -> Dict:
+def get_patient_serial_number(doctor_id:str,visit_date:str) -> int:
     patient_serial_list = patient_db.find_by_two_fields(field1="doctor_id",val1=doctor_id,field2="visit_date",val2=visit_date)
     if patient_serial_list is None:
         raise ValueError(f"PATIENT DB LOG :: Could not generate serial number invalid value passed to find_by_two_fields function")
@@ -167,5 +167,24 @@ def get_patient_serial_number(doctor_id:str,visit_date:str) -> Dict:
         serial_number = length+1
     elif length == 0:
         serial_number = 1
+
     print(f"PATIENT DB LOG :: Alloting serial number:{serial_number} to patient")
     return serial_number
+
+def get_patient_count_for_week(doctor_id:str,week:str) -> int:
+    patient_list = patient_db.find_by_two_fields(field1="doctor_id",val1=doctor_id,field2="appointment_week",val2=week)
+    if patient_list is None:
+        raise ValueError(f"PATIENT DB LOG :: Could not process patient count for week = {week}, doctor_id = {doctor_id} invalid value passed to find_by_two_fields function!!")
+
+    patient_count = len(patient_list)
+    print(f"PATIENT DB LOG :: Returning total patient count:{patient_count} for week {week}")
+    return patient_count
+
+def get_patient_count_for_visit_date(doctor_id:str,date:str) -> int:
+    patient_list = patient_db.find_by_two_fields(field1="doctor_id",val1=doctor_id,field2="visit_date",val2=date)
+    if patient_list is None:
+        raise ValueError(f"PATIENT DB LOG :: Could not process patient count for date = {date}, doctor_id = {doctor_id} invalid value passed to find_by_two_fields function!!")
+
+    patient_count = len(patient_list)
+    print(f"PATIENT DB LOG :: Returning total patient count:{patient_count} for date {date}")
+    return patient_count
