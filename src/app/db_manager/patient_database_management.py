@@ -12,6 +12,8 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, Optional, Union
 from .db_operations import DatabaseOperations
+from datetime import datetime, date, time, timedelta, timezone
+import zoneinfo
 
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -21,6 +23,57 @@ patient_env = (base / ".env.patients").resolve()
 patient_db = DatabaseOperations(env_file=str(patient_env))
 # Add near top of your module
 MAX_ID_ATTEMPTS = 10
+
+IST = zoneinfo.ZoneInfo("Asia/Kolkata")
+
+def parse_iso_z(s: str) -> datetime:
+    """
+    Accepts ISO strings like "2026-03-02T18:30:00.000Z" (UTC) or with offset.
+    Returns an aware datetime converted to IST (Asia/Kolkata).
+    """
+    # Normalize trailing Z to +00:00 so fromisoformat accepts it
+    if s.endswith('Z'):
+        s = s[:-1] + '+00:00'
+    dt = datetime.fromisoformat(s)  # may be offset-aware
+    # Convert to IST
+    if dt.tzinfo is None:
+        # assume naive input is UTC then convert
+        dt = dt.replace(tzinfo=timezone.utc)
+
+    IST_date = dt.astimezone(IST)
+    print(f"PATIENT DB LOG :: Printing IST date = {IST_date}, from received date {s} _________________")
+    return IST_date
+
+def get_iso_week(dt):
+    """
+    Compute ISO year/week using the date components in IST.
+    Accepts date or datetime; uses IST-local date (year/month/day) to construct
+    an IST-midnight datetime and then follows ISO week rules.
+    Returns {'year': int, 'week': int}.
+    """
+    # If datetime, convert to IST then take date; if date, use directly
+    if isinstance(dt, datetime):
+        dt_ist = dt.astimezone(IST)
+        d = dt_ist.date()
+    else:
+        d = dt  # assume date
+
+    # Construct IST-midnight for that local date
+    d_ist_mid = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=IST)
+
+    # ISO weekday: Mon=1 .. Sun=7
+    day_num = d_ist_mid.isoweekday()
+
+    # Move to Thursday of this week (IST)
+    d_thu_ist = d_ist_mid + timedelta(days=(4 - day_num))
+
+    # Jan 1 of that ISO-year at IST midnight
+    year_start_ist = datetime(d_thu_ist.year, 1, 1, 0, 0, 0, tzinfo=IST)
+
+    days_diff = (d_thu_ist - year_start_ist).days
+    week_no = (days_diff + 1 + 6) // 7
+
+    return {'year': d_thu_ist.year, 'week': week_no}
 
 def _token_exists(token: str) -> bool:
     match_list = patient_db.find_by_id(id_val=token, id_field="token_number")
@@ -52,7 +105,10 @@ def append_patient_registration_record(data: Dict) -> Dict:
 
     patient_id ,patient_token = _generate_patient_id_and_token()
     serial_number = get_patient_serial_number(doctor_id=data["doctor_id"].strip(),visit_date=data["visit_date"])
-
+    parsed_visit_date = parse_iso_z(data["visit_date"])
+    IST_visit_date = str(parsed_visit_date.date())
+    print(f"PATIENT DB LOG :: IST visit date is {IST_visit_date}..........")
+    year_week_dict = get_iso_week(parsed_visit_date)
     record = {
         "patient_id":patient_id,
         "clinic_id": data["clinic_id"].strip(),
@@ -65,12 +121,12 @@ def append_patient_registration_record(data: Dict) -> Dict:
         "patient_mobile":data["patient_mobile"].strip(),
         "created_at": data["created_at"].strip(),
         "visit_day":data["visit_day"],
-        "visit_date":data["visit_date"],
+        "visit_date":IST_visit_date,
         "doctor_consultation_fees":data["clinic_fees"],
         "uTAN":patient_token,
         "serial_number":serial_number,
-        "appointment_week":data["appointment_week"],
-        "appointment_year":data["appointment_year"],
+        "appointment_week":year_week_dict["week"],
+        "appointment_year":year_week_dict["year"],
         "checked_in":data["checked_in"]
     }
 

@@ -276,7 +276,7 @@ def submit_booking():
         print(rec)
         #return
         # TODO: send verification email asynchronously
-        return jsonify(success=True, serial_number=rec["serial_number"],uTAN=rec["uTAN"]), 201
+        return jsonify(success=True, serial_number=rec["serial_number"],uTAN=rec["uTAN"],visit_day=rec["visit_day"],visit_date=rec["visit_date"]), 201
     except ValueError as ve:
         return jsonify(success=False, error=str(ve)), 400
     except Exception as e:

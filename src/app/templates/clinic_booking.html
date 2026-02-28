@@ -336,7 +336,8 @@
         submitBookingBtn.disabled = false; // allow direct booking
         currentOtp = null;
         msg('OTP verification disabled');
-      } else {
+      } 
+      else {
         // Enable OTP flow
         sendOtpBtn.disabled = false;
         verifyOtpBtn.disabled = true;
@@ -485,16 +486,6 @@
       return new Date(year, Number(m) - 1, Number(d));
     }
 
-    // ISO week function
-    function getISOWeek(date) {
-      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-      const dayNum = d.getUTCDay() || 7;               // Mon=1..Sun=7
-      d.setUTCDate(d.getUTCDate() + 4 - dayNum);      // Thursday of this week
-      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-      const weekNo = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
-      return { year: d.getUTCFullYear(), week: weekNo };
-    }
-
 
     document.getElementById('submitBookingBtn').addEventListener('click', () => {
       // Validate all fields and show per-field messages
@@ -519,17 +510,6 @@
       let appointment_week = null;
       let appointment_year = null;
       const visitDateParsed = parseDottedShortYear(visitDate);
-      if (visitDateParsed) {
-        const { year, week } = getISOWeek(visitDateParsed);
-        console.log(`Visit is in ISO week ${week}, year ${year}`);
-        appointment_week = week;
-        appointment_year = year;
-        // store to payload fields if needed:
-        // appointment_week = week; appointment_year = year;
-      } else {
-        console.error("Could not parse visit_date");
-        return
-      }
       
       // when building payload include age:
       const age = Number(document.getElementById('patientAge').value.trim()) || null;
@@ -544,8 +524,6 @@
         clinic_id: document.getElementById('clinicId').dataset ? document.getElementById('clinicId').dataset.clinicId : document.getElementById('clinicId').textContent || '',
         doctor_id: document.getElementById('doctorId').dataset ? document.getElementById('doctorId').dataset.doctorId : document.getElementById('doctorId').textContent || '',
         created_at: now,
-        appointment_week: appointment_week,
-        appointment_year: appointment_year,
         checked_in: false
 
       };
@@ -585,8 +563,8 @@
             clinic_contact: document.querySelector('#clinicCard span#clinicContact')?.textContent.trim() ||
                           document.querySelector('#clinicCard')?.textContent.match(/\d{3,}/) || '',
             doctor_photo: document.querySelector('#clinicCard img')?.src || '',
-            visit_day: payload.visit_day,
-            visit_date: visitDate
+            visit_day: data.visit_day,
+            visit_date: data.visit_date
           };
           openBookingModal(modalData);
 

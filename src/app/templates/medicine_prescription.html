@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Prescription</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --brand:#0b66c3;
+      --muted:#666;
+      --border:#e6e6e6;
+      --paper:#fff;
+      --radius:8px;
+      font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color:#111;
+    }
+    body{
+      background:#f6f8fb;
+      margin:20px;
+      -webkit-print-color-adjust:exact;
+    }
+    .presc{
+      width:800px;
+      max-width:100%;
+      margin:0 auto;
+      background:var(--paper);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:22px;
+      box-shadow:0 8px 24px rgba(12,20,40,0.06);
+    }
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:18px;
+      margin-bottom:14px;
+    }
+    .clinic{
+      display:flex;
+      gap:14px;
+      align-items:center;
+    }
+    .logo{
+      width:84px;
+      height:84px;
+      border-radius:8px;
+      background:linear-gradient(135deg,var(--brand),#3aa0ff);
+      color:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      font-size:20px;
+    }
+    .clinic-info h1{
+      margin:0;
+      font-size:18px;
+      letter-spacing:0.2px;
+    }
+    .clinic-info p{ margin:2px 0; color:var(--muted); font-size:13px; }
+    .meta{
+      text-align:right;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .meta strong{ color:#111; display:block; font-size:14px; margin-bottom:6px; }
+    hr{ border:none; height:1px; background:var(--border); margin:16px 0; }
+    .patient{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      font-size:14px;
+    }
+    .patient .left{ max-width:66%; }
+    .patient p{ margin:6px 0; color:var(--muted); }
+    .presc-body{
+      margin-top:12px;
+    }
+    table.rx{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:8px;
+      font-size:14px;
+    }
+    table.rx th, table.rx td{
+      padding:10px 8px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+      vertical-align:top;
+    }
+    table.rx th{
+      background:#fafbfc;
+      color:var(--muted);
+      font-weight:600;
+      font-size:13px;
+    }
+    .notes{
+      margin-top:14px;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .signature{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:18px;
+      gap:12px;
+    }
+    .sig-left{ font-size:13px; color:var(--muted); }
+    .sig-right{
+      text-align:right;
+    }
+    .sig-line{
+      display:inline-block;
+      margin-top:12px;
+      border-top:1px solid #cfcfcf;
+      padding-top:6px;
+      font-weight:600;
+    }
+    @media print{
+      body{ margin:0; background:transparent; }
+      .presc{ box-shadow:none; border:none; width:100%; padding:10mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="presc" id="prescription">
+    <header>
+      <div class="clinic">
+        <div class="logo">DR</div>
+        <div class="clinic-info">
+          <h1>Sunrise Family Clinic</h1>
+          <p>Dr. A. K. Sharma, M.B.B.S, M.D. (General Medicine)</p>
+          <p>123 Health Ave, Sector 10, Mumbai, Maharashtra</p>
+          <p>Phone: +91 22 2345 6789 | Reg No: MH-12345</p>
+        </div>
+      </div>
+      <div class="meta">
+        <strong>Prescription</strong>
+        <div>Date: 02-Mar-2026</div>
+        <div>Time (UTC): 18:30</div>
+        <div>Patient ID: P-20260302-01</div>
+      </div>
+    </header>
+
+    <hr />
+
+    <section class="patient">
+      <div class="left">
+        <p><strong>Patient:</strong> Mr. Rohit Mehra</p>
+        <p><strong>Age / Sex:</strong> 34 / Male</p>
+        <p><strong>Address:</strong> 11 Rosewood Apartments, Bandra West, Mumbai</p>
+      </div>
+      <div class="right">
+        <p><strong>Weight:</strong> 72 kg</p>
+        <p><strong>BP:</strong> 122/78 mmHg</p>
+        <p><strong>Phone:</strong> +91 98765 43210</p>
+      </div>
+    </section>
+
+    <div class="presc-body">
+      <h3 style="margin:12px 0 6px 0;">Rx</h3>
+
+      <table class="rx" aria-label="prescription-table">
+        <thead>
+          <tr>
+            <th style="width:48%;">Medicine</th>
+            <th style="width:18%;">Dose</th>
+            <th style="width:18%;">Freq / Duration</th>
+            <th style="width:16%;">Qty</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Paracetamol 650 mg</strong><div style="color:var(--muted);font-size:12px;margin-top:6px;">For fever and pain</div></td>
+            <td>650 mg</td>
+            <td>1 tablet — TDS (after food) — 5 days</td>
+            <td>15</td>
+          </tr>
+
+          <tr>
+            <td><strong>Amoxicillin + Clavulanate 625 mg</strong><div style="color:var(--muted);font-size:12px;margin-top:6px;">If bacterial infection suspected</div></td>
+            <td>625 mg</td>
+            <td>1 tablet — BD (after food) — 5 days</td>
+            <td>10</td>
+          </tr>
+
+          <tr>
+            <td><strong>Syrup CoughX (Dextromethorphan) 5 ml/5 ml</strong><div style="color:var(--muted);font-size:12px;margin-top:6px;">For dry cough</div></td>
+            <td>10 ml</td>
+            <td>HS (at night) — 7 days</td>
+            <td>70 ml</td>
+          </tr>
+
+          <tr>
+            <td><strong>Multivitamin Tablet</strong><div style="color:var(--muted);font-size:12px;margin-top:6px;">General support</div></td>
+            <td>1 tablet</td>
+            <td>OD — 30 days</td>
+            <td>30</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="notes">
+        <p><strong>Provisional Diagnosis:</strong> Acute viral syndrome / upper respiratory tract infection</p>
+        <p><strong>Advice:</strong> Rest, hydration, avoid cold beverages, return if high fever or breathing difficulty. Follow up in 3–5 days or earlier if symptoms worsen.</p>
+        <p><strong>Allergies:</strong> No known drug allergies (NKDA)</p>
+      </div>
+
+      <div class="signature">
+        <div class="sig-left">
+          <div style="font-size:12px;color:var(--muted);">Clinic Timings: Mon–Sat 09:00–17:00</div>
+          <div style="font-size:12px;color:var(--muted); margin-top:6px;">Note: Keep medicines out of reach of children.</div>
+        </div>
+        <div class="sig-right">
+          <div class="sig-line">Dr. A. K. Sharma</div>
+          <div style="font-size:12px;color:var(--muted);">MBBS, MD (Gen. Med.)</div>
+          <div style="font-size:12px;color:var(--muted);">Reg No: MH-12345</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
