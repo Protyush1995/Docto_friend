@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Diagnose — uTAN</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --primary:#0040ff;
+      --bg:#f6f8ff;
+      --card-bg:#ffffff;
+      --muted:#6b7280;
+      --accent:#0b63ff;
+      --card-shadow:0 12px 32px rgba(0,64,255,0.10);
+      --input-shadow:0 8px 20px rgba(0,64,255,0.06);
+      --radius:12px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg,var(--bg),#ffffff 60%);
+      color:#0b1226;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .wrap{
+      width:100%;
+      max-width:920px;
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:28px;
+      align-items:center;
+    }
+    .promo{
+      background:linear-gradient(180deg, rgba(0,64,255,0.03), transparent);
+      padding:32px;
+      border-radius:var(--radius);
+      box-shadow:var(--card-shadow);
+      border:1px solid rgba(0,64,255,0.06);
+    }
+    .brand{
+      display:flex; align-items:center; gap:14px; margin-bottom:18px;
+    }
+    .logo{
+      width:100px;
+      height:100px;
+      border-radius:0;
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-position: center;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:6px;
+      box-shadow: none;
+      border: none;
+      font-size:20px;
+      line-height:0;
+    }
+    .logo img{ display:block; width:100%; height:100%; object-fit:contain; image-rendering: -webkit-optimize-contrast; }
+    .card{
+      background:var(--card-bg);
+      border-radius:var(--radius);
+      padding:28px;
+      box-shadow:var(--card-shadow);
+      border:1px solid rgba(0,64,255,0.05);
+    }
+    .card h2{ margin:0 0 6px 0; color:var(--primary); font-size:20px; }
+    .card p.sub{ margin:0 0 18px 0; color:var(--muted); font-size:13px; }
+
+    label{ display:block; font-weight:600; color:#062a8a; margin-top:10px; font-size:13px; }
+    input[type="text"]{
+      width:100%; padding:12px 14px; margin-top:8px; border-radius:8px;
+      border:1px solid rgba(0,0,0,0.09); box-shadow:var(--input-shadow);
+      font-size:15px; background:#fff;
+    }
+    .row{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
+    .remember{ display:flex; align-items:center; gap:8px; color:var(--muted); font-size:13px; }
+    .link{ color:var(--primary); text-decoration:none; font-weight:600; font-size:13px; }
+
+    .btn{
+      width:100%; margin-top:16px; padding:12px; border-radius:10px; border:none;
+      background:linear-gradient(180deg,var(--primary),#0033cc); color:#fff; font-weight:700;
+      box-shadow:0 10px 28px rgba(0,64,255,0.12); cursor:pointer; font-size:15px;
+    }
+
+    .alt { margin-top:12px; text-align:center; color:var(--muted); font-size:13px; }
+    .alt a{ color:var(--primary); text-decoration:none; font-weight:600; }
+
+    @media (max-width:900px){
+      .wrap{ grid-template-columns: 1fr; }
+      .promo{ order:2 }
+      .card{ order:1 }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="promo">
+      <div class="brand">
+        <div class="logo">
+          <!-- replace src with your brand asset -->
+          <img src="{{ doctor_data.profile_pic_uri }}" alt="Company Logo" style="width:72px;height:72px;border-radius:10px;object-fit:cover;">
+        </div>
+        <div>
+          <div style="font-weight:700; color:var(--primary);">Dr {{doctor_data.firstname}} {{doctor_data.lastname}}</div>
+          <div style="color:var(--muted); font-size:13px;"><strong>{{doctor_data.qualifications}}</strong></div>
+          <div style="color:var(--muted); font-size:13px;"><strong>{{doctor_data.expertise}}</strong></div>
+          <div style="color:var(--muted); font-size:13px;"><strong>Regd No : {{doctor_data.license}}</strong></div>
+        </div>
+      </div>
+      <h1 style="margin-top:6px">Seamless diagnostics. Smarter care.</h1>
+      <p style="color:var(--muted)">Use a uTAN to securely trigger a patient diagnosis flow......@Doctopal</p>
+    </div>
+
+    <div class="card" role="main" aria-labelledby="diagnoseTitle">
+      <h2 id="diagnoseTitle">Diagnose patient with uTAN</h2>
+      <p class="sub">Enter a valid uTAN to begin the diagnosis</p>
+
+      <form id="diagnoseForm" autocomplete="on">
+        <label for="utan"><strong>Enter uTAN</strong></label>
+        <input id="utan" name="utan" type="text" placeholder="Enter the 7 digit uTAN provided to patient" required>
+
+        <button id="diagnoseBtn" class="btn" type="submit">Diagnose Patient</button>
+        <div class="alt">New to uTAN? <a>Learn more</a></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Coach: client-only form posts JSON to /api/diagnose, handles redirect or shows alert on error.
+    document.getElementById('diagnoseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const uTAN = document.getElementById('utan').value.trim();
+      const doctor = {{ doctor_data | tojson | safe }}; 
+      const url =  `/patient-update-form?doctor_id=${encodeURIComponent(doctor.doctor_id)}&uTAN=${encodeURIComponent(uTAN)}`;                   
+      console.log(url);
+      if (!utan) { alert('Please enter a uTAN!!'); return; }
+      // navigate current tab to the Flask route (render_template will load in same tab)
+      window.location.href = url;
+    });
+  </script>
+</body>
+</html>

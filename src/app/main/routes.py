@@ -324,27 +324,30 @@ def submit_booking():
         current_app.logger.exception("Failed to save patient booking")
         return jsonify(success=False, error="internal_error"), 500
     
-@bp.route("/patient-prescription-update", methods=["GET"])
-def patient_update_generate_prescription():
+@bp.route("/doctor-diagnose-patient", methods=["GET"])
+def doctor_diagnose_patient():
 
-    patient_id = request.args.get("patient_id", "").strip()
-    clinic_id = request.args.get("clinic_id", "").strip()
     doctor_id = request.args.get("doctor_id", "").strip()
 
-    if not clinic_id or not doctor_id or not patient_id: return jsonify({"error": "Arguments missing! Clinic ID or Doctor ID or Patient ID missing!!"}), 404
+    if not doctor_id: return jsonify({"error": "Arguments missing! Doctor ID  missing!!"}), 404
+
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
     
-    return render_template("generate_prescription_update_patient.html") 
+    return render_template("doctor_diagnose_patient.html",doctor_data=doctor_data) 
 
-@bp.route("/patient-prescription-update", methods=["POST"])
-def patient_doctor_clinic_booking():
+@bp.route("/patient-update-form", methods=["GET"])
+def update_patient():
 
-    patient_id = request.args.get("patient_id", "").strip()
-    clinic_id = request.args.get("clinic_id", "").strip()
     doctor_id = request.args.get("doctor_id", "").strip()
+    uTAN = request.args.get("uTAN", "").strip()
+    print(f"ROUTE LOG :: Printing from /patient-update-form Doctor ID = {doctor_id}, uTAN = {uTAN}................")
+    if not doctor_id or not uTAN: return jsonify({"error": "Arguments missing! Doctor ID or uTAN missing!!"}), 404
 
-    if not clinic_id or not doctor_id or not patient_id: return jsonify({"error": "Arguments missing! Clinic ID or Doctor ID or Patient ID missing!!"}), 404
+    patient = patient_database_management.get_patient_by_token_number(token_number=uTAN)
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
+    
+    return render_template("generate_prescription_update_patient.html",doctor_data=doctor_data,patient=patient) 
 
-    return render_template("generate_prescription_update_patient.html") 
 
 @bp.route("/doctor-profile", methods=["GET"])
 def doctor_profile():

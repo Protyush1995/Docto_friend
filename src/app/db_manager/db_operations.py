@@ -34,7 +34,7 @@ class DatabaseOperations:
         if env_path.is_file():
             val = dotenv_values(env_path)
             #load_dotenv(env_path)
-            print(f"DB LOG : Loading environment variables from: {env_path}")
+            #print(f"DB LOG : Loading environment variables from: {env_path}")
         else:
             raise RuntimeError(f".env file not found: {env_path}")
 
@@ -43,10 +43,10 @@ class DatabaseOperations:
         collection_name = val.get("MONGODB_COLLECTION_NAME")
 
         #Logging
-        print(f"DB LOG : Loaded environment variables..........................")
-        print(f"DB LOG : client_URL: {env_path}")
-        print(f"DB LOG : DB Name: {db_name}")
-        print(f"DB LOG : Collection Name:{collection_name}")
+        #print(f"DB LOG : Loaded environment variables..........................")
+        #print(f"DB LOG : client_URL: {env_path}")
+        #print(f"DB LOG : DB Name: {db_name}")
+        #print(f"DB LOG : Collection Name:{collection_name}")
 
 
         missing = [n for n, v in (("MONGODB_CLIENT_URL", client_url),
@@ -58,13 +58,13 @@ class DatabaseOperations:
         try:
             # quick fail if server unreachable
             self.client = MongoClient(client_url, serverSelectionTimeoutMS=5000)
-            print("DB LOG : Trying mongodb connection.....")
-            print(self.client.admin.command("ping"))
+            #print("DB LOG : Trying mongodb connection.....")
+            #print(self.client.admin.command("ping"))
             self.db_name = db_name
             self.db = self.client[db_name]
             self.collection_name = collection_name
             self.collection = self.create_collection(collection_name) 
-            print("DB LOG : Database class successfully initialized !")
+            #print("DB LOG : Database class successfully initialized !")
             
         except ConnectionFailure as exc:
             raise RuntimeError("Failed to connect to MongoDB") from exc
@@ -86,13 +86,13 @@ class DatabaseOperations:
         # Create a user document
         # print(f"DB LOg : Received user Document ------ {json.dumps(user_document)}")
         if not user_document:
-            print ("!!WARNING!! Empty user data!! nothing to enter in database!!")
+            print ("DB LOg : !!WARNING!! Empty user data!! nothing to enter in database!!")
             return None
         else:
             # Insert the user into the collection
-            print(f"Trying to insert user document into DB : {self.db_name}, Collection :{self.collection_name}")
+            #print(f"Trying to insert user document into DB : {self.db_name}, Collection :{self.collection_name}")
             result = self.collection.insert_one(user_document)
-            print(f"DB LOG : Successfully inserted user document into DB : {self.db_name}, Collection :{self.collection_name} ")
+            #print(f"DB LOG : Successfully inserted user document into DB : {self.db_name}, Collection :{self.collection_name} ")
             return result.inserted_id  # Return the new user's ID
         
     def update_record(self, primary_key_name: str, primary_key_val: str, updates: Dict) -> Dict:
@@ -126,7 +126,7 @@ class DatabaseOperations:
         :param id_val : value of primary key to be searched
         :param id_field : primary key field name to be searched
         """
-        print(f"DB Operations LOG : Entering find by ID function with {id_field} = {id_val} : Database Name = {self.db_name} : Collection Name {self.collection_name}")
+        #print(f"DB Operations LOG : Entering find by ID function with {id_field} = {id_val} : Database Name = {self.db_name} : Collection Name {self.collection_name}")
         if not id_field or not id_val: return None
         cursor = self.collection.find({id_field: id_val.strip()})
         if cursor:
@@ -136,7 +136,7 @@ class DatabaseOperations:
             for d in cursor:
                 if "_id" in d:
                     del d["_id"]
-                    print(f"DB Operations LOG : Record after making JSON serializable : type = {type(d)}")
+                    #print(f"DB Operations LOG : Record after making JSON serializable : type = {type(d)}")
                     #print(json.dumps(d))
                     
 
