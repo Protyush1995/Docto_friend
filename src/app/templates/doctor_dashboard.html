@@ -683,6 +683,12 @@
               </div>
             </div>
           </div>
+
+          <div class="stat" style="padding:12px;">
+            <h3 id="patientsToday" style="margin:0 0 6px 0; font-size:20px;">4</h3>
+            <p style="margin:0; font-size:13px; color:var(--muted);">Appointments Today</p>
+          </div>
+          
           <script>
               document.addEventListener('DOMContentLoaded', () => {
                 const card = document.querySelector('.aspect-ratio');
@@ -717,10 +723,6 @@
             <p style="margin:0; font-size:13px; color:var(--muted);">Appointments This Week</p>
           </div>
 
-          <div class="stat" style="padding:12px;">
-            <h3 id="patientsToday" style="margin:0 0 6px 0; font-size:20px;">4</h3>
-            <p style="margin:0; font-size:13px; color:var(--muted);">Appointments Today</p>
-          </div>
         </div>
       </div>
 
@@ -770,7 +772,6 @@
 
                 <div class="clinic-info">
                     <div class="chip"><strong>Address:</strong> {{ clinic.clinic_address }}</div>
-                    <div class="chip"><strong>Fees:</strong> {{ clinic.doctor_consultation_fees }}</div>
                     <div class="chip"><strong>Contact:</strong> {{ clinic.primary_contact_number }} / {{clinic.secondary_contact_number}}</div>
                     <div class="chip"><strong>Visit Days:</strong> {{ clinic.visit_schedule }}</div>
                 </div>

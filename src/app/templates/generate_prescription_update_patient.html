@@ -2,226 +2,496 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Update Patient — Demo</title>
+  <title>Edit Patient Record</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body { font-family: Arial, sans-serif; padding:1rem; max-width:900px; margin:auto; color:#0066cc;}
-    .card { border:1px solid #ddd; border-radius:8px; padding:1rem; box-shadow:0 2px 6px rgba(0,0,0,0.08); display:flex; gap:1rem; align-items:center; margin-bottom:1rem; }
-    .card-img { width:120px; height:120px; flex:0 0 120px; border-radius:8px; object-fit:cover; border:1px solid #ccc; }
-    .card-body { flex:1 1 auto; min-width:0; }
-    .card-body h2 { margin:0 0 .25rem 0; word-break:break-word; }
-    .card-body p { margin:.25rem 0; color:#333; word-break:break-word; }
-    label { display:block; margin-top:0.6rem; font-weight:600; }
-    input, select, textarea, button { width:100%; padding:0.5rem; box-sizing:border-box; margin-top:0.25rem; }
-    .muted { color:#666; font-size:0.9rem; }
-    .row { display:flex; gap:0.5rem; }
-    .success { color:green; }
-    .error { color:#b00020; }
-    #message { margin-top:0.75rem; }
-    .field-error { color:#b00020; font-size:0.9rem; margin-top:0.25rem; display:none; }
-    .field-invalid { border-color:#b00020; }
-
-    @media (max-width:600px) {
-      .card { flex-direction:column; align-items:flex-start; }
-      .card-img { width:100%; height:auto; flex:0 0 auto; max-height:240px; }
-      .card-body { width:100%; }
-      .row { flex-direction:column; }
+    :root{
+      --primary: #4d20cab8;
+      --bg: #f6f8ff;
+      --card-bg: #ffffff;
+      --muted: #6b7280;
+      --border-radius: 12px;
+      --card-shadow: 0 10px 30px rgba(0,64,255,0.08);
     }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 400px at 10% 10%, rgba(0,64,255,0.06), transparent 10%),
+                  linear-gradient(180deg, var(--bg), #ffffff 60%);
+      color:#0b1226;
+      padding:24px;
+    }
+    .container{ max-width:900px; margin:0 auto; }
+    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .brand{ display:flex; gap:12px; align-items:center; }
+    .logo{ width:56px; height:56px; border-radius:10px; background:linear-gradient(135deg,var(--primary),#0066ff); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; box-shadow:var(--card-shadow); }
+    h1{ margin:0; font-size:20px; color:var(--primary); }
+    .sub{ color:var(--muted); font-size:13px; }
+    .card{
+      background:var(--card-bg);
+      border-radius:var(--border-radius);
+      padding:20px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.08);
+      border:1px solid rgba(0,64,255,0.05);
+    }
+    form{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; align-items:start; }
+    .full{ grid-column: 1 / -1; }
+    label{ display:block; font-size:13px; color:var(--muted); margin-bottom:6px; font-weight:600; }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="date"], textarea, select{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(6,42,138,0.08); background:#fff; font-size:14px;
+    }
+    textarea{ min-height:96px; resize:vertical; }
+    .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+    .btn{ padding:10px 14px; border-radius:10px; border:none; cursor:pointer; background:linear-gradient(180deg,var(--primary),#0033cc); color:#fff; font-weight:600; }
+    .btn.ghost{ background:transparent; color:var(--primary); border:1px solid rgba(0,64,255,0.12); }
+    .hint{ font-size:12px; color:var(--muted); margin-top:6px; }
+    @media (max-width:760px){
+      form{ grid-template-columns: 1fr; }
+      .actions{ justify-content:stretch; flex-direction:column-reverse; }
+    }
+    pre{ background:#f6f6f8; padding:12px; border-radius:8px; overflow:auto; font-size:13px; }
   </style>
 </head>
 <body>
-  <h1>Update Patient Details</h1>
-
-  <!-- Clinic/doctor card (keeps original theme) -->
-  <div class="card" id="clinicCard">
-    <img class="card-img" src="https://via.placeholder.com/120" alt="Doctor photo">
-    <div class="card-body">
-      <h2 id="doctorName">Dr. Demo Doctor</h2>
-      <p><strong id="doctorExpertise">General Medicine</strong></p>
-      <p><strong>Clinic:</strong> <span id="clinicName">Demo Clinic</span></p>
-      <p><strong>Address:</strong> <span id="clinicAddress">123 Demo Street</span></p>
-      <p style="display:none" id="clinicId">CLINIC123</p>
-    </div>
-  </div>
-
-  <!-- Update patient card -->
-  <div class="card" style="flex-direction:column; align-items:stretch;">
-    <div class="card-body">
-      <h2>Update Patient Record</h2>
-
-      <!-- Lookup -->
-      <label>Lookup by Patient ID or Mobile</label>
-      <div class="row" style="margin-top:0.25rem;">
-        <div style="flex:1">
-          <input id="lookupPatientId" placeholder="Patient ID (e.g., P20260213083000123)">
-        </div>
-        <div style="flex:1">
-          <input id="lookupMobile" placeholder="Or Mobile (10-digit)">
-        </div>
-        <div style="flex:0 0 120px">
-          <button id="lookupBtn" type="button">Lookup</button>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">PR</div>
+        <div>
+          <h1>Diagnose Patient — uTAN: {{ patient.uTAN }}</h1>
+          <div class="sub"><strong>Patient Name: {{ patient.patient_name }}</strong></div>
         </div>
       </div>
-      <div id="lookupError" class="field-error">Patient not found</div>
-
-      <!-- Edit form -->
-      <label style="margin-top:1rem;">Patient First Name</label>
-      <input id="editFirstName" placeholder="First name">
-      <div id="firstNameError" class="field-error">Please enter a valid first name</div>
-
-      <label>Patient Last Name</label>
-      <input id="editLastName" placeholder="Last name">
-      <div id="lastNameError" class="field-error">Please enter a valid last name</div>
-
-      <label>Sex</label>
-      <select id="editSex">
-        <option value="">Select</option>
-        <option>Male</option>
-        <option>Female</option>
-        <option>Others</option>
-      </select>
-      <div id="sexError" class="field-error">Please select sex</div>
-
-      <label>Mobile</label>
-      <input id="editMobile" placeholder="10-digit mobile">
-      <div id="mobileError" class="field-error">Please enter a valid mobile</div>
-
-      <label>Patient ID (read-only)</label>
-      <input id="editPatientId" readonly>
-
-      <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
-        <button id="saveBtn" type="button" style="flex:1;">Save Changes</button>
-        <button id="downloadBtn" type="button" style="flex:1;">Download CSV</button>
+      <div>
+        <a href="/doc_dashboard/{{ patient.doctor_id }}" class="btn btn-small btn-ghost" style="text-decoration:none; display:inline-block; padding:8px 10px;">Back to Dashboard</a>
       </div>
+    </header>
 
-      <div id="message" style="margin-top:0.5rem;"></div>
-    </div>
+    <main class="card">
+      <form id="patientForm" action="/patient/update" method="POST" novalidate>
+
+        <div class="full">
+          <label for="patient_name">Patient name</label>
+          <input id="patient_name" name="patient_name" type="text" value="{{ patient.patient_name }}">
+        </div>
+
+        <div>
+          <label for="age">Age</label>
+          <input id="age" name="age" type="text" value="{{ patient.age }}">
+        </div>
+
+        <div>
+          <label for="sex">Sex</label>
+          <select id="sex" name="sex">
+            <option value="Male" {% if patient.sex=='Male' %}selected{% endif %}>Male</option>
+            <option value="Female" {% if patient.sex=='Female' %}selected{% endif %}>Female</option>
+            <option value="Other" {% if patient.sex=='Other' %}selected{% endif %}>Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="occupation">Occupation</label>
+          <input id="occupation" name="occupation" type="text" value="{{ patient.occupation }}">
+        </div>
+
+        <div>
+          <label for="patient_mobile">Mobile</label>
+          <input id="patient_mobile" name="patient_mobile" type="tel" value="{{ patient.patient_mobile }}">
+          <div id="mobileError" class="hint" aria-live="polite"></div>
+        </div>
+
+        <div class="full">
+          <label for="patient_address">Address</label>
+          <textarea id="patient_address" name="patient_address">{{ patient.patient_address }}</textarea>
+        </div>
+
+        <div>
+          <label for="patient_weight">Weight(Kg)</label>
+          <input id="patient_weight" name="patient_weight" type="text" placeholder="Weight in Kg">
+        </div>
+
+        <div>
+          <label for="patient_temp">Temperature(C)</label>
+          <input id="patient_temp" name="patient_temp" type="text" placeholder="Body temp in Celcius">
+        </div>
+
+        <div>
+          <label for="patient_BP">BP (mmHg)</label>
+          <input id="patient_BP" name="patient_BP" type="text" placeholder="Blood pressure in mmHg">
+        </div>
+
+        <div>
+          <label for="patient_BP">BP (mmHg)</label>
+          <input id="patient_BP" name="patient_BP" type="text" placeholder="Blood pressure in mmHg">
+        </div>
+
+        <div>
+          <label for="checked_in">Checked in</label>
+          <input type="checkbox" checked>Patient checkin</option>
+        </div>
+
+        <div class="full">
+          <label for="patient_CO">C/O</label>
+          <textarea id="patient_CO" name="patient_CO" placeholder="C/O"></textarea>
+        </div>
+
+        <div class="full">
+          <label for="patient_OE">O/E</label>
+          <textarea id="patient_OE" name="patient_OE" placeholder="O/E"></textarea>
+        </div>
+        
+        <div class="full">
+          <label for="investTable">Investigation / Tests requested</label>
+
+          <table id="investTable" style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)">Investigation</th>
+                <th style="padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)"></th>
+              </tr>
+            </thead>
+            <tbody id="investTbody">
+              <!-- seeded by JS -->
+            </tbody>
+          </table>
+
+          <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end">
+            <button type="button" class="btn ghost" id="addInvestRow">Add Investigation</button>
+          </div>
+          <div class="hint" style="margin-top:8px">Enter investigation/test names (e.g. USG upper abdomen).</div>
+
+        </div>
+
+
+        <div class="full">
+          <label for="rxTable">Rx (Medication)</label>
+
+          <table id="rxTable" style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)">Medicine & Dosage</th>
+                <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)">Regime</th>
+                <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)">Duration / Notes</th>
+                <th style="padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)"></th>
+              </tr>
+            </thead>
+            <tbody id="rxTbody">
+              <!-- rows seeded by JS -->
+            </tbody>
+          </table>
+
+          <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end">
+            <button type="button" class="btn ghost" id="addRxRow">Add Medicine</button>
+          </div>
+          <div class="hint" style="margin-top:8px">Enter medicines, select regime and specify duration/notes.</div>
+
+        </div>
+
+
+        <div>
+          <label for="patient_advice">Advice</label>
+          <input id="patient_advice" name="patient_advice" type="text" placeholder="Advice to patients...">
+        </div>
+
+        <div class="full actions">
+          <button type="button" class="btn ghost" id="cancelBtn">Cancel Entry</button>
+          <button type="submit" class="btn">Generate Prescription</button>
+        </div>
+      </form>
+
+      <h3 style="margin-top:16px;">Updated JSON Preview</h3>
+      <pre id="jsonPreview">{}</pre>
+    </main>
+
+    <footer style="margin-top:18px; text-align:center; color:var(--muted); font-size:13px;">
+      © 2026 Patient Dashboard — demo
+    </footer>
   </div>
 
-  <script>
-    // Mock patient store (in-memory demo)
-    const patients = {
-      // patientId: { firstName, lastName, sex, mobile, patientId }
-      "P20260213083010001": { firstName:"Asha", lastName:"Kumar", sex:"Female", mobile:"9876543210", patientId:"P20260213083010001" },
-      "P20260213083010002": { firstName:"Ravi", lastName:"Singh", sex:"Male", mobile:"9123456780", patientId:"P20260213083010002" }
-    };
+<script>
+(function(){
+  const MAX_BYTES = 2 * 1024 * 1024;
+  const form = document.getElementById('patientForm');
+  const cancel = document.getElementById('cancelBtn');
+  const fileInput = document.getElementById('photoFile');
+  const avatarImg = document.getElementById('avatarImg');
+  const photoHint = document.getElementById('photoHint');
+  const mobileError = document.getElementById('mobileError');
+  const preview = document.getElementById('jsonPreview');
 
-    const msgEl = document.getElementById('message');
-    function msg(t, ok=true) { msgEl.textContent = t; msgEl.className = ok ? 'success' : 'error'; }
+  // RxModule: standalone manager for the Rx table (add/remove/seed/getData)
+  const RxModule = (function(){
+    const rxTbody = document.getElementById('rxTbody');
+    const addRxRowBtn = document.getElementById('addRxRow');
+    const regimes = ['0-0-1','0-1-0','1-0-0','0-1-1','1-0-1','1-1-0','1-1-1'];
 
-    function showFieldError(id, show) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.style.display = show ? 'block' : 'none';
-      const input = el.previousElementSibling && el.previousElementSibling.tagName
-                    ? el.previousElementSibling
-                    : null;
-      if (input && input.classList) {
-        if (show) input.classList.add('field-invalid'); else input.classList.remove('field-invalid');
-      }
+    if (!rxTbody) {
+      console.warn('RxModule: rxTbody element not found.');
+      return {
+        seed: () => {},
+        addRow: () => {},
+        getRows: () => []
+      };
     }
 
-    function isValidMobile(v){ return /^\d{10}$/.test(v); }
-    function isNonEmpty(v){ return typeof v === 'string' && v.trim().length>0; }
+    function makeInput(name, placeholder, value = '') {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.name = name;
+      inp.placeholder = placeholder;
+      inp.value = value;
+      inp.style.width = '100%';
+      inp.style.padding = '8px';
+      inp.style.borderRadius = '8px';
+      inp.style.border = '1px solid rgba(6,42,138,0.08)';
+      return inp;
+    }
 
-    // Lookup logic: by patientId or mobile
-    document.getElementById('lookupBtn').addEventListener('click', () => {
-      const pid = document.getElementById('lookupPatientId').value.trim();
-      const mobile = document.getElementById('lookupMobile').value.trim();
-      let found = null;
+    function makeSelect(name, options = [], selectedVal) {
+      const sel = document.createElement('select');
+      sel.name = name;
+      sel.style.padding = '8px';
+      sel.style.borderRadius = '8px';
+      sel.style.border = '1px solid rgba(6,42,138,0.08)';
+      options.forEach(optVal => {
+        const o = document.createElement('option');
+        o.value = optVal;
+        o.textContent = optVal;
+        if (selectedVal === optVal) o.selected = true;
+        sel.appendChild(o);
+      });
+      return sel;
+    }
 
-      if (pid && patients[pid]) found = patients[pid];
-      else if (mobile) {
-        found = Object.values(patients).find(p => p.mobile === mobile) || null;
-      }
+    function makeRxRow(data = {}) {
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid rgba(6,42,138,0.04)';
 
-      if (!found) {
-        document.getElementById('editFirstName').value = '';
-        document.getElementById('editLastName').value = '';
-        document.getElementById('editSex').value = '';
-        document.getElementById('editMobile').value = '';
-        document.getElementById('editPatientId').value = '';
-        showFieldError('lookupError', true);
-        msg('Patient not found', false);
+      const tdMed = document.createElement('td'); tdMed.style.padding = '8px';
+      tdMed.appendChild(makeInput('rx_medicine', 'e.g. Amoxicillin 500mg', data.medicine || ''));
+
+      const tdReg = document.createElement('td'); tdReg.style.padding = '8px';
+      tdReg.appendChild(makeSelect('rx_regime', regimes, data.regime));
+
+      const tdDur = document.createElement('td'); tdDur.style.padding = '8px';
+      tdDur.appendChild(makeInput('rx_duration', 'e.g. After meal for 5 days', data.duration || ''));
+
+      const tdAct = document.createElement('td'); tdAct.style.padding = '8px'; tdAct.style.width = '90px';
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'btn ghost';
+      rm.textContent = 'Remove';
+      rm.addEventListener('click', () => tr.remove());
+      tdAct.appendChild(rm);
+
+      tr.appendChild(tdMed);
+      tr.appendChild(tdReg);
+      tr.appendChild(tdDur);
+      tr.appendChild(tdAct);
+
+      return tr;
+    }
+
+    function seed(initialArray) {
+      rxTbody.innerHTML = '';
+      if (!Array.isArray(initialArray) || initialArray.length === 0) {
+        rxTbody.appendChild(makeRxRow());
         return;
       }
+      initialArray.forEach(item => rxTbody.appendChild(makeRxRow(item)));
+    }
 
-      showFieldError('lookupError', false);
-      document.getElementById('editFirstName').value = found.firstName;
-      document.getElementById('editLastName').value = found.lastName;
-      document.getElementById('editSex').value = found.sex || '';
-      document.getElementById('editMobile').value = found.mobile;
-      document.getElementById('editPatientId').value = found.patientId;
-      msg('Patient loaded', true);
-    });
+    function addRow(data = {}) {
+      rxTbody.appendChild(makeRxRow(data));
+    }
 
-    // Save changes to in-memory store
-    document.getElementById('saveBtn').addEventListener('click', () => {
-      const first = document.getElementById('editFirstName').value.trim();
-      const last = document.getElementById('editLastName').value.trim();
-      const sex = document.getElementById('editSex').value;
-      const mobile = document.getElementById('editMobile').value.trim();
-      const pid = document.getElementById('editPatientId').value.trim();
+    function getRows() {
+      const rows = [];
+      for (const row of rxTbody.querySelectorAll('tr')) {
+        const med = row.querySelector('input[name="rx_medicine"]')?.value?.trim() || '';
+        const regime = row.querySelector('select[name="rx_regime"]')?.value || '';
+        const duration = row.querySelector('input[name="rx_duration"]')?.value?.trim() || '';
+        // skip completely empty rows
+        if (!med && !regime && !duration) continue;
+        rows.push({ medicine: med, regime: regime, duration: duration });
+      }
+      return rows;
+    }
 
-      let ok = true;
-      if (!isNonEmpty(first)) { showFieldError('firstNameError', true); ok=false; } else showFieldError('firstNameError', false);
-      if (!isNonEmpty(last)) { showFieldError('lastNameError', true); ok=false; } else showFieldError('lastNameError', false);
-      if (!isNonEmpty(sex)) { showFieldError('sexError', true); ok=false; } else showFieldError('sexError', false);
-      if (!isValidMobile(mobile)) { showFieldError('mobileError', true); ok=false; } else showFieldError('mobileError', false);
-      if (!isNonEmpty(pid)) { msg('Load a patient before saving', false); return; }
+    // wire add button if present
+    if (addRxRowBtn) {
+      addRxRowBtn.addEventListener('click', () => addRow());
+    }
 
-      if (!ok) { msg('Please correct highlighted fields', false); return; }
+    // expose API
+    return {
+      seed,
+      addRow,
+      getRows
+    };
+  })();
 
-      // update store (mock)
-      patients[pid] = { firstName:first, lastName:last, sex:sex, mobile:mobile, patientId:pid };
-      msg('Patient updated: ' + pid, true);
-    });
+  // InvestModule: standalone manager for single-column Investigations table
+  const InvestModule = (function(){
+    const tbody = document.getElementById('investTbody');
+    const addBtn = document.getElementById('addInvestRow');
 
-    // Download updated CSV row
-    document.getElementById('downloadBtn').addEventListener('click', () => {
-      const pid = document.getElementById('editPatientId').value.trim();
-      if (!pid || !patients[pid]) { msg('Load a patient to download', false); return; }
-      const p = patients[pid];
+    if (!tbody) {
+      console.warn('InvestModule: investTbody element not found.');
+      return { seed: () => {}, addRow: () => {}, getRows: () => [] };
+    }
 
-      const clinicId = document.getElementById('clinicId').textContent || 'CLINIC';
-      const clinicName = document.getElementById('clinicName').textContent || 'Clinic';
-      const doctorName = document.getElementById('doctorName').textContent || 'Doctor';
-      const headers = ["patient_id","first_name","last_name","sex","mobile","clinic_id","clinic_name","doctor_name","updated_at"];
-      const row = [
-        p.patientId,
-        p.firstName,
-        p.lastName,
-        p.sex,
-        p.mobile,
-        clinicId,
-        clinicName,
-        doctorName,
-        new Date().toISOString()
-      ];
+    function makeInput(value = '') {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.name = 'invest_name';
+      inp.placeholder = 'e.g. USG upper abdomen';
+      inp.value = value;
+      inp.style.width = '100%';
+      inp.style.padding = '8px';
+      inp.style.borderRadius = '8px';
+      inp.style.border = '1px solid rgba(6,42,138,0.08)';
+      return inp;
+    }
 
-      const csv = headers.join(',') + "\n" + row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',') + "\n";
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const today = new Date().toISOString().slice(0,10).replace(/-/g,'');
-      a.href = url;
-      a.download = `${clinicId}__${clinicName.replace(/\s+/g,'_')}__${p.patientId}__${today}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      msg('CSV downloaded', true);
-    });
+    function makeRow(value = '') {
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid rgba(6,42,138,0.04)';
 
-    // Small helpers: hide errors when editing
-    ['editFirstName','editLastName','editSex','editMobile','lookupPatientId','lookupMobile'].forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener('input', () => {
-        ['firstNameError','lastNameError','sexError','mobileError','lookupError'].forEach(e => showFieldError(e,false));
-        msg('');
+      const tdInput = document.createElement('td');
+      tdInput.style.padding = '8px';
+      tdInput.appendChild(makeInput(value));
+
+      const tdAct = document.createElement('td');
+      tdAct.style.padding = '8px';
+      tdAct.style.width = '90px';
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'btn ghost';
+      rm.textContent = 'Remove';
+      rm.addEventListener('click', () => tr.remove());
+      tdAct.appendChild(rm);
+
+      tr.appendChild(tdInput);
+      tr.appendChild(tdAct);
+      return tr;
+    }
+
+    function seed(initialArray) {
+      tbody.innerHTML = '';
+      if (!Array.isArray(initialArray) || initialArray.length === 0) {
+        tbody.appendChild(makeRow());
+        return;
+      }
+      initialArray.forEach(item => {
+        const v = typeof item === 'string' ? item : (item.name || '');
+        tbody.appendChild(makeRow(v));
       });
-    });
-  </script>
+    }
+
+    function addRow(value = '') {
+      tbody.appendChild(makeRow(value));
+    }
+
+    function getRows() {
+      const rows = [];
+      for (const row of tbody.querySelectorAll('tr')) {
+        const val = row.querySelector('input[name="invest_name"]')?.value?.trim() || '';
+        if (val) rows.push(val);
+      }
+      return rows;
+    }
+
+    if (addBtn) addBtn.addEventListener('click', () => addRow());
+
+    return { seed, addRow, getRows };
+  })();
+
+  window.base64Image = null;
+  window.imageMime = null;
+  window.imageFilename = null;
+
+  cancel.addEventListener('click', () => { window.history.back(); });
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) { photoHint.textContent = 'No file chosen'; window.base64Image = null; return; }
+    if (!['image/png','image/jpeg'].includes(file.type)) { alert('Only JPG and PNG allowed'); fileInput.value=''; photoHint.textContent='Invalid file type'; return; }
+    if (file.size > MAX_BYTES) { alert('Max 2 MB'); fileInput.value=''; photoHint.textContent='File too large'; return; }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      avatarImg.src = ev.target.result;
+      photoHint.textContent = file.name + ' (' + Math.round(file.size/1024) + ' KB)';
+      const parts = ev.target.result.split(',');
+      window.base64Image = parts[1] || null;
+      window.imageMime = file.type;
+      window.imageFilename = file.name;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function validPhone(v){ return /^\d{10}$/.test(v); }
+
+  document.getElementById('patient_mobile').addEventListener('input', (e)=>{
+    const v = e.target.value.trim();
+    mobileError.textContent = v === '' || validPhone(v) ? '' : 'Enter 10 digits';
+  });
+
+  
+  
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const payload = {};
+    for (const [k, v] of fd.entries()) {
+      if (v === null || v === '') continue;
+      const el = form.elements[k];
+      if (el && el.tagName === 'TEXTAREA') { payload[k] = String(v); continue; }
+      if (/^\d+$/.test(v)) payload[k] = Number(v);
+      else if (v === 'true' || v === 'false') payload[k] = v === 'true';
+      else payload[k] = String(v).trim();
+    }
+    if (window.base64Image) {
+      payload.image_data = window.base64Image;
+      payload.image_mime = window.imageMime;
+      payload.image_filename = window.imageFilename;
+    }
+    if (payload.patient_mobile && !validPhone(String(payload.patient_mobile))) {
+      alert('Mobile must be 10 digits.');
+      form.patient_mobile.focus();
+      return;
+    }
+    if (payload.age !== undefined && (isNaN(Number(payload.age)) || Number(payload.age) < 0)) {
+      alert('Age must be a non-negative number.');
+      form.age.focus(); return;
+    }
+    if (payload.doctor_consultation_fees !== undefined && isNaN(Number(payload.doctor_consultation_fees))) {
+      alert('Fees must be numeric.'); form.doctor_consultation_fees.focus(); return;
+    }
+
+    // show preview and POST JSON (endpoint placeholder)
+    preview.textContent = JSON.stringify(payload, null, 2);
+
+    try {
+      const resp = await fetch('/patient-edit/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const j = await resp.json();
+      if (resp.ok && j.success) {
+        window.location.href = j.redirect || `/patients/${encodeURIComponent(j.patient_id || payload.patient_id)}`;
+      } else {
+        alert(j.error || j.message || 'Update failed.');
+      }
+    } catch(err) {
+      console.error(err);
+      alert('Network error. Try again.');
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
