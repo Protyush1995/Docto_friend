@@ -54,7 +54,6 @@ def get_iso_week(dt):
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 DATE_TODAY = datetime.now(IST).date()
-
 # Loading API key for SMS OTP verification
 base = Path(__file__).parent
 secret_env = (base / ".env.secrets").resolve()
@@ -138,6 +137,10 @@ def register_route():
 def doctor_edit_profile_form(doctor_id):
     # load from DB using your existing DB helper
     data = doctor_database_management.get_doctor_by_id(doctor_id)
+    filtered = {k: v for k, v in data.items() if k not in {'doctor_qr_uri', 'image_data', 'profile_pic_uri'}}
+
+    print(f"ROUTE LOG :: doctor-edit-profile GET method :: data received from frontend (printing doctor_qr_uri,image_data,profile_pic_uri avoided) -------------------------------{json.dumps(filtered)}")
+    
     if not data:
         abort(404)
 
@@ -151,7 +154,7 @@ def doctor_edit_profile_form(doctor_id):
 @bp.route("/doctor-edit-profile/", methods=["POST"])
 def doctor_update_profile():
     data = request.get_json() or {}
-    print(f"ROUTE LOG : Printing from doctor_update_profile from routes-------------------------------{json.dumps(data)}")
+    print(f"ROUTE LOG :: doctor-edit-profile POST method :: data received from frontend -------------------------------{json.dumps(data)}")
     try:
         response = doctor_database_management.update_doctor_profile(data)
         print(f"ROUTE LOG : Printing response from update profile from routes-------------------------------{json.dumps(response)}")
@@ -346,7 +349,26 @@ def update_patient():
     patient = patient_database_management.get_patient_by_token_number(token_number=uTAN)
     doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
     
-    return render_template("generate_prescription_update_patient.html",doctor_data=doctor_data,patient=patient) 
+    return render_template("update_patient.html",doctor_data=doctor_data,patient=patient) 
+
+@bp.route("/patient-generate-prescription", methods=["POST"])
+def generate_prescription_patient():
+
+    data = request.get_json() or {}
+    
+    print(f"ROUTE LOG :: Printing from /patient-update-form patient_data = {json.dumps(data)}................")
+    if not data : return jsonify({"error": "Arguments missing! Patient data missing!! Unable to generate prescription"}), 404
+    
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=data["doctor_id"])
+    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=data["clinic_id"])
+
+    html = render_template("doctor_prescription.html",patient_data=data,doctor_data=doctor_data,clinic_data=clinic_data) 
+
+    return jsonify({
+        'status': 'ok',
+        'patient_prescription_html': html,
+    }), 200
+
 
 
 @bp.route("/doctor-profile", methods=["GET"])

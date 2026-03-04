@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <title>Edit Patient Record</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+
   <style>
     :root{
       --primary: #4d20cab8;
@@ -52,15 +54,38 @@
     }
     pre{ background:#f6f6f8; padding:12px; border-radius:8px; overflow:auto; font-size:13px; }
   </style>
+  <style>
+  .modal { position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center; }
+  .modal-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.6); }
+  .modal-content { position:relative; width:100%; max-width:1200px; height:100%; max-height:92vh; margin:auto; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
+  .modal-toolbar { display:flex; gap:8px; padding:8px; background:#f5f5f5; border-bottom:1px solid #e5e5e5; }
+  .modal-btn { background:#fff; border:1px solid #ccc; padding:6px 10px; border-radius:4px; cursor:pointer; }
+  .modal-btn:hover { filter:brightness(0.97); }
+  .modal-body { flex:1; display:flex; align-items:flex-start; justify-content:center; padding:12px; overflow:auto; background:#fff; }
+  .modal-html { width:100%; max-width:1000px; background:#fff; padding:16px; box-sizing:border-box; }
+
+  /* Ensure images and media inside rendered HTML scale */
+  .modal-html img, .modal-html table { max-width:100%; height:auto; }
+
+  /* Print styles for A4 */
+  @media print {
+    body * { visibility:hidden !important; }
+    #imgModal, #imgModal .modal-body, #modalHtmlContainer { visibility:visible !important; position:fixed !important; left:0; top:0; width:100% !important; height:100% !important; margin:0 !important; padding:0 !important; overflow:visible !important; }
+    #modalHtmlContainer { padding:10mm !important; box-sizing:border-box; }
+    @page { size: A4; margin: 10mm; }
+  }
+  </style>  
+
+
 </head>
 <body>
   <div class="container">
     <header>
       <div class="brand">
-        <div class="logo" aria-hidden="true">PR</div>
+        <div class="logo" aria-hidden="true"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpeg') }}" alt="Logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
         <div>
-          <h1>Diagnose Patient — uTAN: {{ patient.uTAN }}</h1>
-          <div class="sub"><strong>Patient Name: {{ patient.patient_name }}</strong></div>
+          <h1>Patient Diagnosis Form :</h1>
+          <div class="sub"><strong>Doctor: Dr {{doctor_data.firstname}} {{doctor_data.lastname}} , Patient Name: {{ patient.patient_name }} , Patient uTAN: {{ patient.uTAN }}</strong></div>
         </div>
       </div>
       <div>
@@ -69,7 +94,7 @@
     </header>
 
     <main class="card">
-      <form id="patientForm" action="/patient/update" method="POST" novalidate>
+      <form id="patientForm" novalidate>
 
         <div class="full">
           <label for="patient_name">Patient name</label>
@@ -122,8 +147,8 @@
         </div>
 
         <div>
-          <label for="patient_BP">BP (mmHg)</label>
-          <input id="patient_BP" name="patient_BP" type="text" placeholder="Blood pressure in mmHg">
+          <label for="patient_pulse">Pulse/min</label>
+          <input id="patient_pulse" name="patient_pulse" type="text" placeholder="Pulse per minute">
         </div>
 
         <div>
@@ -132,12 +157,12 @@
         </div>
 
         <div class="full">
-          <label for="patient_CO">C/O</label>
+          <label for="patient_CO">C/O (Chief complaint by patient)</label>
           <textarea id="patient_CO" name="patient_CO" placeholder="C/O"></textarea>
         </div>
 
         <div class="full">
-          <label for="patient_OE">O/E</label>
+          <label for="patient_OE">O/E (On observation diagnosis)</label>
           <textarea id="patient_OE" name="patient_OE" placeholder="O/E"></textarea>
         </div>
         
@@ -147,7 +172,7 @@
           <table id="investTable" style="width:100%;border-collapse:collapse">
             <thead>
               <tr>
-                <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)">Investigation</th>
+                <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)">Investigation requested</th>
                 <th style="padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)"></th>
               </tr>
             </thead>
@@ -157,7 +182,7 @@
           </table>
 
           <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end">
-            <button type="button" class="btn ghost" id="addInvestRow">Add Investigation</button>
+            <button type="button" class="btn " id="addInvestRow">Add Investigation</button>
           </div>
           <div class="hint" style="margin-top:8px">Enter investigation/test names (e.g. USG upper abdomen).</div>
 
@@ -182,12 +207,16 @@
           </table>
 
           <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end">
-            <button type="button" class="btn ghost" id="addRxRow">Add Medicine</button>
+            <button type="button" class="btn " id="addRxRow">Add Medicine</button>
           </div>
           <div class="hint" style="margin-top:8px">Enter medicines, select regime and specify duration/notes.</div>
 
         </div>
 
+        <div>
+          <label for="patient_follow_up">Follow-up-time</label>
+          <input id="patient_follow_up" name="patient_follow_up" type="text" placeholder="Advice to patients...">
+        </div>
 
         <div>
           <label for="patient_advice">Advice</label>
@@ -202,6 +231,23 @@
 
       <h3 style="margin-top:16px;">Updated JSON Preview</h3>
       <pre id="jsonPreview">{}</pre>
+
+      <!-- Hidden full-size HTML modal -->
+      <div id="imgModal" class="modal" aria-hidden="true" role="dialog" style="display:none;">
+        <div class="modal-backdrop" id="imgModalBackdrop"></div>
+        <div class="modal-content" role="document" aria-label="Rendered prescription">
+          <div class="modal-toolbar">
+            <button id="printBtn" class="modal-btn">Print</button>
+            <button id="whatsappBtn" class="modal-btn">Send via WhatsApp</button>
+            <button id="cancelBtnModal" class="modal-btn">Cancel</button>
+          </div>
+          <div class="modal-body">
+            <div id="modalHtmlContainer" class="modal-html" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+
+
     </main>
 
     <footer style="margin-top:18px; text-align:center; color:var(--muted); font-size:13px;">
@@ -414,23 +460,6 @@
 
   cancel.addEventListener('click', () => { window.history.back(); });
 
-  fileInput.addEventListener('change', () => {
-    const file = fileInput.files[0];
-    if (!file) { photoHint.textContent = 'No file chosen'; window.base64Image = null; return; }
-    if (!['image/png','image/jpeg'].includes(file.type)) { alert('Only JPG and PNG allowed'); fileInput.value=''; photoHint.textContent='Invalid file type'; return; }
-    if (file.size > MAX_BYTES) { alert('Max 2 MB'); fileInput.value=''; photoHint.textContent='File too large'; return; }
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      avatarImg.src = ev.target.result;
-      photoHint.textContent = file.name + ' (' + Math.round(file.size/1024) + ' KB)';
-      const parts = ev.target.result.split(',');
-      window.base64Image = parts[1] || null;
-      window.imageMime = file.type;
-      window.imageFilename = file.name;
-    };
-    reader.readAsDataURL(file);
-  });
-
   function validPhone(v){ return /^\d{10}$/.test(v); }
 
   document.getElementById('patient_mobile').addEventListener('input', (e)=>{
@@ -438,60 +467,127 @@
     mobileError.textContent = v === '' || validPhone(v) ? '' : 'Enter 10 digits';
   });
 
-  
-  
+  /* insert inside your existing IIFE where form.addEventListener('submit', ...) is */
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const fd = new FormData(form);
-    const payload = {};
-    for (const [k, v] of fd.entries()) {
-      if (v === null || v === '') continue;
-      const el = form.elements[k];
-      if (el && el.tagName === 'TEXTAREA') { payload[k] = String(v); continue; }
-      if (/^\d+$/.test(v)) payload[k] = Number(v);
-      else if (v === 'true' || v === 'false') payload[k] = v === 'true';
-      else payload[k] = String(v).trim();
-    }
-    if (window.base64Image) {
-      payload.image_data = window.base64Image;
-      payload.image_mime = window.imageMime;
-      payload.image_filename = window.imageFilename;
-    }
-    if (payload.patient_mobile && !validPhone(String(payload.patient_mobile))) {
-      alert('Mobile must be 10 digits.');
-      form.patient_mobile.focus();
-      return;
-    }
-    if (payload.age !== undefined && (isNaN(Number(payload.age)) || Number(payload.age) < 0)) {
-      alert('Age must be a non-negative number.');
-      form.age.focus(); return;
-    }
-    if (payload.doctor_consultation_fees !== undefined && isNaN(Number(payload.doctor_consultation_fees))) {
-      alert('Fees must be numeric.'); form.doctor_consultation_fees.focus(); return;
-    }
 
-    // show preview and POST JSON (endpoint placeholder)
-    preview.textContent = JSON.stringify(payload, null, 2);
+    // basic fields
+    const payload = {
+      patient_name: document.getElementById('patient_name').value.trim() || '',
+      age: document.getElementById('age').value.trim() || '',
+      sex: document.getElementById('sex').value || '',
+      occupation: document.getElementById('occupation').value.trim() || '',
+      patient_mobile: document.getElementById('patient_mobile').value.trim() || '',
+      patient_address: document.getElementById('patient_address').value.trim() || '',
+      patient_weight: document.getElementById('patient_weight').value.trim() || '',
+      patient_temp: document.getElementById('patient_temp').value.trim() || '',
+      patient_BP: document.getElementById('patient_BP').value.trim() || '',
+      patient_pulse: document.getElementById('patient_pulse').value.trim() || '',
+      checked_in: !!document.querySelector('input[type="checkbox"]').checked,
+      patient_CO: document.getElementById('patient_CO').value.trim() || '',
+      patient_OE: document.getElementById('patient_OE').value.trim() || '',
+      patient_follow_up : document.getElementById('patient_follow_up').value.trim() || '',
+      advice: document.getElementById('patient_advice').value.trim() || '',
+      investigations: InvestModule.getRows(),   // array of strings
+      medications: RxModule.getRows(),         // array of {medicine, regime, duration}
+      patient_id: "{{ patient.patient_id}}",
+      doctor_id: "{{ patient.doctor_id}}",
+      clinic_id: "{{ patient.clinic_id}}",
+      attachments: null
+    };
+
+    // print to console and preview
+    console.log('Generated payload:', payload);
+    
 
     try {
-      const resp = await fetch('/patient-edit/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const j = await resp.json();
-      if (resp.ok && j.success) {
-        window.location.href = j.redirect || `/patients/${encodeURIComponent(j.patient_id || payload.patient_id)}`;
-      } else {
-        alert(j.error || j.message || 'Update failed.');
-      }
-    } catch(err) {
-      console.error(err);
-      alert('Network error. Try again.');
+      
+      const res = await fetch('/patient-generate-prescription', { 
+        method:'POST', 
+        headers:{'Content-Type':'application/json'}, 
+        body: JSON.stringify(payload) })
+        .then(r=>r.json())
+        .then(data => window.showModalWithResponse(data));
+
+      document.getElementById('jsonPreview').textContent = JSON.stringify(payload, null, 2);
+
+    } catch (err) {
+      console.log(err);
+      //showError('Network error — try again later');
     }
-  });
+
+    });
+
 })();
 </script>
+
+<script>
+(function(){
+  const modal = document.getElementById('imgModal');
+  const backdrop = document.getElementById('imgModalBackdrop');
+  const htmlContainer = document.getElementById('modalHtmlContainer');
+  const btnPrint = document.getElementById('printBtn');
+  const btnCancel = document.getElementById('cancelBtnModal');
+  const btnWhatsapp = document.getElementById('whatsappBtn');
+
+  function show(html) {
+    htmlContainer.innerHTML = html;
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function close() {
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    htmlContainer.innerHTML = '';
+    document.body.style.overflow = '';
+  }
+
+  btnCancel.addEventListener('click', close);
+  backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', (e)=> { if (e.key === 'Escape') close(); });
+
+  btnPrint.addEventListener('click', function(){
+    const w = window.open('', '_blank');
+    const content = htmlContainer.innerHTML;
+    const css = Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map(n => n.outerHTML).join('\n');
+    const doc = `
+      <!doctype html><html><head><meta charset="utf-8"><title>Print</title>
+      ${css}
+      <style>@page{size:A4;margin:10mm} body{margin:0;padding:0} .print-wrap{padding:10mm;box-sizing:border-box}</style>
+      </head><body>
+      <div class="print-wrap">${content}</div>
+      <script>window.onload = function(){ setTimeout(()=>{ window.print(); }, 200); }<\/script>
+      </body></html>`;
+    w.document.open();
+    w.document.write(doc);
+    w.document.close();
+  });
+
+  btnWhatsapp.addEventListener('click', function(){
+    // placeholder — no action as requested
+    btnWhatsapp.disabled = true;
+    setTimeout(()=> btnWhatsapp.disabled = false, 600);
+  });
+
+  window.showModalWithResponse = function(response){
+    console.log("Printing response received from patient prescription upadate backend")
+    console.log(response);
+
+    if (response.patient_prescription_html) {
+      show(response.patient_prescription_html);
+      return;
+    }
+    // fallback: if image provided, create an <img> and insert
+    if (response.patient_prescription_img_base64) {
+      show('<img src="data:image/png;base64,' + response.patient_prescription_img_base64 + '" alt="Prescription" style="width:100%;height:auto;">');
+      return;
+    }
+    console.warn('No renderable content in response');
+  };
+})();
+</script>
+
 
 </body>
 </html>

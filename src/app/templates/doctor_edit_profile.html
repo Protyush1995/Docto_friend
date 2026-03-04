@@ -100,7 +100,7 @@
     </header>
 
     {% macro val_if(v) -%}
-            {%- if v is not none and (v|string).strip() != '' -%} {{ v }} {%- endif -%}
+            {%- if v is not none and (v|string) != '' -%} {{ v }} {%- endif -%}
     {%- endmacro %}
 
     <main class="card">
@@ -118,29 +118,24 @@
           </div>
         </div>
 
-        <!--<div>
-          <label for="photo">Profile image URL</label>
-          <input id="photo" name="photo_url" type="text" placeholder="/static/image/doc_placeholder.png" value="">
-        </div>-->
-
         <div>
-          <label for="fees">Member Since:</label>
+          <label for="created_at">Member Since:</label>
           <label>{{doctor_data.created_at}}</label>
         </div>
 
         <div class="full">
           <label for="firstname">First name</label>
-          <input id="firstname" name="firstname" type="text" placeholder="First name" value={{ val_if(doctor_data.firstname) }}>
+          <input id="firstname" name="firstname" type="text" placeholder="First name" value="{{ val_if(doctor_data.firstname) }}"">
         </div>
 
         <div>
           <label for="lastname">Last name</label>
-          <input id="lastname" name="lastname" type="text" placeholder="Last name" value={{ val_if(doctor_data.lastname) }}>
+          <input id="lastname" name="lastname" type="text" placeholder="Last name" value="{{ val_if(doctor_data.lastname) }}">
         </div>
 
         <div>
           <label for="qual">Qualifications</label>
-          <input id="qual" name="qualifications" type="text" placeholder="e.g. MBBS, MD" value={{ val_if(doctor_data.qualifications) }}>
+          <input id="qual" name="qualifications" type="text" placeholder="e.g. MBBS, MD" value="{{ val_if(doctor_data.qualifications) }}">
         </div>
 
         <div>
@@ -155,22 +150,22 @@
 
         <div>
           <label for="email">Email</label>
-          <input id="email" name="email" type="email" placeholder="you@example.com" value={{ val_if(doctor_data.email) }}>
+          <input id="email" name="email" type="email" placeholder="you@example.com" value="{{ val_if(doctor_data.email) }}">
         </div>
 
         <div>
           <label for="phone">Primary contact number</label>
-          <input id="phone" name="primary_contact_number" type="tel" placeholder="+1 555 555 5555" value={{ val_if(doctor_data.primary_contact_number) }}>
+          <input id="phone" name="primary_contact_number" type="tel" placeholder="+1 555 555 5555" value="{{ val_if(doctor_data.primary_contact_number) }}">
         </div>
 
         <div>
           <label for="altphone">Alternate contact number</label>
-          <input id="altphone" name="secondary_contact_number" type="tel" placeholder="+1 555 555 5555" value={{ val_if(doctor_data.secondary_contact_number) }}>
+          <input id="altphone" name="secondary_contact_number" type="tel" placeholder="+1 555 555 5555" value="{{ val_if(doctor_data.secondary_contact_number) }}">
         </div>
 
         <div>
           <label for="specialty">Specialty</label>
-          <input id="specialty" name="expertise" type="text" placeholder="e.g. Cardiology" value={{ val_if(doctor_data.expertise) }}>
+          <input id="specialty" name="expertise" type="text" placeholder="e.g. Cardiology" value="{{ val_if(doctor_data.expertise) }}">
         </div>
 
         <div class="full">
@@ -185,12 +180,12 @@
 
         <div>
           <label for="years">Years of experience</label>
-          <input id="years" name="years_of_experience" type="text" placeholder="e.g. 10" value={{ val_if(doctor_data.years_of_experience)}}>
+          <input id="years" name="years_of_experience" type="text" placeholder="e.g. 10" value="{{ val_if(doctor_data.years_of_experience)}}">
         </div>
 
         <div>
           <label for="fees">Nominal visiting fees</label>
-          <input id="fees" name="default_fees" type="text" placeholder="e.g. 500" value={{ val_if(doctor_data.default_fees)}}>
+          <input id="fees" name="default_fees" type="text" placeholder="e.g. 500" value="{{ val_if(doctor_data.default_fees)}}">
         </div>
 
 
@@ -206,64 +201,7 @@
     </footer>
   </div>
 
-  <!--<script>
-        (function(){
-        const form = document.getElementById('editProfileForm');
-        const cancel = document.getElementById('cancelBtn');
-        cancel.addEventListener('click', () => { window.history.back(); });
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fd = new FormData(form);
-            const payload = {};
-            for (const [k,v] of fd.entries())
-            {
-                if (!v) continue;
-                // convert numeric-looking fields to numbers
-                if (/^\d+$/.test(v)) payload[k] = Number(v);
-                else payload[k] = v.trim();
-            }
-
-            // basic email validation
-            if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email))
-            {
-                alert('Please enter a valid email address.');
-                form.email.focus();
-                return;
-            }
-
-            try{
-            const resp = await fetch('/doctor-edit-profile/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-            
-            const j = await resp.json();
-            if (resp.ok && j.success){
-                
-                const doctorId = j.user_id || j.doctor_id || (j.user && j.user.doctor_id);
-                if (doctorId) {
-                    console.log('Profile updated succeeded !!');
-                    window.location.href = j.redirect || `/doc_dashboard/${encodeURIComponent(doctorId)}`;
-                } 
-                else {
-                    console.log("doctor_id missing in response !!");
-                    alert("WARNING : Update succeeded but redirect failed. Contact admin!!");
-                }
-                
-            } 
-            else {
-                alert(j.error || j.message || 'Update failed!! Contact admin!!');
-            }
-            } 
-            catch(err){
-                console.error(err);
-                alert('Network error. Try again.');
-            }
-        });
-        })();
-</script>-->
 <script>
 (function(){
   const MAX_BYTES = 2 * 1024 * 1024; // 2 MB

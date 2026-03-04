@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Prescription</title>
+  <title>Patient Prescription</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     :root{
@@ -88,7 +88,7 @@
       height:100%;
       display:grid;
       grid-template-columns:20% 80%;
-      grid-template-rows:30% 70%;
+      grid-template-rows:25% 75%;
       gap:0;
       align-items:stretch;
     }
@@ -180,21 +180,24 @@
     <div style="padding: 0px 18px;">
         <div class="row header" role="banner" aria-label="Header (doctor and clinic)" id="row-header">
         <div class="header-left" aria-label="Doctor details">
-            <div class="avatar" id="doctor-avatar">DR</div>
+            <div class="avatar" id="doctor-avatar"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpeg') }}" alt="Logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
             <div class="doc-info">
-            <h2 id="doctor-name">Dr. A. K. Sharma</h2>
-            <p id="doctor-qual">MBBS, MD (General Medicine)</p>
-            <p id="doctor-reg" style="margin-top:6px;">Reg No: MH-12345</p>
-            <p id="clinic-timings" style="margin-top:6px;color:var(--muted);font-size:13px;">Clinic Timings: Mon–Sat 09:00–17:00</p>
+            <h2 id="doctor-name">Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h2>
+            <p id="doctor-qual">{{doctor_data.qualifications}}</p>
+            <p id="doctor-qual">{{doctor_data.expertise}}</p>
+            <p id="doctor-fellowship" style="margin-top:6px;">{{doctor_data.practising_or_fellowship}}</p>
+            <p id="doctor-achievements" style="margin-top:6px;">{{doctor_data.achievements}}</p>
+            <p id="doctor-reg" style="margin-top:6px;">Reg No: {{doctor_data.license}}</p>
             </div>
         </div>
 
         <div class="header-right" aria-label="Clinic details">
-            <div class="clinic-name" id="clinic-name">Sunrise Family Clinic</div>
-            <div id="clinic-address">123 Health Ave, Sector 10, Mumbai, Maharashtra</div>
-            <div style="margin-top:6px;" id="clinic-phone">Phone: +91 22 2345 6789</div>
+            <div class="clinic-name" id="clinic-name">{{clinic_data.clinicname}}</div>
+            <div id="clinic-address">{{clinic_data.clinic_address}}</div>
+            <div style="margin-top:6px;" id="clinic-phone">Phone: {{clinic_data.primary_contact_number}} / {{clinic_data.secondary_contact_number}}</div>
             <div style="margin-top:10px;font-weight:700;color:#111;" id="presc-title">Prescription Date:</div>
-            <div style="margin-top:6px;color:var(--muted);font-size:13px;"><span id="presc-date">02-Mar-2026</span></div>
+            <div style="margin-top:6px;color:var(--muted);font-size:13px;"><span id="presc-date">{{patient_data.visit_date}}</span></div>
+            <p id="clinic-timings" style="margin-top:6px;color:var(--muted);font-size:13px;">Visit Timings: {{clinic_data.visit_schedule}}</p>
         </div>
         </div>
     </div>
@@ -203,16 +206,16 @@
         <div class="row patient" role="region" aria-label="Patient details" id="row-patient">
             <!-- First line: Name | Age/Sex | Date -->
             <div class="patient-line">
-                <div class="patient-field"><strong>Name: </strong> <span id="patient-name">Mr. Rohit Mehra</span></div>
-                <div class="patient-field"><strong>Age / Sex: </strong> <span id="patient-age-sex">34 / Male</span></div>
-                <div class="patient-field" ><strong>Occupation: </strong><span id="patient-occupation">Software Engineer</span></div>
+                <div class="patient-field"><strong>Name: </strong> <span id="patient-name">{{patient_data.patient_name}}</span></div>
+                <div class="patient-field"><strong>Age / Sex: </strong> <span id="patient-age-sex">{{patient_data.age}} / {{patient_data.sex}}</span></div>
+                <div class="patient-field" ><strong>Occupation: </strong><span id="patient-occupation">{{patient_data.occupation}}</span></div>
             </div>
 
             <!-- Second line: Address | Occupation | Vitals (BP, Weight, Temp, RR, SpO2) -->
             <div class="patient-line" >
-                <div class="patient-field" ><strong>Address: </strong><span id="patient-address">11 Rosewood Apartments, Bandra West, Mumbai</span></div>
-                <div class="patient-field"><strong>BP: </strong> <div id="patient-bp">122/78 mmHg</div>, <strong>Pulse: </strong> <div id="patient-weight">72 /min</div></div>
-                <div class="patient-field"><strong>Weight: </strong> <div id="patient-weight">72 kg</div>, <strong>Temp: </strong> <div id="v-temp">38.2°C</div></div>
+                <div class="patient-field" ><strong>Address: </strong><span id="patient-address">{{patient_data.patient_address}}</span></div>
+                <div class="patient-field"><strong>BP: </strong> <div id="patient-bp">{{patient_data.patient_BP}} mmHg</div>, <strong>Pulse: </strong> <div id="patient-weight">{{patient_data.patient_pulse}} /min</div></div>
+                <div class="patient-field"><strong>Weight: </strong> <div id="patient-weight">{{patient_data.patient_weight}} kg</div>, <strong>Temp: </strong> <div id="v-temp">{{patient_data.patient_temp}}°C</div></div>
             </div>
         </div>
     </div>
@@ -223,27 +226,19 @@
         <div class="body-grid" role="grid" style="height:100%;" id="body-grid">
             <!-- upper-left -->
             <div class="upper-left col-left" aria-label="Short notes / flags">
-            <div><strong>Allergies:</strong> <span id="allergies">No known drug allergies (NKDA)</span></div>
+            <div><strong>Visit Reason:</strong> <span id="visit-reason">{{patient_data.CO}}</span></div>
             <div><strong>Follow-up:</strong> <span id="followup">3–5 days or earlier if symptoms worsen</span></div>
-            <div><strong>Visit Reason:</strong> <span id="visit-reason">Fever, cough, sore throat</span></div>
             </div>
 
             <!-- upper-right -->
             <div class="upper-right col-right" aria-label="Quick summary">
-            <div id="provisional-diagnosis" style="font-size:16px;">Provisional Diagnosis: Acute viral syndrome</div>
+            <div id="provisional-diagnosis" style="font-size:16px;">Provisional Diagnosis: {{patient_data.patient_OE}}</div>
             </div>
 
             <!-- lower-left -->
             <div class="lower-left col-left" aria-label="Left column details">
-            <div style="font-weight:700;margin-bottom:8px;color:#111;">Vitals & Notes</div>
-            <div style="margin-bottom:6px;color:var(--muted);font-size:13px;">
-                <div>Temperature: <span id="v-temp">38.2°C</span></div>
-                <div>Respiratory Rate: <span id="v-rr">18 /min</span></div>
-                <div>Oxygen Saturation: <span id="v-spo2">98% (room air)</span></div>
-            </div>
-            <div style="font-size:13px;color:var(--muted);margin-top:8px;" id="clinical-note">
-                Short clinical note: Patient reports onset of symptoms 2 days ago; no significant past history. Hydration advised.
-            </div>
+            <div style="font-weight:700;margin-bottom:8px;color:#111;">Requested Investigations:</div>
+            
             </div>
 
             <!-- lower-right: medication list -->
@@ -291,7 +286,7 @@
             </table>
 
             <div style="margin-top:12px;font-size:13px;color:var(--muted);">
-                <div style="margin-bottom:6px;"><strong>Advice:</strong> <span id="advice">Rest, fluids, warm saline gargles. Avoid cold drinks. Return if high fever, breathing difficulty, or persistent symptoms.</span></div>
+                <div style="margin-bottom:6px;"><strong>Advice:</strong> <span id="advice">{{patient_data.advice}}</span></div>
                 <div><strong>Notes:</strong> <span id="notes">Keep medicines out of reach of children.</span></div>
             </div>
             </div>

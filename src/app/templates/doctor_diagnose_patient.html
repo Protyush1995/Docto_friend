@@ -105,7 +105,7 @@
       <div class="brand">
         <div class="logo">
           <!-- replace src with your brand asset -->
-          <img src="{{ doctor_data.profile_pic_uri }}" alt="Company Logo" style="width:72px;height:72px;border-radius:10px;object-fit:cover;">
+          <img src="{{ url_for('static', filename='image/doctopal_logo_1.jpeg') }}" alt="Company Logo" style="width:72px;height:72px;border-radius:10px;object-fit:cover;">
         </div>
         <div>
           <div style="font-weight:700; color:var(--primary);">Dr {{doctor_data.firstname}} {{doctor_data.lastname}}</div>

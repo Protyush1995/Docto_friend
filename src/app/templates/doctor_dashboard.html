@@ -510,18 +510,24 @@
 
 
 
-    .overlay-center .doc-name,
+    .overlay-center .doc-name {
+      color : rgba(231, 177, 71, 0.993);
+      margin: 0;           /* remove default margins */
+      line-height: 1.15;   /* tighter line height */
+    }
+
     .overlay-center .doc-expertise,
     .overlay-center .doc-qual {
       margin: 0;           /* remove default margins */
       line-height: 1.15;   /* tighter line height */
+      color: #fff;
     }
 
     /* Optional: slightly smaller font for the p elements */
     .overlay-center .doc-expertise,
     .overlay-center .doc-qual {
       font-size: 13px;
-      color: var(--muted);
+      color: #fff;
     }
 
 
@@ -535,6 +541,7 @@
   .overlay-center .doc-name {
     font-size: 12px;
     line-height: 1.1;
+    color: rgba(231, 177, 71, 0.993);
   }
 
   .overlay-center .doc-expertise,
@@ -552,7 +559,7 @@
     right:7%;
     width: auto;
   }
-  .overlay-center .doc-name { font-size: 10px; }
+  .overlay-center .doc-name { font-size: 10px; color:rgba(231, 177, 71, 0.993);}
   .overlay-center .doc-expertise,
   .overlay-center .doc-qual { font-size: 8px; }
   .flip-card .qr { width:28px; height:28px; }
@@ -585,9 +592,9 @@
     }
 
     /* If you use variable-based colors inside .flip-card, override them explicitly */
-    .dark .flip-card h3 { color: #4d20cab8; }
+    .dark .flip-card h3 { color: rgba(231, 177, 71, 0.993); }
     .dark .flip-card p,
-    .dark .flip-card a { color: #6b7280; }
+    .dark .flip-card a { color: #fff; }
 
     /* Ensure images are unaffected */
     .dark .flip-card img { filter: none; }
@@ -637,12 +644,16 @@
               <div class="profile-meta">
                   <h3><strong>ID :</strong> {{user_id}}</h3>
                   <h2>Dr. <strong>{{ doctor_data.firstname }} {{ doctor_data.lastname }} </strong></h2>
-                  <p>{{ doctor_data.doctor_qualifications }}</p>
-                  <p class="sub">Email: {{ doctor_data.email }} · Phone: {{ doctor_data.primary_contact_number }}</p>
+                  <p><strong>{{ doctor_data.expertise }}</strong></p>
+                  <p class="sub"><strong>{{ doctor_data.qualifications }}</strong></p>
               </div>
           </div>
 
           <div style="margin-top:12px; color:var(--muted); font-size:13px;">
+              <div><strong></strong> {{ doctor_data.practising_or_fellowship }}</div>
+              <div><strong> {{ doctor_data.achievements }}</strong></div>
+              <div><strong>Email:</strong> {{ doctor_data.email }} · <strong>Phone:</strong> {{ doctor_data.primary_contact_number }}</div>
+              <div><strong>Experience:</strong> {{ doctor_data.years_of_experience }} yrs</div>
               <div><strong>Member since:</strong> {{ doctor_data.created_at }}</div>
               <div style="margin-top:6px"><strong>License:</strong> <strong>{{ doctor_data.license  }} 
                   </strong></div>
@@ -675,6 +686,9 @@
                 <h3 class="doc-name">Dr. {{ doctor_data.firstname }} {{ doctor_data.lastname }}</h3>
                 <p class="doc-expertise"><strong>{{ doctor_data.expertise }}</strong></p>
                 <p class="doc-qual"><strong>{{ doctor_data.qualifications }}</strong></p>
+                <p class="doc-qual"><strong>Email: {{ doctor_data.email }}</strong></p>
+                <p class="doc-qual"><strong>Contact ; {{doctor_data.primary_contact_number}}</strong></p>
+                
               </div>
               <!-- QR + label container -->
               <div class="qr-with-label">
