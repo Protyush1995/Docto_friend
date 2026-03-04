@@ -16,8 +16,44 @@
       font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       color:#111;
     }
+
+
+  /* Base page sizing */
+  @page { size: A4; margin: 0; } /* adjust margin as needed */
+  html, body { height: 297mm; margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
+
+  /* Container sized to A4 minus margins */
+  .container {
+    box-sizing: border-box;
+    width: calc(210mm - 20mm); /* A4 width minus left+right margin */
+    min-height: calc(297mm - 20mm); /* A4 height minus top+bottom margin */
+    margin: 0;
+    padding: 0; /* document padding inside page */
+    background: #fff;
+  }
+
+  /* Ensure no browser shrinks content for print */
+  body * { -webkit-print-color-adjust: exact; }
+
+  /* Force page-breaks if needed */
+  .page-break { page-break-after: always; break-after: page; }
+
+  /* Avoid overflow creating extra white bands; allow internal scrolling to be visible in print */
+  .container { overflow: visible; }
+
+  /* Print-specific tweaks: hide interactive UI */
+  @media print {
+    body { margin:0; }
+    /* keep fonts readable */
+    .container { font-size: 12pt; }
+    /* avoid CSS that forces element off-page */
+    .row { page-break-inside: avoid; }
+  }
+
+
+
     html,body{height:100%;margin:0;background:var(--bg);}
-    .container{
+    /*.container{
       width:820px;
       max-width:100%;
       margin:18px auto;
@@ -29,7 +65,7 @@
       display:flex;
       flex-direction:column;
       min-height:auto;
-    }
+    }*/
 
     .row { box-sizing:border-box; padding:14px 18px; background:linear-gradient(#fff,#fff); }
     .row.header{ height:18%; display:flex; align-items:flex-start; gap:18px; border-bottom:2px solid #000000; margin-top: 3% !important;}
@@ -229,13 +265,14 @@
                 <div class="patient-field"><strong>Name: </strong> <span id="patient-name">{{patient_data.patient_name}}</span></div>
                 <div class="patient-field"><strong>Age / Sex: </strong> <span id="patient-age-sex">{{patient_data.age}} / {{patient_data.sex}}</span></div>
                 <div class="patient-field" ><strong>Occupation: </strong><span id="patient-occupation">{{patient_data.occupation}}</span></div>
+                <div class="patient-field"><strong>Mobile: </strong><span id="patient-occupation">{{patient_data.patient_mobile}}</span></div>
             </div>
 
             <!-- Second line: Address | Occupation | Vitals (BP, Weight, Temp, RR, SpO2) -->
             <div class="patient-line" >
                 <div class="patient-field" ><strong>Address: </strong><span id="patient-address">{{patient_data.patient_address}}</span></div>
+                <div class="patient-field"><strong>Weight: </strong> <div id="patient-weight">{{patient_data.patient_weight}} kg</div>, <strong>Temp: </strong> <div id="v-temp">{{patient_data.patient_temp}}°C </div></div>
                 <div class="patient-field"><strong>BP: </strong> <div id="patient-bp">{{patient_data.patient_BP}} mmHg</div>, <strong>Pulse: </strong> <div id="patient-weight">{{patient_data.patient_pulse}} /min</div></div>
-                <div class="patient-field"><strong>Weight: </strong> <div id="patient-weight">{{patient_data.patient_weight}} kg</div>, <strong>Temp: </strong> <div id="v-temp">{{patient_data.patient_temp}}°C</div></div>
             </div>
         </div>
     </div>

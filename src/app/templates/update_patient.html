@@ -572,23 +572,22 @@
 </script>
 
 <script>
-async function captureAndPrintA4({ targetSelector = '#modalHtmlContainer .container', dpi = 300 } = {}) {
+async function captureAndPrintFillHeight({ targetSelector = '#modalHtmlContainer .container', dpi = 300 } = {}) {
   try {
-    // wait for fonts
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
-
     const target = document.querySelector(targetSelector) || document.querySelector('.container') || document.body;
     if (!target) throw new Error('Capture target not found');
 
-    // A4 physical size in inches: 8.27 x 11.69 (landscape reversed if needed)
+    // A4 in inches -> pixels at desired DPI
     const A4_WIDTH_IN = 8.27, A4_HEIGHT_IN = 11.69;
-    const pxPerInch = dpi; // DPI for print quality (150-300 recommended)
-
+    const pxPerInch = dpi;
     const A4_W_PX = Math.round(A4_WIDTH_IN * pxPerInch);
     const A4_H_PX = Math.round(A4_HEIGHT_IN * pxPerInch);
 
-    // capture at higher scale for quality
-    const captureScale = 2; // increase if you need more detail; will be downscaled to A4
+    // Increase html2canvas capture scale based on device pixel ratio and target size
+    const deviceScale = window.devicePixelRatio || 1;
+    const captureScale = Math.max(2, Math.round(deviceScale * 2));
+
     const canvas = await html2canvas(target, {
       scale: captureScale,
       useCORS: true,
@@ -598,65 +597,74 @@ async function captureAndPrintA4({ targetSelector = '#modalHtmlContainer .contai
       windowHeight: document.documentElement.scrollHeight
     });
 
-    // compute scale to fit canvas into A4 while preserving aspect ratio
     const srcW = canvas.width;
     const srcH = canvas.height;
-    const widthRatio = A4_W_PX / srcW;
-    const heightRatio = A4_H_PX / srcH;
-    const fitScale = Math.min(widthRatio, heightRatio, 1); // don't upscale beyond native
 
-    const targetW = Math.round(srcW * fitScale);
-    const targetH = Math.round(srcH * fitScale);
+    // Desired scale so that image height exactly matches A4 height
+    const scaleByHeight = A4_H_PX / srcH;
+    const scaledW = Math.round(srcW * scaleByHeight);
+    const scaledH = A4_H_PX; // by design
 
-    // create resized canvas sized to A4 (center image on white A4 background)
+    // Create an intermediate canvas with the scaled full image (may be wider than A4)
+    const scaledCanvas = document.createElement('canvas');
+    scaledCanvas.width = scaledW;
+    scaledCanvas.height = scaledH;
+    const sctx = scaledCanvas.getContext('2d');
+
+    // Fill white background then draw scaled image
+    sctx.fillStyle = '#ffffff';
+    sctx.fillRect(0, 0, scaledCanvas.width, scaledCanvas.height);
+    sctx.drawImage(canvas, 0, 0, srcW, srcH, 0, 0, scaledW, scaledH);
+
+    // If scaled width > A4 width, crop horizontally (centered) so height remains exact A4
     const outCanvas = document.createElement('canvas');
     outCanvas.width = A4_W_PX;
     outCanvas.height = A4_H_PX;
     const ctx = outCanvas.getContext('2d');
-
-    // fill white background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, outCanvas.width, outCanvas.height);
 
-    // compute centered placement
-    const x = Math.round((outCanvas.width - targetW) / 2);
-    const y = Math.round((outCanvas.height - targetH) / 2);
-
-    // draw scaled image
-    ctx.drawImage(canvas, 0, 0, srcW, srcH, x, y, targetW, targetH);
+    if (scaledW <= A4_W_PX) {
+      // If scaled fits or is smaller in width, center horizontally
+      const dx = Math.round((A4_W_PX - scaledW) / 2);
+      ctx.drawImage(scaledCanvas, 0, 0, scaledW, scaledH, dx, 0, scaledW, scaledH);
+    } else {
+      // Crop centered slice from scaledCanvas
+      const sx = Math.round((scaledW - A4_W_PX) / 2);
+      ctx.drawImage(scaledCanvas, sx, 0, A4_W_PX, A4_H_PX, 0, 0, A4_W_PX, A4_H_PX);
+    }
 
     const dataUrl = outCanvas.toDataURL('image/png');
 
-    // open print window with image sized to A4
+    // open print window with A4 CSS and auto-print
     const w = window.open('', '_blank');
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>Print</title>
       <style>
         @page { size: A4; margin: 0; }
         html,body { height:100%; margin:0; }
         body { display:flex; align-items:center; justify-content:center; background:#fff; }
-        img { width:100%; height:auto; max-width:100%; display:block; }
-        .wrap { width:210mm; height:297mm; box-sizing:border-box; padding:10mm; }
+        .a4 { width:210mm; height:297mm; box-sizing:border-box; margin:0; padding:0; overflow:hidden; }
+        .a4 img { width:100%; height:100%; object-fit:cover; display:block; }
       </style>
       </head><body>
-        <div class="wrap"><img src="${dataUrl}" alt="Prescription"></div>
-        <script>
-          window.onload = function(){ setTimeout(()=>{ window.print(); }, 300); };
-        <\/script>
+        <div class="a4"><img src="${dataUrl}" alt="Print"></div>
+        <script>window.onload = function(){ setTimeout(()=>{ window.print(); }, 300); }<\/script>
       </body></html>`;
     w.document.open();
     w.document.write(html);
     w.document.close();
   } catch (err) {
-    console.error('captureAndPrintA4 error', err);
+    console.error('captureAndPrintFillHeight error', err);
     alert('Failed to capture/print: ' + (err.message || err));
   }
 }
 
-// wire to button
 document.getElementById('printBtn').addEventListener('click', function(){
-  captureAndPrintA4({ targetSelector: '#modalHtmlContainer .container', dpi: 300 });
+  captureAndPrintFillHeight({ targetSelector: '#modalHtmlContainer .container', dpi: 300 });
 });
+
 </script>
+
 
 
 
