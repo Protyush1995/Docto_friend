@@ -361,8 +361,21 @@ def generate_prescription_patient():
     
     doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=data["doctor_id"])
     clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=data["clinic_id"])
+    visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="kv")
+    clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
 
-    html = render_template("doctor_prescription.html",patient_data=data,doctor_data=doctor_data,clinic_data=clinic_data) 
+
+    clinics_list = clinic_database_management.get_clinic_by_doctor_id(data["doctor_id"])
+    if isinstance(clinics_list, dict):
+        clinics_list = [clinics_list]
+
+    clinics_list_processed = []
+    for clinic in clinics_list:
+        doctor_affiliation = extract_doctor_affiliations(clinic)
+        clinics_list_processed.append(doctor_affiliation)
+    
+    print(f"ROUTE LOG : Printing from /patient-generate-prescription generated schedule : {visit_schedule} . address : {clinic_address}, doctor_affiliation : {clinics_list_processed}")
+    html = render_template("doctor_prescription.html",patient_data=data,doctor_data=doctor_data,clinic_data=clinic_data,visit_schedule=visit_schedule,clinic_address=clinic_address,prescription_date=str(DATE_TODAY),doctor_affiliation=clinics_list_processed) 
 
     return jsonify({
         'status': 'ok',
@@ -596,3 +609,20 @@ def ordered_list_to_dict(schedule_list: list):
         if times:
             out[name.lower()] = times
     return out
+
+
+def extract_doctor_affiliations(rec):
+    # rec may be dict from Mongo; normalize keys and nested clinic_address
+    addr = rec.get("clinic_address", {}) or {}
+    temp = {"post_office": addr.get("post_office") or "",
+        "police_station": addr.get("police_station") or "",
+        "city": addr.get("city") or "",
+        "pincode": addr.get("pin_code") or addr.get("pin_code") or ""}
+    str_address = dict_to_string(d=temp)
+    return {
+        "clinic_name": rec.get("clinicname") or "",
+        "address": str_address 
+    }
+
+
+#-------------------------------------------------- END ----------------------------------------------------------------------

@@ -69,7 +69,7 @@
 
     .header-left{ flex:0 0 48%; display:flex; gap:12px; align-items:flex-start; }
     .header-left .avatar{
-      width:84px;height:84px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#3aa0ff);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;
+      width:84px;height:84px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;
       border:1px solid var(--inner-border);
     }
     .doc-info h2{margin:0;font-size:18px;}
@@ -173,6 +173,25 @@
       .container{ box-shadow:none; border:none; width:100%; margin:0; min-height:auto; }
     }
   </style>
+  <style>
+    /* smaller, compact clinic list inside footer */
+    #other-clinics { 
+        margin:6px 0 0 12px; 
+        padding-left:14px; 
+        list-style-position:inside; 
+        color:var(--muted);
+        font-size:11px;              /* reduced font size */
+        line-height:1.1;             /* tighter lines */
+        max-height:92px;             /* limit vertical space to footer */
+        overflow:auto;               /* scroll if more than fits */
+        padding-right:6px;           /* room for scrollbar */
+    }
+    #other-clinics li { margin:3px 0; }
+    #other-clinics li span { display:inline-block; vertical-align:middle; }
+    @media (max-width:720px){
+        #other-clinics { font-size:10px; max-height:120px; }
+    }
+</style>
 </head>
 <body>
   <div class="container" role="document" aria-label="Prescription">
@@ -193,11 +212,12 @@
 
         <div class="header-right" aria-label="Clinic details">
             <div class="clinic-name" id="clinic-name">{{clinic_data.clinicname}}</div>
-            <div id="clinic-address">{{clinic_data.clinic_address}}</div>
+            <div id="clinic-address">{{clinic_address}}</div>
             <div style="margin-top:6px;" id="clinic-phone">Phone: {{clinic_data.primary_contact_number}} / {{clinic_data.secondary_contact_number}}</div>
-            <div style="margin-top:10px;font-weight:700;color:#111;" id="presc-title">Prescription Date:</div>
-            <div style="margin-top:6px;color:var(--muted);font-size:13px;"><span id="presc-date">{{patient_data.visit_date}}</span></div>
-            <p id="clinic-timings" style="margin-top:6px;color:var(--muted);font-size:13px;">Visit Timings: {{clinic_data.visit_schedule}}</p>
+            
+            <div style="margin-top:10px;font-weight:700;color:#111;" id="presc-title">Visit Timings:</div>
+            <div style="margin-top:6px;color:var(--muted);font-size:13px;"><span id="presc-date">{{visit_schedule}}</span></div>
+            <p id="clinic-timings" style="margin-top:6px;color:var(--muted);font-size:13px;"><strong>Prescription Date: </strong>{{prescription_date}}</p>
         </div>
         </div>
     </div>
@@ -226,8 +246,8 @@
         <div class="body-grid" role="grid" style="height:100%;" id="body-grid">
             <!-- upper-left -->
             <div class="upper-left col-left" aria-label="Short notes / flags">
-            <div><strong>Visit Reason:</strong> <span id="visit-reason">{{patient_data.CO}}</span></div>
-            <div><strong>Follow-up:</strong> <span id="followup">3–5 days or earlier if symptoms worsen</span></div>
+            <div><strong>Visit Reason:</strong> <span id="visit-reason">{{patient_data.patient_CO}}</span></div>
+            <div><strong>Follow-up:</strong> <span id="followup">{{patient_data.patient_follow_up}}</span></div>
             </div>
 
             <!-- upper-right -->
@@ -238,50 +258,45 @@
             <!-- lower-left -->
             <div class="lower-left col-left" aria-label="Left column details">
             <div style="font-weight:700;margin-bottom:8px;color:#111;">Requested Investigations:</div>
-            
+            <ul id="investigations" style="color:#111; list-style-position:inside; text-align:left; padding-inline-start: 0px;">
+                {% if patient_data.investigations %}
+                    {% for inv in patient_data.investigations %}
+                    <li style="text-align:left;">{{ inv }}</li>
+                    {% endfor %}
+                {% else %}
+                    <li style="text-align:left;"><em>No investigations requested</em></li>
+                {% endif %}
+            </ul>
             </div>
 
             <!-- lower-right: medication list -->
             <div class="lower-right col-right" aria-label="Medication list">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <div style="font-weight:700;font-size:15px;color:#111;">Rx (Medications)</div>
-                <div style="font-size:13px;color:var(--muted);">Qty shown where applicable</div>
             </div>
 
             <table class="rx" aria-label="medication-table" id="med-table">
                 <thead>
                 <tr>
                     <th style="width:52%;">Medicine</th>
-                    <th style="width:16%;">Dose</th>
+                    <th style="width:16%;">Regime</th>
                     <th style="width:20%;">Freq / Duration</th>
-                    <th style="width:12%;">Qty</th>
                 </tr>
                 </thead>
                 <tbody id="med-body">
-                <tr id="med-1">
-                    <td><strong id="med-1-name">Paracetamol 650 mg</strong><div style="color:var(--muted);font-size:12px;margin-top:6px;" id="med-1-desc">For fever and pain</div></td>
-                    <td id="med-1-dose">650 mg</td>
-                    <td id="med-1-freq">1 tab — TDS (after food) — 5 days</td>
-                    <td id="med-1-qty">15</td>
-                </tr>
-                <tr id="med-2">
-                    <td><strong id="med-2-name">Amoxicillin + Clavulanate 625 mg</strong><div style="color:var(--muted);font-size:12px;margin-top:6px;" id="med-2-desc">If bacterial infection suspected</div></td>
-                    <td id="med-2-dose">625 mg</td>
-                    <td id="med-2-freq">1 tab — BD (after food) — 5 days</td>
-                    <td id="med-2-qty">10</td>
-                </tr>
-                <tr id="med-3">
-                    <td><strong id="med-3-name">Cough Syrup (Dextromethorphan)</strong><div style="color:var(--muted);font-size:12px;margin-top:6px;" id="med-3-desc">For dry cough</div></td>
-                    <td id="med-3-dose">10 ml</td>
-                    <td id="med-3-freq">HS — 7 days</td>
-                    <td id="med-3-qty">70 ml</td>
-                </tr>
-                <tr id="med-4">
-                    <td><strong id="med-4-name">Multivitamin</strong><div style="color:var(--muted);font-size:12px;margin-top:6px;" id="med-4-desc">General support</div></td>
-                    <td id="med-4-dose">1 tab</td>
-                    <td id="med-4-freq">OD — 30 days</td>
-                    <td id="med-4-qty">30</td>
-                </tr>
+                     {% if patient_data.medications %}
+                        {% for med in patient_data.medications %}
+                        <tr>
+                            <td>{{ med.medicine }}</td>
+                            <td>{{ med.regime }}</td>
+                            <td>{{ med.duration }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                        <td colspan="3" style="color:var(--muted);">No medications prescribed</td>
+                        </tr>
+                    {% endif %}
                 </tbody>
             </table>
 
@@ -297,28 +312,28 @@
      <div style="padding: 12px 18px;">
         <div class="row footer" role="contentinfo" aria-label="Footer" id="row-footer">
         <div class="footer-left" aria-label="QR code">
-            <div class="qr" id="qr-demo" aria-hidden="true">QR CODE<br><span style="font-size:11px;color:var(--muted);">(demo)</span></div>
+            <div class="qr" id="qr-demo" aria-hidden="true"><img src="{{ doctor_data.doctor_qr_uri }}" alt="QR"></div>
         </div>
         <div class="footer-right" aria-label="Footer information">
-            <div><strong>Clinic:</strong> <span id="footer-clinic">Sunrise Family Clinic — 123 Health Ave, Sector 10, Mumbai</span></div>
-            <div class="diagnosis"><strong>Diagnosis:</strong> <span id="footer-dx">Acute viral syndrome / URTI</span></div>
-            <div><strong>Prescription ID:</strong> <span id="presc-id">P-20260302-01</span> &nbsp;&nbsp; <strong>Date:</strong> <span id="presc-date-2">02-Mar-2026</span></div>
-            <div class="sign" id="footer-sign">Dr. A. K. Sharma — MBBS, MD</div>
+
+            <div aria-label="Other clinics" style="margin-top:8px;">
+            <strong style="font-size:12px;">Other Clinics:</strong>
+            <ul id="other-clinics">
+                {% for c in doctor_affiliation %}
+                <li>
+                    <span style="font-weight:600;color:#111;">{{ c.clinic_name }}</span>
+                    {% if c.address %} — <span style="color:var(--muted);">{{ c.address }}</span>{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            </div>
+
+
+            <div class="sign" id="footer-sign">Dr. {{doctor_data.firstname}} {{doctor_data.lastname}} — Regd No: {{doctor_data.license}}</div>
         </div>
         </div>
     </div>
   </div>
 
-  <script>
-    // Example: dynamic updates (usage)
-    // document.getElementById('patient-name').textContent = 'New Name';
-    // To parse ISO string and set date/time:
-    // function setIsoTimestamp(iso) {
-    //   if(iso.endsWith('Z')) iso = iso.slice(0,-1) + '+00:00';
-    //   const dt = new Date(iso);
-    //   document.getElementById('presc-date').textContent = dt.toLocaleDateString('en-GB');
-    //   document.getElementById('presc-time').textContent = dt.toISOString().slice(11,16);
-    // }
-  </script>
 </body>
 </html>

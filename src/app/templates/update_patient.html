@@ -76,6 +76,7 @@
   }
   </style>  
 
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 </head>
 <body>
@@ -215,7 +216,7 @@
 
         <div>
           <label for="patient_follow_up">Follow-up-time</label>
-          <input id="patient_follow_up" name="patient_follow_up" type="text" placeholder="Advice to patients...">
+          <input id="patient_follow_up" name="patient_follow_up" type="text" placeholder="Follow up in 7 days...">
         </div>
 
         <div>
@@ -526,7 +527,6 @@
   const modal = document.getElementById('imgModal');
   const backdrop = document.getElementById('imgModalBackdrop');
   const htmlContainer = document.getElementById('modalHtmlContainer');
-  const btnPrint = document.getElementById('printBtn');
   const btnCancel = document.getElementById('cancelBtnModal');
   const btnWhatsapp = document.getElementById('whatsappBtn');
 
@@ -546,23 +546,6 @@
   btnCancel.addEventListener('click', close);
   backdrop.addEventListener('click', close);
   document.addEventListener('keydown', (e)=> { if (e.key === 'Escape') close(); });
-
-  btnPrint.addEventListener('click', function(){
-    const w = window.open('', '_blank');
-    const content = htmlContainer.innerHTML;
-    const css = Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map(n => n.outerHTML).join('\n');
-    const doc = `
-      <!doctype html><html><head><meta charset="utf-8"><title>Print</title>
-      ${css}
-      <style>@page{size:A4;margin:10mm} body{margin:0;padding:0} .print-wrap{padding:10mm;box-sizing:border-box}</style>
-      </head><body>
-      <div class="print-wrap">${content}</div>
-      <script>window.onload = function(){ setTimeout(()=>{ window.print(); }, 200); }<\/script>
-      </body></html>`;
-    w.document.open();
-    w.document.write(doc);
-    w.document.close();
-  });
 
   btnWhatsapp.addEventListener('click', function(){
     // placeholder — no action as requested
@@ -587,6 +570,94 @@
   };
 })();
 </script>
+
+<script>
+async function captureAndPrintA4({ targetSelector = '#modalHtmlContainer .container', dpi = 300 } = {}) {
+  try {
+    // wait for fonts
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+
+    const target = document.querySelector(targetSelector) || document.querySelector('.container') || document.body;
+    if (!target) throw new Error('Capture target not found');
+
+    // A4 physical size in inches: 8.27 x 11.69 (landscape reversed if needed)
+    const A4_WIDTH_IN = 8.27, A4_HEIGHT_IN = 11.69;
+    const pxPerInch = dpi; // DPI for print quality (150-300 recommended)
+
+    const A4_W_PX = Math.round(A4_WIDTH_IN * pxPerInch);
+    const A4_H_PX = Math.round(A4_HEIGHT_IN * pxPerInch);
+
+    // capture at higher scale for quality
+    const captureScale = 2; // increase if you need more detail; will be downscaled to A4
+    const canvas = await html2canvas(target, {
+      scale: captureScale,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: document.documentElement.scrollWidth,
+      windowHeight: document.documentElement.scrollHeight
+    });
+
+    // compute scale to fit canvas into A4 while preserving aspect ratio
+    const srcW = canvas.width;
+    const srcH = canvas.height;
+    const widthRatio = A4_W_PX / srcW;
+    const heightRatio = A4_H_PX / srcH;
+    const fitScale = Math.min(widthRatio, heightRatio, 1); // don't upscale beyond native
+
+    const targetW = Math.round(srcW * fitScale);
+    const targetH = Math.round(srcH * fitScale);
+
+    // create resized canvas sized to A4 (center image on white A4 background)
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = A4_W_PX;
+    outCanvas.height = A4_H_PX;
+    const ctx = outCanvas.getContext('2d');
+
+    // fill white background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, outCanvas.width, outCanvas.height);
+
+    // compute centered placement
+    const x = Math.round((outCanvas.width - targetW) / 2);
+    const y = Math.round((outCanvas.height - targetH) / 2);
+
+    // draw scaled image
+    ctx.drawImage(canvas, 0, 0, srcW, srcH, x, y, targetW, targetH);
+
+    const dataUrl = outCanvas.toDataURL('image/png');
+
+    // open print window with image sized to A4
+    const w = window.open('', '_blank');
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Print</title>
+      <style>
+        @page { size: A4; margin: 0; }
+        html,body { height:100%; margin:0; }
+        body { display:flex; align-items:center; justify-content:center; background:#fff; }
+        img { width:100%; height:auto; max-width:100%; display:block; }
+        .wrap { width:210mm; height:297mm; box-sizing:border-box; padding:10mm; }
+      </style>
+      </head><body>
+        <div class="wrap"><img src="${dataUrl}" alt="Prescription"></div>
+        <script>
+          window.onload = function(){ setTimeout(()=>{ window.print(); }, 300); };
+        <\/script>
+      </body></html>`;
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  } catch (err) {
+    console.error('captureAndPrintA4 error', err);
+    alert('Failed to capture/print: ' + (err.message || err));
+  }
+}
+
+// wire to button
+document.getElementById('printBtn').addEventListener('click', function(){
+  captureAndPrintA4({ targetSelector: '#modalHtmlContainer .container', dpi: 300 });
+});
+</script>
+
 
 
 </body>
