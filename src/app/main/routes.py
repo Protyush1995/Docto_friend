@@ -348,8 +348,10 @@ def update_patient():
 
     patient = patient_database_management.get_patient_by_token_number(token_number=uTAN)
     doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
+    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=patient['clinic_id'])
+    clinic_address = dict_to_string(d=clinic_data['clinic_address'])
     
-    return render_template("update_patient.html",doctor_data=doctor_data,patient=patient) 
+    return render_template("update_patient.html",doctor_data=doctor_data,patient=patient,clinic_data=clinic_data,clinic_address=clinic_address) 
 
 @bp.route("/patient-generate-prescription", methods=["POST"])
 def generate_prescription_patient():

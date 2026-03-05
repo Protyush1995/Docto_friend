@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Money Receipt</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --brand:#0a5f8a;
+      --muted:#555;
+      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial, sans-serif;
+      color:#111;
+    }
+    html,body{height:100%;margin:0;background:#f5f6f8;}
+    /* Container sized to half A4 height, full A4 width when printed in portrait */
+    .receipt {
+      width:210mm;
+      height:148.5mm; /* A4 half height */
+      max-width:100%;
+      margin:10mm auto;
+      background:#fff;
+      box-sizing:border-box;
+      padding:12mm;
+      border-radius:4px;
+      box-shadow:0 6px 18px rgba(20,20,20,0.06);
+    }
+
+    /* Header row with patient ID and date */
+    .header {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .hdr-left { font-size:13px; color:var(--muted); }
+    .hdr-right { text-align:right; font-size:13px; color:var(--muted); }
+
+    .title {
+      text-align:center;
+      font-size:20px;
+      font-weight:700;
+      color:var(--brand);
+      margin:8px 0 12px 0;
+      letter-spacing:0.4px;
+    }
+
+    .body {
+      font-size:15px;
+      line-height:1.6;
+      color:#111;
+      margin-bottom:20px;
+    }
+    .body .amount { font-weight:700; }
+
+    .details { margin:10px 0 18px 0; font-size:13px; color:var(--muted); }
+
+    .footer {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      margin-top:auto;
+    }
+    .doc {
+      text-align:right;
+      font-size:13px;
+    }
+    .sig-line {
+      display:block;
+      width:220px;
+      height:1px;
+      background:#ccc;
+      margin-bottom:6px;
+      margin-left:auto;
+    }
+
+    .small { font-size:12px; color:var(--muted); }
+
+    /* Print tweaks */
+    @page { size: A4; margin: 0; }
+    @media print {
+      body { background:#fff; }
+      .receipt { box-shadow:none; margin:0; width:210mm; height:148.5mm; padding:12mm; border-radius:0; }
+      .no-print { display:none; }
+    }
+
+    /* Responsive for smaller screens */
+    @media (max-width:480px){
+      .receipt{padding:12px;width:100%;height:auto;margin:8px;}
+      .sig-line{width:160px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt" role="document" aria-label="Money Receipt">
+    <div class="header" role="banner">
+      <div class="hdr-left">
+        <div><strong>Patient ID:</strong> <span id="patient-id">{{data.patient_id}}</span></div>
+      </div>
+      <div class="hdr-right">
+        <div><strong>Date:</strong> <span id="date">{{data.today}}</span></div>
+      </div>
+    </div>
+
+    <div class="title" aria-hidden="true">Money Receipt</div>
+
+    <div class="body" id="receipt-body">
+      <!-- Sentence with placeholders replaced by demo data below -->
+      <span id="received-text">
+        Received with thanks from <strong id="pname">{{data.patient_name}}</strong> of
+        <strong id="paddr">{{data.patient_address}}</strong> an amount of
+        <strong class="amount" id="amount">Rs {{data.consultation_fees}}</strong> for Doctor Consultation Charges.
+      </span>
+    </div>
+
+    <div class="footer" role="contentinfo">
+      <div class="small">
+        <div><strong>Clinic:</strong> {{data.clinic_name}}</div>
+        <div style="margin-top:6px;">{{data.clinic_address}} • Phone: {{data.clinic_contact}}</div>
+      </div>
+
+      <div class="doc" aria-label="Doctor signature">
+        <span class="sig-line" aria-hidden="true"></span>
+        <div><strong>Dr. {{data.doctor_name}}</strong></div>
+        <div><strong>{{data.qualifications}}</strong></div>
+        <div style="margin-top:4px;">Regd No: <strong id="license">{{data.doctor_license}}</strong></div>
+      </div>
+    </div>
+
+    <div style="margin-top:8px;text-align:right;">
+      <button class="no-print" onclick="window.print()" style="padding:8px 12px;border-radius:6px;border:0;background:var(--brand);color:#fff;cursor:pointer;">Print</button>
+    </div>
+  </div>
+</body>
+</html>
