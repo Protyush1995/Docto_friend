@@ -140,3 +140,7 @@ def get_clinic_by_doctor_id(doctor_id:str) -> Dict:
 def get_clinic_by_clinic_id(clinic_id:str) -> Dict:
     clinic_data = clinic_db.find_by_id(id_val=clinic_id,id_field="clinic_id")
     return clinic_data
+
+def remove_clinic_by_doc_clin_id(clinic_id:str,doctor_id:str) -> Dict:
+    response = clinic_db.delete_record(primary_key_name1='doctor_id',primary_key_val1=doctor_id,primary_key_name2='clinic_id',primary_key_val2=clinic_id)
+    return response

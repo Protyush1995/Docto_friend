@@ -120,6 +120,29 @@ class DatabaseOperations:
             "modified_count": result.modified_count,
             "acknowledged": result.acknowledged
         }
+    
+
+    def delete_record(self, primary_key_name1: str, primary_key_val1: str, primary_key_name2: str, primary_key_val2: str) -> Dict:
+        """
+        Delete document(s) matching primary_key_name == primary_key_val.
+
+        :param primary_key_name: field name to match (e.g., "doc_id")
+        :param primary_key_val: value to match
+        :param delete_one: if True delete a single matching document; if False delete all matches
+        :return: dict with result info: {"deleted_count": int, "acknowledged": bool}
+        :raises ValueError: if inputs are invalid
+        """
+        if not all([primary_key_name1,primary_key_val1,primary_key_name2,primary_key_val2]) :
+            raise ValueError("REQUIRED: primary_key_name1,primary_key_val1,primary_key_name2,primary_key_val2 must be provided")
+
+        filter_doc = {primary_key_name1: primary_key_val1, primary_key_name2: primary_key_val2}
+
+        result = self.collection.delete_one(filter_doc)
+        print(f"DB OPERATIONS LOG :: Record removal response from mongo {result}")
+    
+
+        return result
+
 
     def find_by_id(self, id_val: str, id_field: str) -> Optional[Dict]:
         """

@@ -658,7 +658,7 @@
               <div style="margin-top:6px"><strong>License:</strong> <strong>{{ doctor_data.license  }} 
                   </strong></div>
               <div style="margin-top:8px" class="action-row">
-                  <a id="openDiagnose" class="btn" href="/doctor-diagnose-patient?doctor_id={{doctor_data.doctor_id}}" target="_blank">Diagnose Patient</a>
+                  <a id="openDiagnose" class="btn" href="/doctor-diagnose-patient?doctor_id={{doctor_data.doctor_id}}" target="_blank"  style="pointer-events: none;">Diagnose Patient with uTAN</a>
                   <a href="{{ url_for('main.doctor_clinic_seed_form') }}" class="btn">Add Clinics</a>
                   <a href="{{ url_for('main.doctor_edit_profile_form', doctor_id=doctor_data.doctor_id) }}" class="btn">Edit Profile</a>
               </div>
@@ -772,12 +772,16 @@
 
                     <div class="clinic-meta">
                         <h3><a class="ghost" href="/clinic_dashboard/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" aria-label="Clinic Dashboard" title="View Clinic Dashboard">{{ clinic.clinicname }}</a>
-                           <a class="ghost" href="/doc_clinic_update/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" class="edit-icon" aria-label="Edit clinic" title="Edit Clinic Details">
+                           <a class="ghost" href="/doc_delete_clinic/{{doctor_data.doctor_id}}/{{clinic.clinic_id}}" class="edit-icon" aria-label="Delete clinic" title="Remove Clinic Entry">
                               <!-- simple pencil SVG -->
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"/>
-                                <path d="M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
+                                <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                               </svg>
+
                             </a>
                         </h3>
                         <p>Registered since: {{ clinic.created_at }}</p>
@@ -806,7 +810,7 @@
     </section>
 
     <footer>
-      © 2025 Doctor Dashboard — demo data only
+      © 2026 Doctor Dashboard — by DoctoPal
     </footer>
   </div>
 

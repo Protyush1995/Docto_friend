@@ -51,7 +51,6 @@ def get_iso_week(dt):
 
     return {'year': d_thu_ist.year, 'week': week_no}
 
-
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 DATE_TODAY = datetime.now(IST).date()
 # Loading API key for SMS OTP verification
@@ -71,7 +70,6 @@ CURRENT_WEEK = week_year["week"]
 CURRENT_YEAR = week_year["year"]
 UPCOMING_WEEK = CURRENT_WEEK+1
 print(f"ROUTE LOG:: Current week = {CURRENT_WEEK}, Upcoming week = {UPCOMING_WEEK}, Today = {DATE_TODAY}------------------------------------------------------------------------------------------------------------")
-
 
 @bp.route("/", methods=["GET"])
 def doctor_login_page():
@@ -216,7 +214,7 @@ def doctor_clinic_seed_form():
 
         # Save to DB
         response = clinic_database_management.append_clinic_registration_record(clinic_data)
-        print("Inserted clinic:", response)
+        print(f"ROUTE LOG :: Inserted clinic: {response}")
         return jsonify(success=True,doctor_id=doctor_id,message="Clinic has been inserted successfully!!",redirect=True), 201
 
     username=session.get("doctor_id")
@@ -384,8 +382,6 @@ def generate_prescription_patient():
         'patient_prescription_html': html,
     }), 200
 
-
-
 @bp.route("/doctor-profile", methods=["GET"])
 def doctor_profile():
     """
@@ -502,7 +498,6 @@ def doc_clinic_update(doctor_id:str,clinic_id:str):
         visit_schedule_serialized = visit_schedule_serialized
     )
 
-
 @bp.route('/doc_clinic_update/<doctor_id>/<clinic_id>', methods=["POST"])
 def doc_clinic_update_post(doctor_id:str,clinic_id:str):
 
@@ -521,7 +516,22 @@ def doc_clinic_update_post(doctor_id:str,clinic_id:str):
     except Exception as e:
         current_app.logger.exception("Failed to update Clinic profile !! Contact Admin!!")
         return jsonify(success=False, error="internal_error"), 500
+
+@bp.route('/doc_delete_clinic/<doctor_id>/<clinic_id>', methods=["GET"])
+def doc_clinic_delete(doctor_id:str,clinic_id:str):
+    if not doctor_id or not clinic_id:
+        return redirect(url_for('main.doctor_login_page'))
     
+    response = clinic_database_management.remove_clinic_by_doc_clin_id(clinic_id=clinic_id,doctor_id=doctor_id)
+    
+    if response.acknowledged :
+        print(f"ROUTE LOG :: Clinic removal successful. Delete Count {response.deleted_count} ")
+    else:
+        print(f"ROUTE LOG :: Clinic removal unsuccessful. SERVER RESPONSE !! => {response} ")
+    
+    return redirect(url_for('main.doc_dashboard', doctor_id=doctor_id))
+    
+
 
 @bp.route('/clinic_dashboard/<doctor_id>/<clinic_id>', methods=["GET"])
 def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
@@ -538,7 +548,6 @@ def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
         clinic_address = clinic_address,
         visit_schedule = visit_schedule
     )
-
 
 #-------------------------------- >  Helper functions  < ---------------------------------------------------
 
@@ -612,7 +621,6 @@ def ordered_list_to_dict(schedule_list: list):
             out[name.lower()] = times
     return out
 
-
 def extract_doctor_affiliations(rec):
     # rec may be dict from Mongo; normalize keys and nested clinic_address
     addr = rec.get("clinic_address", {}) or {}
@@ -625,6 +633,5 @@ def extract_doctor_affiliations(rec):
         "clinic_name": rec.get("clinicname") or "",
         "address": str_address 
     }
-
 
 #-------------------------------------------------- END ----------------------------------------------------------------------
