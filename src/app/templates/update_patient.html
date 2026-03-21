@@ -460,7 +460,7 @@
   window.imageMime = null;
   window.imageFilename = null;
 
-  cancel.addEventListener('click', () => { window.history.back(); });
+  cancel.addEventListener('click', () => { location.reload(); });
 
   function validPhone(v){ return /^\d{10}$/.test(v); }
 
@@ -493,8 +493,8 @@
       investigations: InvestModule.getRows(),   // array of strings
       medications: RxModule.getRows(),         // array of {medicine, regime, duration}
       patient_id: "{{ patient.patient_id}}",
-      doctor_id: "{{ patient.doctor_id}}",
-      clinic_id: "{{ patient.clinic_id}}",
+      doctor_id: "{{ doctor_data.doctor_id}}",
+      clinic_id: "{{ clinic_data.clinic_id}}",
       attachments: null
     };
 
@@ -542,6 +542,7 @@
     modal.setAttribute('aria-hidden', 'true');
     htmlContainer.innerHTML = '';
     document.body.style.overflow = '';
+    //location.reload();
   }
 
   btnCancel.addEventListener('click', close);

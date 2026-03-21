@@ -351,6 +351,22 @@ def update_patient():
     
     return render_template("update_patient.html",doctor_data=doctor_data,patient=patient,clinic_data=clinic_data,clinic_address=clinic_address) 
 
+@bp.route("/new-patient-form", methods=["GET"])
+def new_patient():
+
+    doctor_id = request.args.get("doctor_id", "").strip()
+    clinic_id = request.args.get("clinic_id", "").strip()
+    print(f"ROUTE LOG :: Printing from /new-patient-form Doctor ID = {doctor_id}, clinic_id = {clinic_id}................")
+    if not doctor_id or not clinic_id: return jsonify({"error": "Arguments missing! Doctor ID or uTAN missing!!"}), 404
+
+    patient = {}
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=doctor_id)
+    clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=clinic_id)
+    clinic_address = dict_to_string(d=clinic_data['clinic_address'])
+    
+    return render_template("update_patient.html",doctor_data=doctor_data,patient=patient,clinic_data=clinic_data,clinic_address=clinic_address) 
+
+
 @bp.route("/patient-generate-prescription", methods=["POST"])
 def generate_prescription_patient():
 
@@ -359,11 +375,14 @@ def generate_prescription_patient():
     print(f"ROUTE LOG :: Printing from /patient-update-form patient_data = {json.dumps(data)}................")
     if not data : return jsonify({"error": "Arguments missing! Patient data missing!! Unable to generate prescription"}), 404
     
+    update_response = patient_database_management.update_patient_profile(data=data)
+    print(f"ROUTE LOG :: Printing response generate_prescription_patient {update_response}")
+    if not update_response['success'] : return jsonify({"error": "update unsuccessfull! Patient data not entered in db!! Unable to generate prescription"}), 404
+
     doctor_data = doctor_database_management.get_doctor_by_id(doctor_id=data["doctor_id"])
     clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id=data["clinic_id"])
     visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="kv")
     clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
-
 
     clinics_list = clinic_database_management.get_clinic_by_doctor_id(data["doctor_id"])
     if isinstance(clinics_list, dict):

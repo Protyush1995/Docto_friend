@@ -15,6 +15,37 @@ from .db_operations import DatabaseOperations
 from datetime import datetime, date, time, timedelta, timezone
 import zoneinfo
 
+def get_iso_week(dt):
+    """
+    Compute ISO year/week using the date components in IST.
+    Accepts date or datetime; uses IST-local date (year/month/day) to construct
+    an IST-midnight datetime and then follows ISO week rules.
+    Returns {'year': int, 'week': int}.
+    """
+    # If datetime, convert to IST then take date; if date, use directly
+    if isinstance(dt, datetime):
+        dt_ist = dt.astimezone(IST)
+        d = dt_ist.date()
+    else:
+        d = dt  # assume date
+
+    # Construct IST-midnight for that local date
+    d_ist_mid = datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=IST)
+
+    # ISO weekday: Mon=1 .. Sun=7
+    day_num = d_ist_mid.isoweekday()
+
+    # Move to Thursday of this week (IST)
+    d_thu_ist = d_ist_mid + timedelta(days=(4 - day_num))
+
+    # Jan 1 of that ISO-year at IST midnight
+    year_start_ist = datetime(d_thu_ist.year, 1, 1, 0, 0, 0, tzinfo=IST)
+
+    days_diff = (d_thu_ist - year_start_ist).days
+    week_no = (days_diff + 1 + 6) // 7
+
+    return {'year': d_thu_ist.year, 'week': week_no}
+
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -25,6 +56,11 @@ patient_db = DatabaseOperations(env_file=str(patient_env))
 MAX_ID_ATTEMPTS = 10
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
+
+DATE_TODAY = datetime.now(IST).date()
+week_year = get_iso_week(DATE_TODAY)
+CURRENT_WEEK = week_year["week"]
+CURRENT_YEAR = week_year["year"]
 
 def parse_iso_z(s: str) -> datetime:
     """
@@ -139,6 +175,21 @@ def append_patient_registration_record(data: Dict) -> Dict:
     return record_copy
 
 def update_patient_profile(data: Dict) -> Dict:
+
+    patient_id_raw = data.get("patient_id")
+    if not patient_id_raw:
+        patient_id ,patient_token = _generate_patient_id_and_token()
+        print(f"PATIENT DB LOG :: IST visit date is {DATE_TODAY}..........")
+        data['patient_id']=patient_id
+        data['uTAN']=patient_token
+        data['visit_date']=str(DATE_TODAY)
+        data['appointment_week']=str(CURRENT_WEEK)
+        data['appointment_year']=str(CURRENT_YEAR)
+        data['created_at']=str(datetime.now(IST))
+
+    print("PATIENT DB MANAGEMENT LOG : patient data...........")
+    print(json.dumps(data))
+
     #updating profile data of MongoDb database
     success = patient_db.update_record (primary_key_name="patient_id",primary_key_val=data["patient_id"],updates=data)
     response = {"success":success["acknowledged"],"clinic_id":data["clinic_id"]}

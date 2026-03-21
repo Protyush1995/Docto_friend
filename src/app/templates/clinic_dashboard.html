@@ -85,7 +85,7 @@
               <p>Registered: {{clinic_data.created_at}}</p>
               <div class="actions">
                 <button class="btn ghost" onclick="alert('Open appointments (demo)')"  style="pointer-events: none;" >Appointments</button>
-                <button class="btn" >Diagnose Patient</button>
+                <a class="btn" href="/new-patient-form?doctor_id={{doctor_data.doctor_id}}&clinic_id={{clinic_data.clinic_id}}" target="_blank">Diagnose Patient</a>
               </div>
             </div>
           </div>
@@ -159,7 +159,7 @@
       </aside>
     </div>
 
-    <footer>© 2026 Clinic Dashboard — demo data only</footer>
+    <footer>© 2026 Clinic Dashboard — by DoctoPal</footer>
 
     
   </div>

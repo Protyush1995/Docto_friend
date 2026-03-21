@@ -112,7 +112,7 @@ class DatabaseOperations:
         result = self.collection.update_one(
             {primary_key_name : primary_key_val},
             {"$set": updates},
-            upsert=False
+            upsert=True
         )
 
         return {
