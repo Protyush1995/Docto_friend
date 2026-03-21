@@ -776,7 +776,7 @@ document.getElementById('moneyReceiptBtn').addEventListener('click', () => {
     today: new Date().toLocaleDateString(),
     patient_name: document.getElementById('patient_name').value.trim() || 'PATIENT_NAME',
     patient_address: document.getElementById('patient_address').value.trim() || 'PATIENT_ADDRESS',
-    consultation_fees: '{{patient.doctor_consultation_fees}}',
+    consultation_fees: '500',
     clinic_name: '{{clinic_data.clinicname}}',
     clinic_address: '{{clinic_address}}',
     clinic_contact: '{{clinic_data.primary_contact_number}} / {{clinic_data.secondary_contact_number}}',
