@@ -225,13 +225,14 @@
         </div>
 
         <div class="full actions">
+          <button type="button" class="btn ghost" id="saveBtn">Save Entry</button>
           <button type="button" class="btn ghost" id="cancelBtn">Cancel Entry</button>
           <button type="submit" class="btn">Generate Prescription</button>
         </div>
       </form>
 
-      <h3 style="margin-top:16px;">Updated JSON Preview</h3>
-      <pre id="jsonPreview">{}</pre>
+      <h3 style="margin-top:16px;" hidden>Updated JSON Preview</h3>
+      <pre id="jsonPreview" hidden>{}</pre>
 
       <!-- Hidden full-size HTML modal -->
       <div id="imgModal" class="modal" aria-hidden="true" role="dialog" style="display:none;">
@@ -239,7 +240,7 @@
         <div class="modal-content" role="document" aria-label="Rendered prescription">
           <div class="modal-toolbar">
             <button id="printBtn" class="btn">Print</button>
-            <button id="whatsappBtn" class="btn">Send via WhatsApp</button>
+            <button id="whatsappBtn" class="btn">Preview Prescription</button>
             <button id="moneyReceiptBtn" class="btn">Generate money receipt</button>
             <button id="cancelBtnModal" class="btn">Cancel</button>
           </div>
@@ -498,9 +499,6 @@
       attachments: null
     };
 
-    // print to console and preview
-    console.log('Generated payload:', payload);
-    
 
     try {
       
@@ -511,11 +509,13 @@
         .then(r=>r.json())
         .then(data => window.showModalWithResponse(data));
 
-      document.getElementById('jsonPreview').textContent = JSON.stringify(payload, null, 2);
+      preview.textContent = JSON.stringify(payload, null, 2);
+      // print to console and preview
+      console.log('Generated payload:', payload);
 
     } catch (err) {
       console.log(err);
-      //showError('Network error — try again later');
+      showError('Network error — try again later');
     }
 
     });
@@ -771,12 +771,17 @@ async function generateMoneyReceipt(data) {
 
 // Starter: hook button
 document.getElementById('moneyReceiptBtn').addEventListener('click', () => {
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2, '0');
+  const mm = String(today.getMonth() + 1).padStart(2, '0'); // months are 0-indexed
+  const yyyy = today.getFullYear();
+  const formatted = `${dd}.${mm}.${yyyy}`;
   const data = {
     patient_id: '{{patient.patient_id}}',
-    today: new Date().toLocaleDateString(),
+    today: formatted,
     patient_name: document.getElementById('patient_name').value.trim() || 'PATIENT_NAME',
     patient_address: document.getElementById('patient_address').value.trim() || 'PATIENT_ADDRESS',
-    consultation_fees: '500',
+    consultation_fees: '{{clinic_data.doctor_consultation_fees}}',
     clinic_name: '{{clinic_data.clinicname}}',
     clinic_address: '{{clinic_address}}',
     clinic_contact: '{{clinic_data.primary_contact_number}} / {{clinic_data.secondary_contact_number}}',

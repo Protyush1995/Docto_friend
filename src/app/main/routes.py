@@ -559,13 +559,15 @@ def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
     clinic_data = clinic_database_management.get_clinic_by_clinic_id(clinic_id)
     clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
     visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="kv")
+    patient_list = patient_database_management.get_patient_by_doctor_id_clinic_id(doctor_id=doctor_id,clinic_id=clinic_id)
 
     return render_template(
         'clinic_dashboard.html',
         doctor_data = doctor_data,
         clinic_data = clinic_data,
         clinic_address = clinic_address,
-        visit_schedule = visit_schedule
+        visit_schedule = visit_schedule,
+        patient_list = patient_list
     )
 
 #-------------------------------- >  Helper functions  < ---------------------------------------------------

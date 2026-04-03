@@ -123,11 +123,74 @@
           </div>
 
           <div class="stats-strip" role="region" aria-label="clinic stats">
-            <div class="stat"><h3 id="todayPatients">4</h3><p>Patients Today</p></div>
-            <div class="stat"><h3 id="upcoming">12</h3><p>Upcoming Appointments</p></div>
-            <div class="stat"><h3 id="checkedIn">2</h3><p>Checked in</p></div>
+            <div class="stat"><h3 id="todayPatients">{{appointments_today}}</h3><p>Patients Today</p></div>
+            <div class="stat"><h3 id="upcoming">{{upcoming_appointments}}</h3><p>Upcoming Appointments</p></div>
+            <div class="stat"><h3 id="checkedIn">{{previous_appointments}}</h3><p>Previous Appointments</p></div>
           </div>
         </div>
+
+        <div class="card" id="jinja-table-card" style="margin-top:16px">
+        <div class="label"><strong>Appointments </strong></div>
+
+        <div style="display:flex;gap:8px;align-items:center;margin:8px 0">
+          <label style="font-size:small">Month:</label>
+          <select id="monthFilter" class="btn ghost" style="padding:6px;font-size:small">
+            <option value="all">All</option>
+            <option value="01">Jan</option>
+            <option value="02">Feb</option>
+            <option value="03">Mar</option>
+            <option value="04">Apr</option>
+            <option value="05">May</option>
+            <option value="06">Jun</option>
+            <option value="07">Jul</option>
+            <option value="08">Aug</option>
+            <option value="09">Sep</option>
+            <option value="10">Oct</option>
+            <option value="11">Nov</option>
+            <option value="12">Dec</option>
+          </select>
+
+          <label style="font-size:small">Year:</label>
+          <select id="yearFilter" class="btn ghost" style="padding:6px;font-size:small"></select>
+
+          <button id="applyFilter" class="btn" style="padding:6px;font-size:small">Apply</button>
+          <button id="downloadCsv" class="btn" style="padding:6px;font-size:small;margin-left:auto">Download CSV</button>
+        </div>
+
+        <div style="overflow:auto">
+          <table id="clinicTable" style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Visit Date</th>
+                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Patient Name</th>
+                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Age</th>
+                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Sex</th>
+                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Chief Complaint</th>
+                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Primary Diagnosis</th>
+                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Prescription</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for patient in patient_list %}
+              <tr data-row-id="{{ patient.patient_id }}">
+                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.visit_date }}</td>
+                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_name }}</td>
+                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.age }}</td>
+                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.sex }}</td>
+                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_CO }}</td>
+                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_OE }}</td>
+                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_prescription }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="7" style="padding:12px;color:var(--muted);text-align:center">No entries yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       </main>
 
       <aside class="side">
@@ -182,13 +245,7 @@
       document.body.appendChild(a); a.click(); a.remove();
     });
 
-    // Replace demo stats programmatically (optional)
-    (function(){
-      const stats = { todayPatients: 4, upcoming: 12, checkedIn: 2 };
-      document.getElementById('todayPatients').textContent = stats.todayPatients;
-      document.getElementById('upcoming').textContent = stats.upcoming;
-      document.getElementById('checkedIn').textContent = stats.checkedIn;
-    })();
+    
   </script>
 
   <script>
@@ -268,6 +325,96 @@
     }
   </script>
 
+  <script>
+  (function(){
+    const table = document.getElementById('clinicTable');
+    const tbody = table.querySelector('tbody');
+    const monthEl = document.getElementById('monthFilter');
+    const yearEl = document.getElementById('yearFilter');
+    const applyBtn = document.getElementById('applyFilter');
+    const downloadBtn = document.getElementById('downloadCsv');
+
+    // Parse date string to {year, month, day}
+    function parseDateString(s){
+      if(!s) return null;
+      s = s.trim();
+      // Accept dd.mm.yyyy
+      const dmy = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+      if(dmy) return { day:parseInt(dmy[1],10), month: String(dmy[2]).padStart(2,'0'), year: String(dmy[3]) };
+      // Accept yyyy-mm-dd or yyyy/mm/dd
+      const ymd = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+      if(ymd) return { day: String(ymd[3]).padStart(2,'0'), month: String(ymd[2]).padStart(2,'0'), year: String(ymd[1]) };
+      // Accept toLocale strings fallback
+      const dt = new Date(s);
+      if(!isNaN(dt)) return { day: String(dt.getDate()).padStart(2,'0'), month: String(dt.getMonth()+1).padStart(2,'0'), year: String(dt.getFullYear()) };
+      return null;
+    }
+
+    // Build rows data cache: [{tr, cells:[], date:{}}]
+    const rows = Array.from(tbody.querySelectorAll('tr[data-row-id]')).map(tr => {
+      const cells = Array.from(tr.children).map(td => td.textContent.trim());
+      const dateStr = cells[0]; // Visit Date is first column
+      const dateObj = parseDateString(dateStr);
+      return { tr, cells, dateObj };
+    });
+
+    // Populate year select from available years
+    const years = Array.from(new Set(rows.map(r => r.dateObj && r.dateObj.year).filter(Boolean))).sort();
+    yearEl.appendChild(new Option('All','all'));
+    years.forEach(y => yearEl.appendChild(new Option(y,y)));
+
+    // Filter function: show rows matching month/year (month 'all' means any)
+    function applyFilter(){
+      const month = monthEl.value;
+      const year = yearEl.value;
+      rows.forEach(r => {
+        const matches = r.dateObj && (month === 'all' || r.dateObj.month === month) && (year === 'all' || r.dateObj.year === year);
+        r.tr.style.display = matches ? '' : 'none';
+      });
+    }
+
+    applyBtn.addEventListener('click', applyFilter);
+
+    // CSV download: include only visible rows (or all if none visible?)
+    function downloadCSV(){
+      const visibleRows = rows.filter(r => r.tr.style.display !== 'none');
+      if(visibleRows.length === 0){
+        alert('No rows to download.');
+        return;
+      }
+      const headerCells = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+      const csvRows = [headerCells.join(',')];
+      visibleRows.forEach(r => {
+        // Escape commas and quotes
+        const line = r.cells.map(v => {
+          if(v == null) return '';
+          const escaped = String(v).replace(/"/g, '""');
+          return `"${escaped}"`;
+        }).join(',');
+        csvRows.push(line);
+      });
+      const csv = csvRows.join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const now = new Date();
+      const fname = `clinic_table_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    downloadBtn.addEventListener('click', downloadCSV);
+
+    // Optional: auto-apply initial filter (show all)
+    monthEl.value = 'all';
+    yearEl.value = 'all';
+    applyFilter();
+  })();
+  </script>
 
 </body>
 </html>
