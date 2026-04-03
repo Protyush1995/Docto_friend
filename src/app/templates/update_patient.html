@@ -89,9 +89,7 @@
           <div class="sub"><strong>Doctor: Dr {{doctor_data.firstname}} {{doctor_data.lastname}} , Patient Name: {{ patient.patient_name }} , Patient uTAN: {{ patient.uTAN }}</strong></div>
         </div>
       </div>
-      <div>
-        <a href="/doc_dashboard/{{ patient.doctor_id }}" class="btn btn-small btn-ghost" style="text-decoration:none; display:inline-block; padding:8px 10px;">Back to Dashboard</a>
-      </div>
+      
     </header>
 
     <main class="card">
@@ -225,9 +223,8 @@
         </div>
 
         <div class="full actions">
-          <button type="button" class="btn ghost" id="saveBtn">Save Entry</button>
-          <button type="button" class="btn ghost" id="cancelBtn">Cancel Entry</button>
           <button type="submit" class="btn">Generate Prescription</button>
+          <button type="button" class="btn ghost" id="cancelBtn">Cancel Entry</button>
         </div>
       </form>
 
@@ -239,10 +236,9 @@
         <div class="modal-backdrop" id="imgModalBackdrop"></div>
         <div class="modal-content" role="document" aria-label="Rendered prescription">
           <div class="modal-toolbar">
-            <button id="printBtn" class="btn">Print</button>
-            <button id="whatsappBtn" class="btn">Preview Prescription</button>
-            <button id="moneyReceiptBtn" class="btn">Generate money receipt</button>
+            <button id="printBtn" class="btn">Print Prescription</button>
             <button id="cancelBtnModal" class="btn">Cancel</button>
+            <button id="moneyReceiptBtn" class="btn" >Generate money receipt</button>
           </div>
           <div class="modal-body">
             <div id="modalHtmlContainer" class="modal-html" aria-live="polite"></div>
@@ -254,7 +250,7 @@
     </main>
 
     <footer style="margin-top:18px; text-align:center; color:var(--muted); font-size:13px;">
-      © 2026 Patient Dashboard — demo
+      © 2026 Patient Diagnosis form - by Doctopal
     </footer>
   </div>
 
@@ -529,8 +525,7 @@
   const backdrop = document.getElementById('imgModalBackdrop');
   const htmlContainer = document.getElementById('modalHtmlContainer');
   const btnCancel = document.getElementById('cancelBtnModal');
-  const btnWhatsapp = document.getElementById('whatsappBtn');
-
+  
   function show(html) {
     htmlContainer.innerHTML = html;
     modal.style.display = 'flex';
@@ -549,12 +544,7 @@
   backdrop.addEventListener('click', close);
   document.addEventListener('keydown', (e)=> { if (e.key === 'Escape') close(); });
 
-  btnWhatsapp.addEventListener('click', function(){
-    // placeholder — no action as requested
-    btnWhatsapp.disabled = true;
-    setTimeout(()=> btnWhatsapp.disabled = false, 600);
-  });
-
+ 
   window.showModalWithResponse = function(response){
     console.log("Printing response received from patient prescription upadate backend")
     console.log(response);

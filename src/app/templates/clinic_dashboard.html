@@ -66,7 +66,7 @@
         <div class="logo"  aria-hidden="true"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpeg') }}" alt="Logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
         <div>
           <h1>Clinic Dashboard</h1>
-          <div class="sub">{{clinic_data.clinicname}} — for {{doctor_data.firstname}} {{doctor_data.lastname}}</div>
+          <div class="sub">{{clinic_data.clinicname}} — for Dr. {{doctor_data.firstname}} {{doctor_data.lastname}} <div class="chip">Doctor ID: {{doctor_data.doctor_id}} , Doctor Member since: {{doctor_data.created_at}}</div></div>
         </div>
       </div>
       <div>
@@ -82,9 +82,8 @@
             <div class="clinic-avatar">PS</div>
             <div class="meta">
               <h2>{{clinic_data.clinicname}}</h2>
-              <p>Registered: {{clinic_data.created_at}}</p>
+              <p><div class="chip">Clinic ID: {{clinic_data.clinic_id}} , Registered: {{clinic_data.created_at}} </div></p>
               <div class="actions">
-                <button class="btn ghost" onclick="alert('Open appointments (demo)')"  style="pointer-events: none;" >Appointments</button>
                 <a class="btn" href="/new-patient-form?doctor_id={{doctor_data.doctor_id}}&clinic_id={{clinic_data.clinic_id}}" target="_blank">Diagnose Patient</a>
               </div>
             </div>
@@ -116,82 +115,12 @@
             </div>
           </div>
 
-          <div class="chips" aria-hidden="true">
-            <div class="chip">Clinic ID: {{clinic_data.clinic_id}}</div>
-            <div class="chip">Doctor ID: {{doctor_data.doctor_id}}</div>
-            <div class="chip">Doctor Member since: {{doctor_data.created_at}}</div>
-          </div>
-
           <div class="stats-strip" role="region" aria-label="clinic stats">
             <div class="stat"><h3 id="todayPatients">{{appointments_today}}</h3><p>Patients Today</p></div>
             <div class="stat"><h3 id="upcoming">{{upcoming_appointments}}</h3><p>Upcoming Appointments</p></div>
             <div class="stat"><h3 id="checkedIn">{{previous_appointments}}</h3><p>Previous Appointments</p></div>
           </div>
         </div>
-
-        <div class="card" id="jinja-table-card" style="margin-top:16px">
-        <div class="label"><strong>Appointments </strong></div>
-
-        <div style="display:flex;gap:8px;align-items:center;margin:8px 0">
-          <label style="font-size:small">Month:</label>
-          <select id="monthFilter" class="btn ghost" style="padding:6px;font-size:small">
-            <option value="all">All</option>
-            <option value="01">Jan</option>
-            <option value="02">Feb</option>
-            <option value="03">Mar</option>
-            <option value="04">Apr</option>
-            <option value="05">May</option>
-            <option value="06">Jun</option>
-            <option value="07">Jul</option>
-            <option value="08">Aug</option>
-            <option value="09">Sep</option>
-            <option value="10">Oct</option>
-            <option value="11">Nov</option>
-            <option value="12">Dec</option>
-          </select>
-
-          <label style="font-size:small">Year:</label>
-          <select id="yearFilter" class="btn ghost" style="padding:6px;font-size:small"></select>
-
-          <button id="applyFilter" class="btn" style="padding:6px;font-size:small">Apply</button>
-          <button id="downloadCsv" class="btn" style="padding:6px;font-size:small;margin-left:auto">Download CSV</button>
-        </div>
-
-        <div style="overflow:auto">
-          <table id="clinicTable" style="width:100%;border-collapse:collapse">
-            <thead>
-              <tr>
-                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Visit Date</th>
-                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Patient Name</th>
-                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Address</th>
-                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Age</th>
-                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Sex</th>
-                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Chief Complaint</th>
-                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Primary Diagnosis</th>
-                
-              </tr>
-            </thead>
-            <tbody>
-              {% for patient in patient_list %}
-              <tr data-row-id="{{ patient.patient_id }}">
-                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.visit_date }}</td>
-                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_name }}</td>
-                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_address }}</td>
-                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.age }}</td>
-                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.sex }}</td>
-                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_CO }}</td>
-                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_OE }}</td>
-                
-              </tr>
-              {% else %}
-              <tr>
-                <td colspan="7" style="padding:12px;color:var(--muted);text-align:center">No entries yet.</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       </main>
 
@@ -203,7 +132,7 @@
             </a>
             <div style="display:flex;gap:8px;margin-top:8px">
               <button class="btn" id="downloadQr">Download</button>
-              <a class="btn ghost" href="/clinic-booking?clinic_id={{clinic_data.clinic_id}}&doctor_id={{doctor_data.doctor_id}}" target="_blank" rel="noopener noreferrer"  >Patient Booking View</a>
+              <a class="btn ghost" href="/clinic-booking?clinic_id={{clinic_data.clinic_id}}&doctor_id={{doctor_data.doctor_id}}" target="_blank" rel="noopener noreferrer"  style="pointer-events: none;" >Patient Booking View</a>
             </div>
             <div class="hint">Tap QR to open / long-press to save on mobile</div>
           </div>
@@ -217,11 +146,74 @@
           </div>
         </div>
 
-        <div style="margin-top:12px" class="card">
-          <div class="label"><strong>Notes</strong></div>
-          <div style="margin-top:8px;color:var(--muted);font-size:13px">No notes yet.</div>
-        </div>
+        
       </aside>
+    </div>
+
+    <div class="card" id="jinja-table-card" style="margin-top:16px">
+          <div class="label"><strong>Appointments </strong></div>
+
+          <div style="display:flex;gap:8px;align-items:center;margin:8px 0">
+            <label style="font-size:small">Month:</label>
+            <select id="monthFilter" class="btn ghost" style="padding:6px;font-size:small">
+              <option value="all">All</option>
+              <option value="01">Jan</option>
+              <option value="02">Feb</option>
+              <option value="03">Mar</option>
+              <option value="04">Apr</option>
+              <option value="05">May</option>
+              <option value="06">Jun</option>
+              <option value="07">Jul</option>
+              <option value="08">Aug</option>
+              <option value="09">Sep</option>
+              <option value="10">Oct</option>
+              <option value="11">Nov</option>
+              <option value="12">Dec</option>
+            </select>
+
+            <label style="font-size:small">Year:</label>
+            <select id="yearFilter" class="btn ghost" style="padding:6px;font-size:small"></select>
+
+            <button id="applyFilter" class="btn" style="padding:6px;font-size:small">Apply</button>
+            <button id="downloadCsv" class="btn" style="padding:6px;font-size:small;margin-left:auto">Download</button>
+          </div>
+
+          <div style="overflow:auto">
+            <table id="clinicTable" style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr>
+                  <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Visit Date</th>
+                  <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Patient Name</th>
+                  <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Age</th>
+                  <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Sex</th>
+                  <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Address</th>
+                  <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Contact</th>
+                  <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Chief Complaint</th>
+                  <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Primary Diagnosis</th>
+                  
+                </tr>
+              </thead>
+              <tbody>
+                {% for patient in patient_list %}
+                <tr data-row-id="{{ patient.patient_id }}">
+                  <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.visit_date }}</td>
+                  <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_name }}</td>
+                  <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.age }}</td>
+                  <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.sex }}</td>
+                  <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_address }}</td>
+                  <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_mobile }}</td>
+                  <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_CO }}</td>
+                  <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_OE }}</td>
+                  
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="7" style="padding:12px;color:var(--muted);text-align:center">No entries yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
     </div>
 
     <footer>© 2026 Clinic Dashboard — by DoctoPal</footer>
@@ -390,7 +382,7 @@
         // Escape commas and quotes
         const line = r.cells.map(v => {
           if(v == null) return '';
-          const escaped = String(v).replace(/"/g, '""');
+          const escaped = String(v);
           return `"${escaped}"`;
         }).join(',');
         csvRows.push(line);
