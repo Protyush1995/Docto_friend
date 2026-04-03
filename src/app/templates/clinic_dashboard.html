@@ -163,11 +163,12 @@
               <tr>
                 <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Visit Date</th>
                 <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Patient Name</th>
+                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Address</th>
                 <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Age</th>
                 <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Sex</th>
                 <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Chief Complaint</th>
                 <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Primary Diagnosis</th>
-                <th style="text-align:left;padding:8px;font-size: small;border-bottom:1px solid #ddd">Prescription</th>
+                
               </tr>
             </thead>
             <tbody>
@@ -175,11 +176,12 @@
               <tr data-row-id="{{ patient.patient_id }}">
                 <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.visit_date }}</td>
                 <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_name }}</td>
+                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_address }}</td>
                 <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.age }}</td>
                 <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.sex }}</td>
                 <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_CO }}</td>
                 <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_OE }}</td>
-                <td style="padding:8px;font-size: small;border-bottom:1px solid #f0f0f0">{{ patient.patient_prescription }}</td>
+                
               </tr>
               {% else %}
               <tr>
@@ -201,7 +203,7 @@
             </a>
             <div style="display:flex;gap:8px;margin-top:8px">
               <button class="btn" id="downloadQr">Download</button>
-              <a class="btn ghost" href="/clinic-booking?clinic_id={{clinic_data.clinic_id}}&doctor_id={{doctor_data.doctor_id}}" target="_blank" rel="noopener noreferrer"  style="pointer-events: none;" >Patient Booking View</a>
+              <a class="btn ghost" href="/clinic-booking?clinic_id={{clinic_data.clinic_id}}&doctor_id={{doctor_data.doctor_id}}" target="_blank" rel="noopener noreferrer"  >Patient Booking View</a>
             </div>
             <div class="hint">Tap QR to open / long-press to save on mobile</div>
           </div>

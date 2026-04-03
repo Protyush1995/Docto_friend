@@ -560,14 +560,18 @@ def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
     clinic_address = dict_to_string(d=clinic_data["clinic_address"],fmt="vo")
     visit_schedule = dict_to_string(d=clinic_data["visit_schedule"],fmt="kv")
     patient_list = patient_database_management.get_patient_by_doctor_id_clinic_id(doctor_id=doctor_id,clinic_id=clinic_id)
-
+    previous_appointments, appointments_today, upcoming_appointments = count_patients_by_timeframe(patient_list=patient_list)
+    
     return render_template(
         'clinic_dashboard.html',
         doctor_data = doctor_data,
         clinic_data = clinic_data,
         clinic_address = clinic_address,
         visit_schedule = visit_schedule,
-        patient_list = patient_list
+        patient_list = patient_list,
+        previous_appointments=previous_appointments,
+        appointments_today=appointments_today,
+        upcoming_appointments=upcoming_appointments
     )
 
 #-------------------------------- >  Helper functions  < ---------------------------------------------------
@@ -654,5 +658,42 @@ def extract_doctor_affiliations(rec):
         "clinic_name": rec.get("clinicname") or "",
         "address": str_address 
     }
+
+def count_patients_by_timeframe(patient_list: list): 
+    """
+    Returns counts of checked-in patients: today, before today, after today.
+    Expects patient['visit_date'] in 'YYYY-MM-DD' (or ISO-parsable) and patient['checked_in'] boolean.
+    """
+    today = date.today()
+    counts = {"today": 0, "before": 0, "after": 0}
+
+    for p in patient_list:
+        if not p.get("checked_in"):
+            continue
+        vd = p.get("visit_date")
+        if not vd:
+            continue
+        # parse date robustly
+        try:
+            # prefer YYYY-MM-DD
+            visit_dt = datetime.fromisoformat(vd).date()
+        except Exception:
+            try:
+                visit_dt = datetime.strptime(vd, "%d.%m.%Y").date()
+            except Exception:
+                try:
+                    visit_dt = datetime.strptime(vd, "%Y/%m/%d").date()
+                except Exception:
+                    continue  # skip if unparseable
+
+        if visit_dt == today:
+            counts["today"] += 1
+        elif visit_dt < today:
+            counts["before"] += 1
+        else:
+            counts["after"] += 1
+
+    print(f"ROUTE LOG :: Patient Counts before : {counts["before"]} , today : {counts["today"]} , after : {counts["after"]} ")
+    return counts["before"],counts["today"],counts["after"]
 
 #-------------------------------------------------- END ----------------------------------------------------------------------
