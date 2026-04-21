@@ -232,9 +232,9 @@
             <div class="doc-info">
             <h2 id="doctor-name">Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h2>
             <p id="doctor-qual">{{doctor_data.qualifications}}</p>
-            <p id="doctor-qual">{{doctor_data.expertise}}</p>
-            <p id="doctor-fellowship" style="margin-top:6px;">{{doctor_data.practising_or_fellowship}}</p>
-            <p id="doctor-achievements" style="margin-top:6px;">{{doctor_data.achievements}}</p>
+            <p id="doctor-expt">{{doctor_data.expertise}}</p>
+            <p id="doctor-fellowship" style="margin-top:6px;">{{doctor_data.practising_or_fellowship | replace('\n', '<br>') | safe }}</p>
+            <p id="doctor-achievements" style="margin-top:6px;">{{doctor_data.achievements | replace('\n', '<br>') | safe }}</p>
             <p id="doctor-reg" style="margin-top:6px;">Reg No: {{doctor_data.license}}</p>
             </div>
         </div>
