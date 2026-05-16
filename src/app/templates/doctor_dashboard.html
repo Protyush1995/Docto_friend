@@ -483,6 +483,27 @@
       white-space: nowrap;
     }
 
+    .flip-card { position: relative; cursor: pointer; }
+    .flip-card .download-hint {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity .18s ease, transform .18s ease;
+      pointer-events: none;
+    }
+    .flip-card:hover .download-hint {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+
     /* responsive tweak */
     @media (max-width:760px){
       .flip-card .qr-with-label { right:6px; bottom:6px; gap:6px; }
@@ -680,6 +701,7 @@
           </div>-->
           <!-- HTML -->
           <div class="flip-card aspect-ratio">
+            <div class="download-hint">Click to download card</div>
             <img src="{{ url_for('static', filename='image/doctor_card_front.png') }}" alt="" class="card-bg">
             <div class="card-overlay">
               <div class="overlay-center">
@@ -688,7 +710,6 @@
                 <p class="doc-qual"><strong>{{ doctor_data.qualifications }}</strong></p>
                 <p class="doc-qual"><strong>Email: {{ doctor_data.email }}</strong></p>
                 <p class="doc-qual"><strong>Contact ; {{doctor_data.primary_contact_number}}</strong></p>
-                
               </div>
               <!-- QR + label container -->
               <div class="qr-with-label">
@@ -814,12 +835,38 @@
     </footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
   <script>
     // Demo: attach dynamic counts if needed (keeps dummy values)
     document.getElementById('totalClinics').textContent = {{ clinic_length | tojson }};;
     document.getElementById('upcomingAppointments').textContent = {{ appointments_upcoming_week | tojson}};
     document.getElementById('patientsToday').textContent = {{ appointments_today | tojson}};
     document.getElementById('patientsThisWeek').textContent = {{ appointments_current_week | tojson}};
+
+    document.querySelectorAll('.flip-card').forEach(card => {
+      card.addEventListener('click', async (ev) => {
+        // avoid triggering when clicking interactive children if needed
+        ev.stopPropagation();
+        try {
+          // ensure same-origin images or CORS-enabled
+          const canvas = await html2canvas(card, { backgroundColor: null, scale: Math.min(2, window.devicePixelRatio || 1), useCORS: true });
+          canvas.toBlob(blob => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `doctor-card-${Date.now()}.png`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(a.href);
+          }, 'image/png');
+        } catch (err) {
+          console.error('Capture failed', err);
+          alert('Unable to download card — see console for details.');
+        }
+      });
+    });
+
   </script>
 
   <script>

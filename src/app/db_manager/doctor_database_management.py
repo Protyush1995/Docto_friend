@@ -82,7 +82,6 @@ def base64_string_to_data_uri(b64_input: Union[str, bytes], mime: Optional[str] 
     mime = mime or 'application/octet-stream'
     return f"data:{mime};base64,{cleaned}"
 
-
 def validate_registration(data: Dict) -> Optional[str]:
     firstname = (data.get("firstname") or "").strip()
     lastname = (data.get("lastname") or "").strip()
@@ -171,6 +170,7 @@ def update_doctor_profile(data: Dict) -> Dict:
     if "image_data" in data :
         profile_pic_uri = base64_string_to_data_uri(data["image_data"],data['image_mime'])
         data["profile_pic_uri"] = profile_pic_uri
+
     success = db.update_record (primary_key_name="doctor_id",primary_key_val=data["doctor_id"],updates=data)
     response = {"success":success["acknowledged"],"doctor_id":data["doctor_id"]}
     print("DOCTOR DB MANAGEMENT LOG : Message returned by Mongo for profile update...........")
