@@ -208,7 +208,6 @@ def get_patient_by_doctor_id_clinic_id(doctor_id:str,clinic_id:str) -> Dict:
     patient_data_list = patient_db.find_by_two_fields(field1="doctor_id",val1=doctor_id,field2="clinic_id",val2=clinic_id)
     return patient_data_list
 
-
 def get_patient_by_token_number(token_number:int) -> Dict:
     patient_data = patient_db.find_by_id(id_val=token_number,id_field="uTAN")
     return patient_data

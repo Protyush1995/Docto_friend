@@ -14,7 +14,7 @@ from flask import (
     url_for,
 )
 from . import bp
-from ..db_manager import doctor_database_management,clinic_database_management,patient_database_management
+from ..db_manager import doctor_database_management,clinic_database_management,patient_database_management,medicine_database_management
 from ..db_manager import db_operations
 from dotenv import dotenv_values
 from datetime import datetime, date, time, timedelta, timezone
@@ -366,7 +366,6 @@ def new_patient():
     
     return render_template("update_patient.html",doctor_data=doctor_data,patient=patient,clinic_data=clinic_data,clinic_address=clinic_address) 
 
-
 @bp.route("/patient-generate-prescription", methods=["POST"])
 def generate_prescription_patient():
 
@@ -550,8 +549,6 @@ def doc_clinic_delete(doctor_id:str,clinic_id:str):
     
     return redirect(url_for('main.doc_dashboard', doctor_id=doctor_id))
     
-
-
 @bp.route('/clinic_dashboard/<doctor_id>/<clinic_id>', methods=["GET"])
 def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
     
@@ -574,6 +571,33 @@ def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
         upcoming_appointments=upcoming_appointments
     )
 
+@bp.route("/search_meds")
+def search_meds():
+
+    # Search for medicine to autocomplete
+    db = medicine_database_management.med_db
+    collection = db.collection
+
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify([])
+    
+    # text search across name, salt_composition, brand (case-insensitive, partial)
+    regex = {"$regex": q}
+    cursor = collection.find({"$or": [
+        {"name": regex}
+    ]}, {"name": 1, "salt_composition": 1, "brand": 1}).limit(50)
+
+    results = []
+    for d in cursor:
+        results.append({
+            "id": str(d.get("_id")),
+            "name": d.get("name"),
+            "salt_composition": d.get("salt_composition"),
+            "brand": d.get("brand")
+        })
+
+    return jsonify(results)
 #-------------------------------- >  Helper functions  < ---------------------------------------------------
 
 def dict_to_string(d: dict, fmt: str = "vo") -> str:

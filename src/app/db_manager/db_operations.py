@@ -82,18 +82,25 @@ class DatabaseOperations:
 
         return self.db[collection]
 
-    def insert_record(self, user_document: Dict):
+    def insert_record(self, user_document: Dict, bulk=False):
         # Create a user document
         # print(f"DB LOg : Received user Document ------ {json.dumps(user_document)}")
         if not user_document:
             print ("DB LOg : !!WARNING!! Empty user data!! nothing to enter in database!!")
             return None
         else:
-            # Insert the user into the collection
-            #print(f"Trying to insert user document into DB : {self.db_name}, Collection :{self.collection_name}")
-            result = self.collection.insert_one(user_document)
-            #print(f"DB LOG : Successfully inserted user document into DB : {self.db_name}, Collection :{self.collection_name} ")
-            return result.inserted_id  # Return the new user's ID
+            if not bulk:
+                # Insert the user into the collection
+                #print(f"Trying to insert user document into DB : {self.db_name}, Collection :{self.collection_name}")
+                result = self.collection.insert_one(user_document)
+                #print(f"DB LOG : Successfully inserted user document into DB : {self.db_name}, Collection :{self.collection_name} ")
+                return result.inserted_id  # Return the new user's ID
+            else:
+                # Insert the bulk records into the collection
+                #print(f"Trying to insert user document into DB : {self.db_name}, Collection :{self.collection_name}")
+                result = self.collection.insert_many(user_document)
+                #print(f"DB LOG : Successfully inserted user document into DB : {self.db_name}, Collection :{self.collection_name} ")
+                return result  # Return the new user's ID
         
     def update_record(self, primary_key_name: str, primary_key_val: str, updates: Dict) -> Dict:
         """

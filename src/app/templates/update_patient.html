@@ -74,6 +74,11 @@
     #modalHtmlContainer { padding:10mm !important; box-sizing:border-box; }
     @page { size: A4; margin: 10mm; }
   }
+
+
+  .suggestion-box { box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-radius:6px; }
+  .med-card:hover { background:#f6f8ff; }
+
   </style>  
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -165,6 +170,7 @@
           <textarea id="patient_OE" name="patient_OE" placeholder="O/E"></textarea>
         </div>
         
+        <!--Investigation request column-->
         <div class="full">
           <label for="investTable">Investigation / Tests requested</label>
 
@@ -265,6 +271,71 @@
   const mobileError = document.getElementById('mobileError');
   const preview = document.getElementById('jsonPreview');
 
+  // NEW AUTOCOMPLETE ADDITION !!
+  // add near top of RxModule (configurable)
+  const searchEndpoint = '/search_meds'; // adjust if needed
+
+  // autocomplete helper (paste once)
+  function attachAutocomplete(input) {
+    input.classList.add('med-input');
+    input.autocomplete = 'off';
+    // create suggestion container positioned relative to table cell
+    const container = document.createElement('div');
+    container.className = 'suggestion-box';
+    container.style.position = 'absolute';
+    container.style.zIndex = 9999;
+    container.style.display = 'none';
+    container.style.background = '#fff';
+    container.style.border = '1px solid #ddd';
+    container.style.maxHeight = '240px';
+    container.style.overflow = 'auto';
+    container.style.width = '360px';
+    // position wrapper - ensure parent is positioned
+    const parent = input.parentElement;
+    parent.style.position = 'relative';
+    parent.appendChild(container);
+
+    const createCard = (m) => {
+      const card = document.createElement('div');
+      card.className = 'med-card';
+      card.style.padding = '8px';
+      card.style.borderBottom = '1px solid #f0f0f0';
+      card.style.cursor = 'pointer';
+      card.innerHTML = `<strong>${m.name}</strong><div style="font-size:12px;color:#333">${m.salt_composition || ''}</div><div style="font-size:11px;color:#666">${m.brand || ''}</div>`;
+      card.addEventListener('click', () => {
+        input.value = m.name;
+        input.dataset.medId = m.id;
+        input.dataset.salt = m.salt_composition || '';
+        input.dataset.brand = m.brand || '';
+        container.style.display = 'none';
+      });
+      return card;
+    };
+
+    let debounceTimer = null;
+    const doSearch = (q) => {
+      if (!q || q.length < 2) { container.style.display = 'none'; container.innerHTML = ''; return; }
+      fetch(`${searchEndpoint}?q=${encodeURIComponent(q)}`)
+        .then(r => r.json())
+        .then(items => {
+          container.innerHTML = '';
+          if (!items || items.length === 0) { container.style.display = 'none'; return; }
+          items.forEach(it => container.appendChild(createCard(it)));
+          container.style.display = 'block';
+        }).catch(() => { container.innerHTML = ''; container.style.display='none'; });
+    };
+
+    input.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => doSearch(e.target.value.trim()), 250);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!parent.contains(e.target)) container.style.display = 'none';
+    });
+  }
+
+
   // RxModule: standalone manager for the Rx table (add/remove/seed/getData)
   const RxModule = (function(){
     const rxTbody = document.getElementById('rxTbody');
@@ -314,7 +385,9 @@
       tr.style.borderBottom = '1px solid rgba(6,42,138,0.04)';
 
       const tdMed = document.createElement('td'); tdMed.style.padding = '8px';
-      tdMed.appendChild(makeInput('rx_medicine', 'e.g. Amoxicillin 500mg', data.medicine || ''));
+      const medInput = makeInput('rx_medicine', 'e.g. Amoxicillin 500mg', data.medicine || '');
+      medInput.classList.add('rx-medicine-input');
+      tdMed.appendChild(medInput);
 
       const tdReg = document.createElement('td'); tdReg.style.padding = '8px';
       tdReg.appendChild(makeSelect('rx_regime', regimes, data.regime));
@@ -334,6 +407,9 @@
       tr.appendChild(tdReg);
       tr.appendChild(tdDur);
       tr.appendChild(tdAct);
+
+      // attach autocomplete to the medicine input
+      attachAutocomplete(medInput);
 
       return tr;
     }
