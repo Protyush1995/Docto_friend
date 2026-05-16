@@ -317,7 +317,9 @@
                      {% if patient_data.medications %}
                         {% for med in patient_data.medications %}
                         <tr>
-                            <td>{{ med.medicine }}</td>
+                            <td>{{ med.medicine }}<br>
+                                <small style="display:block; color:#555; margin-top:4px;">{{ med.salt_composition }}</small>
+                            </td>
                             <td>{{ med.regime }}</td>
                             <td>{{ med.duration }}</td>
                         </tr>

@@ -658,7 +658,7 @@
               <div style="margin-top:6px"><strong>License:</strong> <strong>{{ doctor_data.license  }} 
                   </strong></div>
               <div style="margin-top:8px" class="action-row">
-                  <a id="openDiagnose" class="btn" href="/doctor-diagnose-patient?doctor_id={{doctor_data.doctor_id}}" target="_blank"  style="pointer-events: none;">Diagnose Patient with uTAN</a>
+                  <a id="openDiagnose" class="btn" href="/doctor-diagnose-patient?doctor_id={{doctor_data.doctor_id}}" target="_blank"  style="pointer-events: none;" hidden>Diagnose Patient with uTAN</a>
                   <a href="{{ url_for('main.doctor_clinic_seed_form') }}" class="btn">Add Clinics</a>
                   <a href="{{ url_for('main.doctor_edit_profile_form', doctor_id=doctor_data.doctor_id) }}" class="btn">Edit Profile</a>
               </div>

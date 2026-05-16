@@ -201,6 +201,7 @@
             <thead>
               <tr>
                 <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)">Medicine & Dosage</th>
+                <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)">Salt Composition</th>
                 <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)">Regime</th>
                 <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)">Duration / Notes</th>
                 <th style="padding:8px;border-bottom:1px solid rgba(6,42,138,0.06)"></th>
@@ -272,41 +273,30 @@
   const preview = document.getElementById('jsonPreview');
 
   // NEW AUTOCOMPLETE ADDITION !!
-  // add near top of RxModule (configurable)
-  const searchEndpoint = '/search_meds'; // adjust if needed
+ // configurable endpoint
+  const searchEndpoint = '/search_meds';
 
-  // autocomplete helper (paste once)
-  function attachAutocomplete(input) {
+  function attachAutocomplete(input, saltInput) {
     input.classList.add('med-input');
     input.autocomplete = 'off';
-    // create suggestion container positioned relative to table cell
-    const container = document.createElement('div');
-    container.className = 'suggestion-box';
-    container.style.position = 'absolute';
-    container.style.zIndex = 9999;
-    container.style.display = 'none';
-    container.style.background = '#fff';
-    container.style.border = '1px solid #ddd';
-    container.style.maxHeight = '240px';
-    container.style.overflow = 'auto';
-    container.style.width = '360px';
-    // position wrapper - ensure parent is positioned
     const parent = input.parentElement;
     parent.style.position = 'relative';
+    const container = document.createElement('div');
+    container.className = 'suggestion-box';
+    Object.assign(container.style, { position: 'absolute', zIndex: 9999, display: 'none', background: '#fff', border: '1px solid #ddd', maxHeight: '240px', overflow: 'auto', width: '360px' });
     parent.appendChild(container);
 
     const createCard = (m) => {
       const card = document.createElement('div');
       card.className = 'med-card';
-      card.style.padding = '8px';
-      card.style.borderBottom = '1px solid #f0f0f0';
-      card.style.cursor = 'pointer';
+      Object.assign(card.style, { padding: '8px', borderBottom: '1px solid #f0f0f0', cursor: 'pointer' });
       card.innerHTML = `<strong>${m.name}</strong><div style="font-size:12px;color:#333">${m.salt_composition || ''}</div><div style="font-size:11px;color:#666">${m.brand || ''}</div>`;
       card.addEventListener('click', () => {
         input.value = m.name;
         input.dataset.medId = m.id;
         input.dataset.salt = m.salt_composition || '';
         input.dataset.brand = m.brand || '';
+        if (saltInput) saltInput.value = m.salt_composition || '';
         container.style.display = 'none';
       });
       return card;
@@ -322,7 +312,7 @@
           if (!items || items.length === 0) { container.style.display = 'none'; return; }
           items.forEach(it => container.appendChild(createCard(it)));
           container.style.display = 'block';
-        }).catch(() => { container.innerHTML = ''; container.style.display='none'; });
+        }).catch(()=>{ container.innerHTML=''; container.style.display='none'; });
     };
 
     input.addEventListener('input', (e) => {
@@ -334,6 +324,7 @@
       if (!parent.contains(e.target)) container.style.display = 'none';
     });
   }
+
 
 
   // RxModule: standalone manager for the Rx table (add/remove/seed/getData)
@@ -384,17 +375,28 @@
       const tr = document.createElement('tr');
       tr.style.borderBottom = '1px solid rgba(6,42,138,0.04)';
 
+      // Medicine cell
       const tdMed = document.createElement('td'); tdMed.style.padding = '8px';
       const medInput = makeInput('rx_medicine', 'e.g. Amoxicillin 500mg', data.medicine || '');
       medInput.classList.add('rx-medicine-input');
       tdMed.appendChild(medInput);
 
+      // Salt composition cell (new)
+      const tdSalt = document.createElement('td'); tdSalt.style.padding = '8px';
+      const saltInput = makeInput('rx_salt', 'Salt composition', data.salt || '');
+      saltInput.readOnly = false; // allow manual edits if desired
+      saltInput.classList.add('rx-salt-input');
+      tdSalt.appendChild(saltInput);
+
+      // Regime cell (moved)
       const tdReg = document.createElement('td'); tdReg.style.padding = '8px';
       tdReg.appendChild(makeSelect('rx_regime', regimes, data.regime));
 
+      // Duration cell
       const tdDur = document.createElement('td'); tdDur.style.padding = '8px';
       tdDur.appendChild(makeInput('rx_duration', 'e.g. After meal for 5 days', data.duration || ''));
 
+      // Actions
       const tdAct = document.createElement('td'); tdAct.style.padding = '8px'; tdAct.style.width = '90px';
       const rm = document.createElement('button');
       rm.type = 'button';
@@ -403,13 +405,15 @@
       rm.addEventListener('click', () => tr.remove());
       tdAct.appendChild(rm);
 
+      // Append in order: med, salt, regime, duration, action
       tr.appendChild(tdMed);
+      tr.appendChild(tdSalt);
       tr.appendChild(tdReg);
       tr.appendChild(tdDur);
       tr.appendChild(tdAct);
 
-      // attach autocomplete to the medicine input
-      attachAutocomplete(medInput);
+      // attach autocomplete and pass saltInput so selection fills salt
+      attachAutocomplete(medInput, saltInput);
 
       return tr;
     }
@@ -431,14 +435,15 @@
       const rows = [];
       for (const row of rxTbody.querySelectorAll('tr')) {
         const med = row.querySelector('input[name="rx_medicine"]')?.value?.trim() || '';
+        const salt = row.querySelector('input[name="rx_salt"]')?.value?.trim() || '';
         const regime = row.querySelector('select[name="rx_regime"]')?.value || '';
         const duration = row.querySelector('input[name="rx_duration"]')?.value?.trim() || '';
-        // skip completely empty rows
-        if (!med && !regime && !duration) continue;
-        rows.push({ medicine: med, regime: regime, duration: duration });
+        if (!med && !regime && !duration && !salt) continue;
+        rows.push({ medicine: med, salt_composition: salt, regime: regime, duration: duration });
       }
       return rows;
     }
+
 
     // wire add button if present
     if (addRxRowBtn) {
