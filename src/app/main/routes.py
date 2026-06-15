@@ -12,6 +12,7 @@ from flask import (
     session,
     redirect, 
     url_for,
+    send_file,
 )
 from . import bp
 from ..db_manager import doctor_database_management,clinic_database_management,patient_database_management,medicine_database_management
@@ -19,6 +20,12 @@ from ..db_manager import db_operations
 from dotenv import dotenv_values
 from datetime import datetime, date, time, timedelta, timezone
 import zoneinfo
+import os
+from tempfile import NamedTemporaryFile
+
+HERE = os.path.dirname(__file__)                      # .../src/app/main
+PROJECT_ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))  # moves up to project root
+SNAPSHOT_PATH = os.path.join(PROJECT_ROOT, "index.html")
 
 def get_iso_week(dt):
     """
@@ -50,6 +57,33 @@ def get_iso_week(dt):
     week_no = (days_diff + 1 + 6) // 7
 
     return {'year': d_thu_ist.year, 'week': week_no}
+
+def write_doctor_snapshot(doctor_id):
+    doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
+    clinics_list = clinic_database_management.get_clinic_by_doctor_id(doctor_id)
+    if isinstance(clinics_list, dict):
+        clinics_list = [clinics_list]
+    for clinic in clinics_list:
+        clinic["clinic_address"] = dict_to_string(d=clinic["clinic_address"], fmt="vo")
+        clinic["visit_schedule"] = dict_to_string(d=clinic["visit_schedule"], fmt="kv")
+    filtered_list = [remove_bytes_from_dict(x) for x in clinics_list]
+    doctor_data['clinics'] = filtered_list
+    profile_pic_uri = doctor_data.get("profile_pic_uri")
+
+    rendered = render_template(
+        'doctor_profile_3.html',
+        user_id=doctor_id,
+        profile_pic_uri=profile_pic_uri,
+        doctor_data=doctor_data,
+        clinics=filtered_list,
+        clinic_length=len(filtered_list)
+    )
+
+    os.makedirs(PROJECT_ROOT, exist_ok=True)
+    with NamedTemporaryFile(mode="w", delete=False, dir=PROJECT_ROOT, suffix=".tmp", encoding="utf-8") as tmp:
+        tmp.write(rendered)
+        tmp_path = tmp.name
+    os.replace(tmp_path, SNAPSHOT_PATH)
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 DATE_TODAY = datetime.now(IST).date()
@@ -109,6 +143,9 @@ def api_doctor_login():
             session.permanent = True
 
         current_app.logger.info("Doctor %s logged in", session.get("doctor_id"))
+
+        #rendering doctor profile
+        write_doctor_snapshot(user["doctor_id"])
         return jsonify(success=True, user_id=user["doctor_id"], redirect=url_for('main.doc_dashboard', doctor_id=user["doctor_id"])), 200
 
     except Exception:
@@ -403,44 +440,40 @@ def generate_prescription_patient():
 
 @bp.route("/doctor-profile", methods=["GET"])
 def doctor_profile():
-    """
-    Doctor profile route to be viewed by patient
-    """
     doctor_id = request.args.get("doctor_id", "").strip()
     if not doctor_id:
         return redirect(url_for('main.doctor_login_page'))
-    
+
     doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
     clinics_list = clinic_database_management.get_clinic_by_doctor_id(doctor_id)
-    print(f"ROUTE LOG : Printing clinic list TYPE from doctor dashboard route::list type = {type(clinics_list)}")
-
     if isinstance(clinics_list, dict):
         clinics_list = [clinics_list]
-
-    #Converting schedules for ease of display
     for clinic in clinics_list:
-        clinic["clinic_address"] = dict_to_string(d=clinic["clinic_address"],fmt="vo")
-        clinic["visit_schedule"] = dict_to_string(d=clinic["visit_schedule"],fmt="kv")
-
-    
-    filtered_list = [remove_bytes_from_dict(x) for x in clinics_list ]
-    print(f"ROUTE LOG : Printing clinic list from doctor dashboard::list type = {type(filtered_list)} ::: {filtered_list}")
+        clinic["clinic_address"] = dict_to_string(d=clinic["clinic_address"], fmt="vo")
+        clinic["visit_schedule"] = dict_to_string(d=clinic["visit_schedule"], fmt="kv")
+    filtered_list = [remove_bytes_from_dict(x) for x in clinics_list]
     doctor_data['clinics'] = filtered_list
+    profile_pic_uri = doctor_data.get("profile_pic_uri")
 
-    if "profile_pic_uri" in doctor_data:
-        profile_pic_uri = doctor_data["profile_pic_uri"]
-    else:
-        profile_pic_uri = None
-    
-    
-    return render_template(
-        'doctor_profile.html',
+    rendered = render_template(
+        'doctor_profile_4.html',
         user_id=doctor_id,
         profile_pic_uri=profile_pic_uri,
         doctor_data=doctor_data,
-        clinics = filtered_list,
-        clinic_length = len(filtered_list)
+        clinics=filtered_list,
+        clinic_length=len(filtered_list)
     )
+
+    # atomic write to project root
+    os.makedirs(PROJECT_ROOT, exist_ok=True)
+    tmp_path = None
+    with NamedTemporaryFile(mode="w", delete=False, dir=PROJECT_ROOT, suffix=".tmp", encoding="utf-8") as tmp:
+        tmp.write(rendered)
+        tmp_path = tmp.name
+    os.replace(tmp_path, SNAPSHOT_PATH)  # atomic replace
+
+    # Serve the written file
+    return send_file(SNAPSHOT_PATH)
 
 @bp.route('/doc_dashboard/<doctor_id>', methods=["GET"])
 def doc_dashboard(doctor_id):
