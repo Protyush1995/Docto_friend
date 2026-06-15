@@ -29,7 +29,7 @@ def _generate_doctor_qr(USER: Optional[str] ,REPO: str ="Docto_friend") -> Optio
     if not USER:  # explicit check for missing/empty user
         return None
     
-    payload = f"https://{USER}.github.io/{REPO}"
+    payload = f"https://{USER}.github.io/{REPO}/"
     qr = qrcode.QRCode(version=1, box_size=10, border=2, error_correction=qrcode.constants.ERROR_CORRECT_M)
     qr.add_data(payload)
     qr.make(fit=True)
@@ -145,8 +145,8 @@ def append_registration_record(data: Dict) -> Dict:
 
     github_user_name = str(raw_user).strip()
 
-    print(f"GITHUB USER NAME :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::{repr(github_user_name)}")
-    print(f"GITHUB USER NAME :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::{github_user_name}")
+    #print(f"GITHUB USER NAME :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::{repr(github_user_name)}")
+    #print(f"GITHUB USER NAME :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::{github_user_name}")
 
     doctor_id = _generate_doctor_id()
     qr_png_bytes = _generate_doctor_qr(USER=github_user_name)
