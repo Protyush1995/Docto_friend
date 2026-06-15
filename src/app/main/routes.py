@@ -71,7 +71,7 @@ def write_doctor_snapshot(doctor_id):
     profile_pic_uri = doctor_data.get("profile_pic_uri")
 
     rendered = render_template(
-        'doctor_profile_1.html',
+        'doctor_profile_3.html',
         user_id=doctor_id,
         profile_pic_uri=profile_pic_uri,
         doctor_data=doctor_data,
