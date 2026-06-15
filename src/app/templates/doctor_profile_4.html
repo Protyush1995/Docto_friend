@@ -57,7 +57,9 @@ footer{margin-top:18px;color:var(--muted);font-size:13px}
       {% for clinic in clinics %}
       <div class="clinic">
         <div style="font-weight:700">{{clinic.clinicname}}</div>
-        <div style="color:var(--muted)">{{clinic.clinic_address}}</div>
+        <div style="color:var(--muted)"><strong>Visit Days:</strong> {{ clinic.visit_schedule }}</div>
+        <div style="color:var(--muted)"><strong>Address:</strong> {{ clinic.clinic_address }}</div>
+        <div style="color:var(--muted)"><strong>Contact:</strong> {{ clinic.primary_contact_number }} / {{clinic.secondary_contact_number}}</div>
       </div>
       {% endfor %}
     </section>

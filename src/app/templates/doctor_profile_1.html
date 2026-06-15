@@ -63,7 +63,9 @@ footer{margin-top:22px;color:var(--muted);font-size:13px;text-align:center}
         <div class="clinic" role="listitem">
           <div style="font-weight:700;color:#062a8a">{{clinic.clinicname}}</div>
           <div style="font-size:13px;color:var(--muted)">Since {{clinic.created_at}}</div>
+          <div style="margin-top:8px;font-size:13px;color:var(--muted)"><strong>Visit Days:</strong> {{clinic.visit_schedule}}</div>
           <div style="margin-top:8px;font-size:13px;color:var(--muted)"><strong>Address:</strong> {{clinic.clinic_address}}</div>
+          <div style="margin-top:8px;font-size:13px;color:var(--muted)"><strong>Contact:</strong> {{ clinic.primary_contact_number }} / {{clinic.secondary_contact_number}}</div>
         </div>
         {% endfor %}
       </div>
