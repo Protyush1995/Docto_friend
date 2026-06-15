@@ -343,13 +343,14 @@
     <!-- Row 4: Footer with QR on left and info on right -->
      <div style="padding: 12px 18px;">
         <div class="row footer" role="contentinfo" aria-label="Footer" id="row-footer">
-        <!--<div class="footer-left" aria-label="QR code">
-            <div class="qr" id="qr-demo" aria-hidden="true"><img src="{{ url_for('static', filename='image/Prescription_footer.jpg') }}" alt="QR"></div>
-        </div>-->
+        <div class="footer-left" aria-label="QR code">
+            <div class="qr" id="qr-demo" aria-hidden="true"><img src="{{ doctor_data.doctor_qr_uri }}" alt="QR"></div>
+        </div>
         <div class="footer-right" aria-label="Footer information">
 
             <div aria-label="Other clinics" style="margin-top:8px;">
-            <strong style="font-size:12px;">Other Clinics:</strong>
+            <strong style="font-size:12px;">Scan QR Code to visit my website .</strong></br>
+            <strong style="font-size:12px;">Clinics Affiliations:</strong>
             <ul id="other-clinics">
                 {% for c in doctor_affiliation %}
                 <li>

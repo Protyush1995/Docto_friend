@@ -122,6 +122,8 @@
         <label for="lastname">Last name</label>
         <input id="lastname" name="lastname" type="text" placeholder="Doe" required>
 
+        <label for="GithubUserName">Github user name</label>
+        <input id="GithubUserName" name="GithubUserName" type="text" placeholder="GithubUserName" required>
 
         <label for="email">Email</label>
         <input id="email" name="email" type="email" placeholder="you@hospital.com" required>
@@ -171,6 +173,7 @@
       showError('');
       const firstname = document.getElementById('firstname').value.trim();
       const lastname = document.getElementById('lastname').value.trim();
+      const github_user_name = document.getElementById('GithubUserName').value.trim();
       const email = document.getElementById('email').value.trim();
       const license = document.getElementById('license').value.trim();
       const mobile = document.getElementById('mobile').value.trim();
@@ -180,6 +183,7 @@
 
       if(!firstname) return showError('First name is required');
       if(!lastname) return showError('Last name is required');
+      if(!github_user_name) return showError('Github user name is required');
       if(!EMAIL_RE.test(email)) return showError('Enter a valid email');
       if(!LICENSE_RE.test(license)) return showError('Enter a valid license number (5–20 alphanumeric/dash chars)');
       if(!MOBILE_RE.test(mobile)) return showError('Enter a valid mobile number (include country code, 7–15 digits)');
@@ -190,6 +194,7 @@
       const payload = {
         firstname: firstname,
         lastname: lastname,
+        github_user_name: github_user_name,
         email,
         license,
         mobile,

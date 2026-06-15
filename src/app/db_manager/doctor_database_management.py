@@ -19,14 +19,17 @@ PASS_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).{8,}$")
 db = DatabaseOperations()
 
 #TODO change host later as necessary
-def _generate_doctor_qr(doctor_id: str, host: str = "http://192.168.29.115:5000") -> bytes:
+def _generate_doctor_qr(USER: Optional[str] ,REPO: str ="Docto_friend") -> Optional[bytes]:
     """
     Returns PNG bytes for a QR encoding a URL pointing to /clinic-booking
     with query params clinic_id and doctor_id.
     """
     # Build a compact URL/payload. Use absolute URL if you want (domain optional).
-    # Example: /doctor-profile?doctor_id=DOC123
-    payload = f"{host}/doctor-profile?doctor_id={doctor_id}"
+    
+    if not USER:  # explicit check for missing/empty user
+        return None
+    
+    payload = f"https://{USER}.github.io/{REPO}"
     qr = qrcode.QRCode(version=1, box_size=10, border=2, error_correction=qrcode.constants.ERROR_CORRECT_M)
     qr.add_data(payload)
     qr.make(fit=True)
@@ -88,12 +91,15 @@ def validate_registration(data: Dict) -> Optional[str]:
     email = (data.get("email") or "").strip()
     license_no = (data.get("license") or "").strip()
     password = data.get("password") or ""
+    github_user_name = (data.get("github_user_name") or "").strip()
 
     #Field validity check
     if not firstname:
         return "First name is required"
     if not lastname:
         return "Last name is required"
+    if not github_user_name:
+        return "Github user name is required"
     if not EMAIL_RE.match(email):
         return "Invalid email"
     if not LICENSE_RE.match(license_no):
@@ -132,16 +138,28 @@ def append_registration_record(data: Dict) -> Dict:
     if err:
         raise ValueError(err)
 
+    # Defensive extraction: ensure a plain string (not a tuple/list)
+    raw_user = data.get("github_user_name", "") or ""
+    if isinstance(raw_user, (list, tuple)):
+        raw_user = raw_user[0] if raw_user else ""
+
+    github_user_name = str(raw_user).strip()
+
+    print(f"GITHUB USER NAME :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::{repr(github_user_name)}")
+    print(f"GITHUB USER NAME :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::{github_user_name}")
 
     doctor_id = _generate_doctor_id()
-    qr_png_bytes = _generate_doctor_qr(doctor_id=doctor_id)
-    qr_png_data_uri = bytes_to_data_uri(png_bytes=qr_png_bytes)
+    qr_png_bytes = _generate_doctor_qr(USER=github_user_name)
+    if not qr_png_bytes:
+        qr_png_data_uri = None
+    else : qr_png_data_uri = bytes_to_data_uri(png_bytes=qr_png_bytes)
     password_hash = _hash_password(data["password"])
 
     record = {
         "doctor_id": doctor_id,
         "firstname": data["firstname"].strip(),
         "lastname": data["lastname"].strip(),
+        "github_user_name": github_user_name,
         "email": data["email"].strip().lower(),
         "license": data["license"].strip(),
         "permanent_address":"",

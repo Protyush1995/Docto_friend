@@ -438,6 +438,7 @@ def generate_prescription_patient():
         'patient_prescription_html': html,
     }), 200
 
+# Redundant endpoint
 @bp.route("/doctor-profile", methods=["GET"])
 def doctor_profile():
     doctor_id = request.args.get("doctor_id", "").strip()
