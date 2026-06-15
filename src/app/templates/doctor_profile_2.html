@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</title>
+<style>
+:root{--bg:#eef2ff;--card:#ffffff;--accent:#6b21a8;--muted:#5b6b7a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,system-ui;padding:28px;color:#041024}
+.wrap{max-width:1100px;margin:0 auto}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.name{font-size:22px;color:var(--accent);margin:0}
+.sub{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:1fr 320px;gap:18px}
+.profile{background:var(--card);padding:18px;border-radius:14px;box-shadow:0 12px 30px rgba(107,33,168,0.06)}
+.profile-img{width:100%;height:220px;border-radius:10px;overflow:hidden;background:#f6f6fb}
+.profile-img img{width:100%;height:100%;object-fit:cover}
+.info h2{margin:8px 0 0 0;color:var(--accent)}
+.pill{display:inline-block;padding:6px 8px;background:linear-gradient(90deg,#fff,#f7f0ff);border-radius:8px;margin-top:10px;border:1px solid rgba(107,33,168,0.08)}
+.side{display:flex;flex-direction:column;gap:12px}
+.card{background:#fff;padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(107,33,168,0.04)}
+.clinic-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.clinic{background:linear-gradient(180deg,#fff,#fbf8ff);padding:10px;border-radius:10px;border:1px solid rgba(107,33,168,0.04)}
+footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.clinic-list{grid-template-columns:1fr}}
+</style>
+</head><body>
+<div class="wrap">
+  <header class="header">
+    <div>
+      <h1 class="name">Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h1>
+      <div class="sub">{{doctor_data.qualifications}} · {{doctor_data.expertise}}</div>
+    </div>
+    <div class="sub">Karol Bagh, Delhi</div>
+  </header>
+
+  <div class="grid">
+    <main class="profile">
+      <div class="profile-img"><img src="{{profile_pic_uri}}" alt="Profile"></div>
+      <div class="info">
+        <h2>{{doctor_data.firstname}} {{doctor_data.lastname}}</h2>
+        <div class="pill">{{doctor_data.years_of_experience}} yrs experience</div>
+        <p style="color:var(--muted);margin-top:10px">{{doctor_data.achievements}}</p>
+        <div style="margin-top:12px;font-size:14px;color:var(--muted)"><strong>Email:</strong> {{doctor_data.email}}</div>
+      </div>
+      <section style="margin-top:14px">
+        <h3 style="margin:0 0 8px 0">Clinics</h3>
+        <div class="clinic-list">
+          {% for clinic in clinics %}
+          <div class="clinic">
+            <div style="font-weight:700;color:#2b2b7a">{{clinic.clinicname}}</div>
+            <div style="font-size:12px;color:var(--muted)">{{clinic.clinic_address}}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+    </main>
+
+    <aside class="side">
+      <div class="card"><strong>Rating</strong><div style="font-size:20px;margin-top:6px;color:#0b63ff">4.9</div></div>
+      <div class="card"><strong>Clinics</strong><div style="font-size:20px;margin-top:6px">{{clinic_length}}</div></div>
+      <div class="card"><strong>Member since</strong><div style="margin-top:6px;color:var(--muted)">{{doctor_data.created_at}}</div></div>
+    </aside>
+  </div>
+
+  <footer>© 2026 Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</footer>
+</div>
+</body></html>

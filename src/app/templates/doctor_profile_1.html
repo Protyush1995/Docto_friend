@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Profile for Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</title>
+<style>
+:root{--bg:#f7fafc;--card:#fff;--accent:#0b63ff;--muted:#6b7280}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:#0b1226;padding:36px}
+.wrapper{max-width:880px;margin:0 auto}
+.header{display:flex;gap:20px;align-items:center}
+.logo{width:72px;height:72px;border-radius:12px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid rgba(11,99,255,0.08)}
+h1{margin:0;font-size:20px;color:var(--accent)}
+.sub{color:var(--muted);font-size:13px}
+.card{background:var(--card);border-radius:14px;padding:20px;margin-top:20px;box-shadow:0 8px 24px rgba(11,99,255,0.06)}
+.top{display:flex;gap:18px;align-items:flex-start}
+.avatar{width:96px;height:96px;border-radius:12px;overflow:hidden;background:#f3f6ff;border:1px solid rgba(11,99,255,0.06)}
+.meta h2{margin:0;font-size:18px}
+.meta p{margin:6px 0;color:var(--muted)}
+.stats{display:flex;gap:12px;margin-top:12px}
+.stat{background:#fbfdff;padding:10px;border-radius:10px;border:1px solid rgba(11,99,255,0.04);flex:1}
+.section{margin-top:18px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.clinic{background:#fff;padding:12px;border-radius:10px;border:1px solid rgba(11,99,255,0.04)}
+footer{margin-top:22px;color:var(--muted);font-size:13px;text-align:center}
+@media(max-width:760px){.top{flex-direction:column}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="logo"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpeg') }}" alt="Logo" style="width:100%;height:100%;object-fit:cover"></div>
+    <div>
+      <h1>Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h1>
+      <div class="sub">{{doctor_data.qualifications}} — {{doctor_data.expertise}} · {{doctor_data.permanent_address}}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="top">
+      <div class="avatar"><img src="{{profile_pic_uri}}" alt="Avatar" style="width:100%;height:100%;object-fit:cover"></div>
+      <div class="meta">
+        <h2>{{doctor_data.firstname}} {{doctor_data.lastname}}</h2>
+        <p><strong>{{doctor_data.expertise}}</strong></p>
+        <p>{{doctor_data.qualifications}} • {{doctor_data.years_of_experience}} yrs</p>
+        <p>Email: {{doctor_data.email}}</p>
+        <div class="stats">
+          <div class="stat"><strong>4.9</strong><div style="font-size:12px;color:var(--muted)">Average rating</div></div>
+          <div class="stat"><strong>{{clinic_length}}+</strong><div style="font-size:12px;color:var(--muted)">Clinics</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Visiting Clinics</h3>
+      <div class="grid">
+        {% for clinic in clinics %}
+        <div class="clinic" role="listitem">
+          <div style="font-weight:700;color:#062a8a">{{clinic.clinicname}}</div>
+          <div style="font-size:13px;color:var(--muted)">Since {{clinic.created_at}}</div>
+          <div style="margin-top:8px;font-size:13px;color:var(--muted)"><strong>Address:</strong> {{clinic.clinic_address}}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <footer>© 2026 Dr. {{doctor_data.firstname}} {{doctor_data.lastname}} — Member since {{doctor_data.created_at}}</footer>
+</div>
+</body>
+</html>

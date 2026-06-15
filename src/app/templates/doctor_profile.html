@@ -210,12 +210,12 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
       <div class="logo"><img src="{{ url_for('static', filename='image/doctopal_logo_1.jpeg') }}" alt="Logo"></div>
       <div>
         <h1>Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h1>
-        <div class="sub">{{doctor_data.qualifications}} — {{doctor_data.expertise}} · Karol Bagh, Delhi</div>
+        <div class="sub">{{doctor_data.qualifications}} — {{doctor_data.expertise}} · {{doctor_data.permanent_address}}</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
         <a href="#clinics-section" class="btn">Book Appointment</a>
-        <button class="ghost">Share Profile</button>
+        <button class="ghost" hidden>Share Profile</button>
     </div>
 
   </header>
@@ -232,10 +232,12 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
           <p><strong id="doctorQual">{{doctor_data.qualifications}}</strong></p>
           <p id="doctorFellow">{{doctor_data.practising_or_fellowship}}</p>
           <p><strong id="doctorAchievements">{{doctor_data.achievements}}</strong></p>
+          <p><strong id="doctorEmail">Email : {{doctor_data.email}}</strong></p>
+          <!--  
           <div class="action-row">
             <button class="btn">Call</button>
             <button class="ghost">Message</button>
-          </div>
+          </div>-->
         </div>
       </div>
       <div style="margin-top:12px;">
@@ -284,7 +286,7 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
       
       {% for clinic in clinics %}
           <div class="clinic-card" >
-            <a href="/clinic-booking?clinic_id={{clinic.clinic_id}}&doctor_id={{doctor_data.doctor_id}}" class="clinic-card" target="_blank" rel="noopener noreferrer">
+            <a  class="clinic-card" target="_blank" rel="noopener noreferrer"> <!--  href="/clinic-booking?clinic_id={{clinic.clinic_id}}&doctor_id={{doctor_data.doctor_id}}" -->
 
             <div class="content">
                 <div class="clinic-head">
@@ -309,12 +311,13 @@ footer { margin-top:28px; text-align:center; color:var(--muted); font-size:13px;
 
             </div>
             </a>
+            <!---  
             <div class="clinic-image">
               <div class="qr-download">
                 <img src="{{ clinic.clinic_qr_data_uri }}" alt="Clinic QR">
                   <a class="btn" href="/clinic-booking?clinic_id={{clinic.clinic_id}}&doctor_id={{doctor_data.doctor_id}}" target="_blank" rel="noopener noreferrer">Book Appointment</a>
               </div>
-            </div>
+            </div>-->
 
           </div>
           {% endfor %}

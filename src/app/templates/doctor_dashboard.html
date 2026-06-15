@@ -635,7 +635,7 @@
         </div>
       </div>
       <div>
-        <button class="btn ghost" >Dark mode</button>
+        <button class="btn ghost" hidden>Dark mode</button>
         <form action="{{ url_for('main.logout') }}" method="POST">
             <button type="submit" class="btn">Logout</button>
         </form>
@@ -713,7 +713,7 @@
               </div>
               <!-- QR + label container -->
               <div class="qr-with-label">
-                <span class="qr-label"><strong>Scan to Book Appointment :</strong></span>
+                <span class="qr-label"><strong>Visit my website :</strong></span>
                 <div class="qr"><img src="{{ doctor_data.doctor_qr_uri }}" alt="QR"></div>
               </div>
             </div>
@@ -816,12 +816,15 @@
                 </div>
 
             </div>
-            <div class="clinic-image">
+
+            <!-- Hidden Appointment Qr Block -->
+            <!-- 
+            <div class="clinic-image" hidden>
               <a href="{{ clinic.clinic_qr_data_uri }}" download="clinic_{{ clinic.clinicname }}.png" class="qr-download" aria-label="Download QR">
                 <img src="{{ clinic.clinic_qr_data_uri }}" alt="Clinic QR">
                 <span class="qr-hint">Download QR</span>
               </a>
-            </div>
+            </div>  -->
 
           </div>
           {% endfor %}
