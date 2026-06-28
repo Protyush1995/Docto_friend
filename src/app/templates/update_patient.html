@@ -231,7 +231,14 @@
 
         <div class="full actions">
           <button type="submit" class="btn">Generate Prescription</button>
-          <button type="button" class="btn ghost" id="cancelBtn">Cancel Entry</button>
+
+          <button type="button" class="btn" id="moneyReceiptFormBtn">
+            Generate Money Receipt
+          </button>
+
+          <button type="button" class="btn ghost" id="cancelBtn">
+            Cancel Entry
+          </button>
         </div>
       </form>
 
@@ -243,9 +250,8 @@
         <div class="modal-backdrop" id="imgModalBackdrop"></div>
         <div class="modal-content" role="document" aria-label="Rendered prescription">
           <div class="modal-toolbar">
-            <button id="printBtn" class="btn">Print Prescription</button>
+            <button id="printBtn" class="btn">Print</button>
             <button id="cancelBtnModal" class="btn">Cancel</button>
-            <button id="moneyReceiptBtn" class="btn" >Generate money receipt</button>
           </div>
           <div class="modal-body">
             <div id="modalHtmlContainer" class="modal-html" aria-live="polite"></div>
@@ -257,7 +263,7 @@
     </main>
 
     <footer style="margin-top:18px; text-align:center; color:var(--muted); font-size:13px;">
-      © 2026 Patient Diagnosis form - by Doctopal
+      © Patient Diagnosis form - by Doctopal
     </footer>
   </div>
 
@@ -613,6 +619,11 @@
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
   }
+
+  window.openHtmlModal = function(html = '') {
+    show(html);
+  };
+
   function close() {
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden', 'true');
@@ -790,9 +801,10 @@ function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&am
 
 // Main: render to canvas and print
 async function generateMoneyReceipt(data) {
+  window.openHtmlModal('');
+
   const modalContainer = document.getElementById('modalHtmlContainer');
-  // put HTML into container (non-hidden so styles apply)
-  injectReceiptHtml(modalContainer, data);
+  injectReceiptHtml(modalContainer, data);  
 
   // Give browser a tick to render fonts/styles
   await new Promise(r => setTimeout(r, 250));
@@ -841,7 +853,7 @@ async function generateMoneyReceipt(data) {
 }
 
 // Starter: hook button
-document.getElementById('moneyReceiptBtn').addEventListener('click', () => {
+document.getElementById('moneyReceiptFormBtn').addEventListener('click', () => {
   const today = new Date();
   const dd = String(today.getDate()).padStart(2, '0');
   const mm = String(today.getMonth() + 1).padStart(2, '0'); // months are 0-indexed

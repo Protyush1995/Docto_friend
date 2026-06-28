@@ -163,6 +163,11 @@
           <input id="altphone" name="secondary_contact_number" type="tel" placeholder="+1 555 555 5555" value="{{ val_if(doctor_data.secondary_contact_number) }}">
         </div>
 
+        <div class="full">
+          <label for="about">About</label>
+          <textarea id="about" name="about" placeholder="Your moto for practising the craft, this will be reflected in your website. Eg - I’m a cardiologist focused on patient-first care and evidence-based interventional cardiology, dedicated to improving outcomes through preventive guidance and compassionate treatment." >{{ val_if(doctor_data.about) }}</textarea>
+        </div>
+
         <div>
           <label for="specialty">Specialty</label>
           <input id="specialty" name="expertise" type="text" placeholder="e.g. Cardiology" value="{{ val_if(doctor_data.expertise) }}">
@@ -197,7 +202,7 @@
     </main>
 
     <footer style="margin-top:18px; text-align:center; color:var(--muted); font-size:13px;">
-      © 2025 Doctor Dashboard — demo
+      © Doctor profile editing form - by Doctopal
     </footer>
   </div>
 

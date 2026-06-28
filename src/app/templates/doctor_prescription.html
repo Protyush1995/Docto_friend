@@ -227,8 +227,8 @@
     <!-- Row 1: Header (doctor left, clinic right) -->
     <div style="padding: 0px 18px;">
         <div class="row header" role="banner" aria-label="Header (doctor and clinic)" id="row-header">
-        <div class="header-left" aria-label="Doctor details">
-            <div class="avatar" id="doctor-avatar"><img src="{{ url_for('static', filename='image/Prescription_footer.jpg') }}" alt="Logo" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
+        <div class="header-left" aria-label="Doctor details"> 
+            <div class="avatar" id="doctor-avatar"><img src="{{ clinic_data.clinic_picture}}" alt="Logo" onerror="this.onerror=null; this.src='{{url_for('static', filename='image/Prescription_footer.jpg') }}';" style="width:56px;height:56px;border-radius:10px;object-fit:cover;"></div>
             <div class="doc-info">
             <h2 id="doctor-name">Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h2>
             <p id="doctor-qual">{{doctor_data.qualifications}}</p>

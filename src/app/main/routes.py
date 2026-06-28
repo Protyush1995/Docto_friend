@@ -22,10 +22,20 @@ from datetime import datetime, date, time, timedelta, timezone
 import zoneinfo
 import os
 from tempfile import NamedTemporaryFile
+import subprocess
+import logging
+
+logger = logging.getLogger(__name__)
 
 HERE = os.path.dirname(__file__)                      # .../src/app/main
 PROJECT_ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))  # moves up to project root
 SNAPSHOT_PATH = os.path.join(PROJECT_ROOT, "index.html")
+
+print("''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''")
+print(f"project directory {HERE}")
+print(f"Project root {PROJECT_ROOT}")
+print(f"index.html path in project {SNAPSHOT_PATH}")
+print("''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''")
 
 def get_iso_week(dt):
     """
@@ -58,6 +68,39 @@ def get_iso_week(dt):
 
     return {'year': d_thu_ist.year, 'week': week_no}
 
+def gitsubprocess(REPO_PATH=PROJECT_ROOT):
+    '''
+        Pushing profile to git on change automatic
+    '''
+    try:
+        subprocess.run(["git", "add", "."], cwd=REPO_PATH, check=True)
+
+        status = subprocess.run(
+            ["git", "diff", "--cached", "--quiet"],
+            cwd=REPO_PATH
+        )
+
+        # Exit code 1 means there are staged changes.
+        if status.returncode == 1:
+            subprocess.run(
+                ["git", "commit", "-m", "Saving login session changes to profile"],
+                cwd=REPO_PATH,
+                check=True
+            )
+
+            subprocess.run(
+                ["git", "push", "origin", "dev-backend"],
+                cwd=REPO_PATH,
+                check=True
+            )
+
+            print(" New Profile has been pushed to git successfully!!!!!!!!!!!!!!!!!! ")
+        else:
+            logger.info("No changes to commit.")
+
+    except subprocess.CalledProcessError:
+        logger.exception("Git operation failed.")
+
 def write_doctor_snapshot(doctor_id):
     doctor_data = doctor_database_management.get_doctor_by_id(doctor_id)
     clinics_list = clinic_database_management.get_clinic_by_doctor_id(doctor_id)
@@ -84,6 +127,7 @@ def write_doctor_snapshot(doctor_id):
         tmp.write(rendered)
         tmp_path = tmp.name
     os.replace(tmp_path, SNAPSHOT_PATH)
+    gitsubprocess()
 
 IST = zoneinfo.ZoneInfo("Asia/Kolkata")
 DATE_TODAY = datetime.now(IST).date()
@@ -144,8 +188,9 @@ def api_doctor_login():
 
         current_app.logger.info("Doctor %s logged in", session.get("doctor_id"))
 
-        #rendering doctor profile
+        # rendering doctor profile to index.html
         write_doctor_snapshot(user["doctor_id"])
+        
         return jsonify(success=True, user_id=user["doctor_id"], redirect=url_for('main.doc_dashboard', doctor_id=user["doctor_id"])), 200
 
     except Exception:
@@ -608,31 +653,50 @@ def doc_clinic_dashboard(doctor_id:str,clinic_id:str):
 
 @bp.route("/search_meds")
 def search_meds():
-
-    # Search for medicine to autocomplete
     db = medicine_database_management.med_db
     collection = db.collection
 
     q = request.args.get("q", "").strip()
     if not q:
         return jsonify([])
-    
-    # text search across name, salt_composition, brand (case-insensitive, partial)
-    regex = {"$regex": q}
-    cursor = collection.find({"$or": [
-        {"name": regex}
-    ]}, {"name": 1, "salt_composition": 1, "brand": 1}).limit(50)
 
     results = []
-    for d in cursor:
-        results.append({
+
+    # 1. Exact name match first
+    cursor = collection.find({"name": {"$regex": f"^{q}$", "$options": "i"}},
+                             {"name": 1, "salt_composition": 1, "brand": 1}).limit(50)
+    results = list(cursor)
+
+    # 2. If no exact name match, try partial name match
+    if not results:
+        cursor = collection.find({"name": {"$regex": q, "$options": "i"}},
+                                 {"name": 1, "salt_composition": 1, "brand": 1}).limit(50)
+        results = list(cursor)
+
+    # 3. If still nothing, try salt composition
+    if not results:
+        cursor = collection.find({"salt_composition": {"$regex": q, "$options": "i"}},
+                                 {"name": 1, "salt_composition": 1, "brand": 1}).limit(50)
+        results = list(cursor)
+
+    # 4. Finally, try brand
+    if not results:
+        cursor = collection.find({"brand": {"$regex": q, "$options": "i"}},
+                                 {"name": 1, "salt_composition": 1, "brand": 1}).limit(50)
+        results = list(cursor)
+
+    # Format results
+    formatted = []
+    for d in results:
+        formatted.append({
             "id": str(d.get("_id")),
             "name": d.get("name"),
             "salt_composition": d.get("salt_composition"),
             "brand": d.get("brand")
         })
 
-    return jsonify(results)
+    return jsonify(formatted)
+
 #-------------------------------- >  Helper functions  < ---------------------------------------------------
 
 def dict_to_string(d: dict, fmt: str = "vo") -> str:
