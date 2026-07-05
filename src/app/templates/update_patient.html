@@ -55,6 +55,12 @@
     pre{ background:#f6f6f8; padding:12px; border-radius:8px; overflow:auto; font-size:13px; }
   </style>
   <style>
+
+    input[name="rx_duration"]{
+    display:none;
+}
+
+
   .modal { position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center; }
   .modal-backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.6); }
   .modal-content { position:relative; width:100%; max-width:1200px; height:100%; max-height:92vh; margin:auto; display:flex; flex-direction:column; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
@@ -193,7 +199,7 @@
 
         </div>
 
-
+        <!-- Rx -->
         <div class="full">
           <label for="rxTable">Rx (Medication)</label>
 
@@ -219,11 +225,13 @@
 
         </div>
 
+        <!-- Follow up -->
         <div>
           <label for="patient_follow_up">Follow-up-time</label>
           <input id="patient_follow_up" name="patient_follow_up" type="text" placeholder="Follow up in 7 days...">
         </div>
 
+        <!-- Advice -->
         <div>
           <label for="patient_advice">Advice</label>
           <input id="patient_advice" name="patient_advice" type="text" placeholder="Advice to patients...">
@@ -399,8 +407,84 @@
       tdReg.appendChild(makeSelect('rx_regime', regimes, data.regime));
 
       // Duration cell
-      const tdDur = document.createElement('td'); tdDur.style.padding = '8px';
-      tdDur.appendChild(makeInput('rx_duration', 'e.g. After meal for 5 days', data.duration || ''));
+      const tdDur = document.createElement('td');
+      tdDur.style.padding = '8px';
+
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'flex';
+      wrapper.style.alignItems = 'center';
+      wrapper.style.gap = '4px';
+      wrapper.style.flexWrap = 'nowrap';
+      wrapper.style.whiteSpace = 'nowrap';
+
+      // Hidden field (existing backend uses this)
+      const durationInput = makeInput(
+          'rx_duration',
+          '',
+          data.duration || ''
+      );
+      durationInput.style.display = 'none';
+
+      // Meal dropdown
+      const mealSelect = document.createElement('select');
+      mealSelect.style.width = '72px';
+      mealSelect.style.minWidth = '72px';
+      mealSelect.style.padding = '4px';
+      mealSelect.style.fontSize = '13px';
+      mealSelect.style.borderRadius = '6px';
+      mealSelect.style.border = '1px solid rgba(6,42,138,0.08)';
+
+      mealSelect.innerHTML = `
+          <option value="">--</option>
+          <option value="Before meal">Before</option>
+          <option value="After meal">After</option>
+      `;
+
+      // Days input
+      const daysInput = document.createElement('input');
+      daysInput.type = 'number';
+      daysInput.min = '1';
+      daysInput.placeholder = '0';
+      daysInput.style.width = '48px';
+      daysInput.style.padding = '4px';
+      daysInput.style.fontSize = '13px';
+      daysInput.style.borderRadius = '6px';
+      daysInput.style.border = '1px solid rgba(6,42,138,0.08)';
+
+      // "days" label
+      const daysLabel = document.createElement('span');
+      daysLabel.textContent = 'days';
+      daysLabel.style.fontSize = '13px';
+
+      function updateDuration() {
+          if (mealSelect.value && daysInput.value) {
+              durationInput.value =
+                  `${mealSelect.value} for ${daysInput.value} day${daysInput.value == 1 ? '' : 's'}`;
+          } else {
+              durationInput.value = '';
+          }
+      }
+
+      // Restore values when editing
+      if (data.duration) {
+          const match = data.duration.match(/(Before meal|After meal)\s+for\s+(\d+)/i);
+          if (match) {
+              mealSelect.value = match[1];
+              daysInput.value = match[2];
+          }
+      }
+
+      mealSelect.addEventListener('change', updateDuration);
+      daysInput.addEventListener('input', updateDuration);
+
+      wrapper.appendChild(mealSelect);
+      wrapper.appendChild(daysInput);
+      wrapper.appendChild(daysLabel);
+      wrapper.appendChild(durationInput);
+
+      tdDur.appendChild(wrapper);
+      // Duration cell end
+
 
       // Actions
       const tdAct = document.createElement('td'); tdAct.style.padding = '8px'; tdAct.style.width = '90px';
