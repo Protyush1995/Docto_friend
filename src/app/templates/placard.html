@@ -1,0 +1,52 @@
+<body>
+
+<div class="placard">
+
+<h1>Dr. {{doctor_data.firstname}} {{doctor_data.lastname}}</h1>
+
+<h2>
+{{doctor_data.qualification}}
+</h2>
+
+<h3>
+{{doctor_data.specialization}}
+</h3>
+
+<hr>
+
+<h2>{{clinic_data.clinicname}}</h2>
+
+<p>
+{{clinic_address}}
+</p>
+
+<p>
+Phone:
+{{clinic_data.primary_contact_number}}
+</p>
+
+<p>
+Email:
+{{clinic_data.email}}
+</p>
+
+<h2>Consultation Hours</h2>
+
+<div id="schedule">
+    {{visit_schedule}}
+</div>
+
+<h2>
+Consultation Fee
+</h2>
+
+<h1>₹{{clinic_data.doctor_consultation_fees}}</h1>
+
+<img src="{{clinic_data.clinic_qr_data_uri}}" width="200">
+
+</div>
+
+
+</script>
+
+</body>
