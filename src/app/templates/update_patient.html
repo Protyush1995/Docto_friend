@@ -830,6 +830,7 @@ function printPrescription() {
 
     const w = window.open("", "_blank");
 
+
     w.document.write(`
 <!DOCTYPE html>
 <html>
@@ -839,8 +840,7 @@ function printPrescription() {
 <style>
 
 @page{
-    size:A4;
-    margin:10mm;
+    size:A4 !important;
 }
 
 body{
@@ -848,7 +848,7 @@ body{
     padding:0;
 }
 
-</style>
+${styles}
 
 </head>
 
