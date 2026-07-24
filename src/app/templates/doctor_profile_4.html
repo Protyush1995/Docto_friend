@@ -132,6 +132,19 @@ footer{margin-top:18px;color:var(--muted);font-size:13px}
         <div style="color:var(--muted)"><strong>Visit Days:</strong> {{ clinic.visit_schedule }}</div>
         <div style="color:var(--muted)"><strong>Address:</strong> {{ clinic.clinic_address }}</div>
         <div style="color:var(--muted)"><strong>Contact:</strong> {{ clinic.primary_contact_number }} / {{clinic.secondary_contact_number}}</div>
+        
+        <div class="clinic-actions">
+            <a href="tel:{{clinic.primary_contact_number}}" class="btn btn-call">
+                📞 Call
+            </a>
+
+            <a href="https://www.google.com/maps/search/?api=1&query={{clinic.clinic_address|urlencode}}"
+              target="_blank"
+              class="btn btn-direction">
+                📍 Directions
+            </a>
+        </div>
+      
       </div>
       {% endfor %}
     </section>
