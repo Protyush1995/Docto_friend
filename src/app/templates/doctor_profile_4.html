@@ -173,7 +173,7 @@ footer{margin-top:18px;color:var(--muted);font-size:13px}
                 📞 Call
             </a>
 
-            <a href="https://www.google.com/maps/search/?api=1&query={{clinic.clinic_address|urlencode}}"
+            <a href="https://www.google.com/maps/search/?api=1&query={{ clinic.clinicname|urlencode }},{{ clinic.clinic_address|urlencode }}"
               target="_blank"
               class="btn btn-direction">
                 📍 Directions
