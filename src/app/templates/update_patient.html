@@ -983,7 +983,7 @@ function injectReceiptHtml(container, data) {
   </style>
   <div class="receipt" role="document" aria-label="Money Receipt">
     <div class="header" role="banner">
-      <div class="hdr-left"><div><strong>Patient ID:</strong> <span id="patient-id">${escapeHtml(data.patient_id)}</span></div></div>
+      <div class="hdr-left" hidden><div><strong>Patient ID:</strong> <span id="patient-id">${escapeHtml(data.patient_id)}</span></div></div>
       <div class="hdr-right"><div><strong>Date:</strong> <span id="date">${escapeHtml(data.today)}</span></div></div>
     </div>
     <div class="title">Money Receipt</div>
