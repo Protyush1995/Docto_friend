@@ -76,8 +76,9 @@
         </div>
       </div>
       <div>
-        <a class="btn ghost" href="/doc_dashboard/{{doctor_data.doctor_id}}" title="Dashboard Dr {{doctor_data.firstname}} {{doctor_data.lastname}}">Back to Dashboard</a>
-        <a class="btn" href="/doc_clinic_update/{{doctor_data.doctor_id}}/{{clinic_data.clinic_id}}" title="Edit Clinic Details">Edit Clinic</a>
+        <a class="btn ghost" href="/doc_dashboard/{{doctor_data.doctor_id}}" title="Dashboard Dr {{doctor_data.firstname}} {{doctor_data.lastname}}">Home 🏠</a>
+        <a class="btn" href="/doc_clinic_update/{{doctor_data.doctor_id}}/{{clinic_data.clinic_id}}" title="Edit Clinic Details">Edit Clinic ✏️</a>
+        <a class="btn" href="/doc_clinic_update/{{doctor_data.doctor_id}}/{{clinic_data.clinic_id}}" title="Edit Clinic Details">✚ Add Doctors</a>
       </div>
     </header>
 
@@ -110,11 +111,11 @@
               <h2>{{clinic_data.clinicname}}</h2>
               <p><div class="chip">Clinic ID: {{clinic_data.clinic_id}} , Registered: {{clinic_data.created_at}} </div></p>
               <div class="actions">
-                <a class="btn" href="/new-patient-form?doctor_id={{doctor_data.doctor_id}}&clinic_id={{clinic_data.clinic_id}}" target="_blank">Diagnose Patient</a>
+                <a class="btn ghost" href="/new-patient-form?doctor_id={{doctor_data.doctor_id}}&clinic_id={{clinic_data.clinic_id}}" target="_blank">Diagnose Patient 🩺</a>
                 <a class="btn ghost"
                   href="/download_placard/{{doctor_data.doctor_id}}/{{clinic_data.clinic_id}}"
                   target="_blank">
-                  Download Placard
+                  Download Placard ⬇️
                 </a>
               </div>
             </div>

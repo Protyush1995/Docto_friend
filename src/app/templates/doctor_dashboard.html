@@ -637,7 +637,7 @@
       <div>
         <button class="btn ghost" hidden>Dark mode</button>
         <form action="{{ url_for('main.logout') }}" method="POST">
-            <button type="submit" class="btn">Logout</button>
+            <button type="submit" class="btn">Logout ⏻</button>
         </form>
       </div>
     </header>
@@ -680,8 +680,8 @@
                   </strong></div>
               <div style="margin-top:8px" class="action-row">
                   <a id="openDiagnose" class="btn" href="/doctor-diagnose-patient?doctor_id={{doctor_data.doctor_id}}" target="_blank"  style="pointer-events: none;" hidden>Diagnose Patient with uTAN</a>
-                  <a href="{{ url_for('main.doctor_clinic_seed_form') }}" class="btn">Add Clinics</a>
-                  <a href="{{ url_for('main.doctor_edit_profile_form', doctor_id=doctor_data.doctor_id) }}" class="btn">Edit Profile</a>
+                  <a href="{{ url_for('main.doctor_clinic_seed_form') }}" class="btn">✚ Add Clinics</a>
+                  <a href="{{ url_for('main.doctor_edit_profile_form', doctor_id=doctor_data.doctor_id) }}" class="btn">Edit Profile ✏️</a>
               </div>
           </div>
       </aside>
@@ -701,7 +701,7 @@
           </div>-->
           <!-- HTML -->
           <div class="flip-card aspect-ratio">
-            <div class="download-hint">Click to download card</div>
+            <div class="download-hint">Click to download card ⬇️</div>
             <img src="{{ url_for('static', filename='image/doctor_card_front.png') }}" alt="" class="card-bg">
             <div class="card-overlay">
               <div class="overlay-center">
